@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"encoding/xml"
 	"gosoapgen/wsdl"
+	"path"
+	"gosoapgen/xsd"
 )
 
 func main() {
@@ -26,7 +28,19 @@ func main() {
 
 	def := wsdl.Definitions{}
 	err = xml.Unmarshal(xmlData, &def)
-	for _, attr := range def.PortType[0].Operation {
-		fmt.Printf("%s: %s\n", attr.Name.Value, attr.Input.Message)
+	xmlFile.Close()
+
+	basePath := path.Dir(wsdlName)
+	for _, attr := range def.Types {
+		xsd.LoadSchema(basePath + "/" + attr.SchemaLocation)
+		//if err != nil {
+		//	fmt.Printf("Error loading schema. %s", err)
+		//	return
+		//}
+		//if outFilePath, err := schema.MakeGoPkgSrcFile(); err == nil {
+		//	if raw, _ := exec.Command("gofmt", "-w=true", "-s=true", "-e=true", outFilePath).CombinedOutput(); len(raw) > 0 {
+		//		log.Printf("GOFMT:\t%s\n", string(raw))
+		//	}
+		//}
 	}
 }
