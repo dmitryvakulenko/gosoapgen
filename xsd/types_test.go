@@ -8,7 +8,7 @@ import (
 )
 
 func TestSingleElementParsing(t *testing.T) {
-	s := parseSchema("./parser_test/1.xsd")
+	s := parseSchema("./types_test/1.xsd")
 
 	if len(s.Element) != 1 {
 		t.Fatalf("Should be 1 type, %d instead", len(s.Element))
@@ -24,7 +24,7 @@ func TestSingleElementParsing(t *testing.T) {
 }
 
 func TestParsingComplexTypeWithAttributes(t *testing.T) {
-	s := parseSchema("./parser_test/2.xsd")
+	s := parseSchema("./types_test/2.xsd")
 
 	if len(s.Element) != 1 {
 		t.Fatalf("Should be 1 type, %d instead", len(s.Element))
@@ -53,7 +53,7 @@ func TestParsingComplexTypeWithAttributes(t *testing.T) {
 
 
 func TestParsingAdditionTypes(t *testing.T) {
-	s := parseSchema("./parser_test/3.xsd")
+	s := parseSchema("./types_test/3.xsd")
 
 	if len(s.ComplexType) != 2 {
 		t.Fatalf("Comples types amount sould be 2, %d instead", len(s.ComplexType))
