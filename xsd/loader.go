@@ -1,8 +1,6 @@
 package xsd
 
 import (
-	"os"
-	"io/ioutil"
 	"encoding/xml"
 )
 
@@ -19,7 +17,7 @@ type Element struct {
 	Name string `xml:"name,attr"`
 	Type string `xml:"type,attr"`
 	SimpleType []SimpleType `xml:"simpleType"`
-	ComplexType []ComplexType `xml:"complexType"`
+	ComplexType ComplexType `xml:"complexType"`
 }
 
 type Restriction struct {
@@ -40,8 +38,8 @@ type ComplexType struct {
 type Schema struct {
 	XMLName xml.Name `xml:"schema"`
 	TargetNamespace string `xml:"targetNamespace,attr"`
+	Element []Element `xml:"element"`
 	Attrs []xml.Attr `xml:",any,attr"`
 	SimpleType []SimpleType `xml:"simpleType"`
 	ComplexType []ComplexType `xml:"complexType"`
-	Element []Element `xml:"element"`
 }

@@ -1,64 +1,85 @@
 package xsd
 
 import (
-	"testing"
+	"encoding/xml"
+	"io/ioutil"
 	"os"
+	"testing"
 )
 
-func TestSingleElementSchema(t *testing.T) {
-	reader := getReader("./parser_test/1.xsd")
-	defer reader.Close()
+func TestSingleElementParsing(t *testing.T) {
+	s := parseSchema("./parser_test/1.xsd")
 
-	p := CreateParser(reader)
-	p.Parse()
-	types := p.GetTypes()
-
-	if len(types) != 1 {
-		t.Fatalf("Should be 1 type, %d instead", len(types))
+	if len(s.Element) != 1 {
+		t.Fatalf("Should be 1 type, %d instead", len(s.Element))
 	}
 
-	if types[0].Name != "Session" {
-		t.Errorf("Type name should be '%s', got '%s' instead", "Session", types[0].Name)
+	if s.Element[0].Name != "Session" {
+		t.Errorf("Type name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
 	}
 
-	if len(types[0].Fields) != 0 {
+	if len(s.Element[0].ComplexType.Sequence.Element) != 0 {
 		t.Errorf("Fields sould be empty")
 	}
-
-	ns := "http://www.w3.org/2001/XMLSchema"
-	if types[0].Namespace != ns {
-		t.Errorf("Namespace should be '%s', '%s' instead", ns, types[0].Namespace)
-	}
 }
-
 
 func TestParsingComplexTypeWithAttributes(t *testing.T) {
-	reader := getReader("./parser_test/2.xsd")
-	defer reader.Close()
+	s := parseSchema("./parser_test/2.xsd")
 
-	p := CreateParser(reader)
-	p.Parse()
-	types := p.GetTypes()
-
-	if len(types) != 1 {
-		t.Fatalf("Should be 1 type, %d instead", len(types))
+	if len(s.Element) != 1 {
+		t.Fatalf("Should be 1 type, %d instead", len(s.Element))
 	}
 
-	if len(types[0].Fields) != 3 {
-		t.Fatalf("Fields amount sould be 3, %d instead", len(types[0].Fields))
+	if s.Element[0].Name != "Session" {
+		t.Errorf("Type name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
 	}
 
-	if types[0].Fields[2].Name != "SecurityToken" {
-		t.Errorf("Field name should be 'SecurityToken', %s instead", types[0].Fields[2].Name)
+	if len(s.Element[0].ComplexType.Sequence.Element) != 3 {
+		t.Fatalf("Fields amount sould be 3, %d instead", len(s.Element[0].ComplexType.Sequence.Element))
+	}
+
+	if s.Element[0].ComplexType.Sequence.Element[2].Name != "SecurityToken" {
+		t.Errorf("Field name should be 'SecurityToken', %s instead", s.Element[0].ComplexType.Sequence.Element[2].Name)
+	}
+
+	if len(s.Element[0].ComplexType.Attribute) != 1 {
+		t.Fatalf("Attributes amount sould be 1, %d instead", len(s.Element[0].ComplexType.Attribute))
+	}
+
+	if s.Element[0].ComplexType.Attribute[0].Name != "TransactionStatusCode" {
+		t.Fatalf("Attribute name should be TransactionStatusCode, %d instead", len(s.Element[0].ComplexType.Attribute[0].Name))
 	}
 }
 
 
-func getReader(fileName string) *os.File {
+func TestParsingAdditionTypes(t *testing.T) {
+	s := parseSchema("./parser_test/3.xsd")
+
+	if len(s.ComplexType) != 2 {
+		t.Fatalf("Comples types amount sould be 2, %d instead", len(s.ComplexType))
+	}
+
+	if s.ComplexType[1].Name != "AvailabilityOptionsType" {
+		t.Fatalf("Complex type name should be 'AvailabilityOptionsType', %d instead", s.ComplexType[1].Name)
+	}
+
+	if len(s.SimpleType) != 2 {
+		t.Fatalf("Simple types amount sould be 2, %d instead", len(s.SimpleType))
+	}
+}
+
+
+func parseSchema(fileName string) *Schema {
 	reader, err := os.Open(fileName)
+	defer reader.Close()
+
 	if err != nil {
 		panic(err)
 	}
 
-	return reader
+	content, _ := ioutil.ReadAll(reader)
+	s := &Schema{}
+	xml.Unmarshal(content, s)
+
+	return s
 }
