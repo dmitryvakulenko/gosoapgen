@@ -4,6 +4,7 @@ type StructField struct {
 	Name string
 	Comment string
 	TypeName string
+	Namespace string
 }
 
 type StructAttribute struct {
@@ -16,6 +17,10 @@ type Struct struct {
 	Namespace string
 	Fields []*StructField
 	Attributes []*Attribute
+}
+
+func (s *Struct) appendField(f *StructField) {
+	s.Fields = append(s.Fields, f)
 }
 
 type WsdlTypes []*Struct

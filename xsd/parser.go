@@ -5,24 +5,27 @@ import (
 	"io"
 )
 
-var (
-	types = make(WsdlTypes, 0)
-	//lastIndex = 1
-	currentStruct *Struct = nil
-	currentField *StructField = nil
-)
-
-func GetTypes() WsdlTypes {
-	return types
+func CreateParser(reader io.Reader) Parser {
+	return Parser{
+		make(WsdlTypes, 0),
+		nil,
+		nil,
+		xml.NewDecoder(reader)}
 }
 
-func Parse(reader io.Reader) {
-	decoder := xml.NewDecoder(reader)
-	parseImpl(decoder)
+type Parser struct {
+	types         WsdlTypes
+	currentStruct *Struct
+	currentField  *StructField
+	decoder       *xml.Decoder
 }
 
-func parseImpl(decoder *xml.Decoder) {
-	t, err := decoder.Token()
+func (p *Parser) GetTypes() WsdlTypes {
+	return p.types
+}
+
+func (p *Parser) Parse() {
+	t, err := p.decoder.Token()
 
 	if err == io.EOF {
 		return
@@ -30,15 +33,15 @@ func parseImpl(decoder *xml.Decoder) {
 
 	switch t := t.(type) {
 	case xml.StartElement:
-		parseElements(&t)
+		p.parseElements(&t)
 	case xml.EndElement:
-		closeElements(&t)
+		p.closeElements(&t)
 	}
 
-	parseImpl(decoder)
+	p.Parse()
 }
 
-func parseElements(elem *xml.StartElement) {
+func (p *Parser) parseElements(elem *xml.StartElement) {
 	switch elem.Name.Local {
 	//case "schema":
 	//	s := Schema{}
@@ -46,31 +49,31 @@ func parseElements(elem *xml.StartElement) {
 	case "element":
 		//e := Element{}
 		//decoder.DecodeElement(&e, elem)
-		if currentStruct == nil {
-			currentStruct = newStruct(getAttribute(elem.Attr, "name"))
-			currentStruct.Namespace = elem.Name.Space
+		if p.currentStruct == nil {
+			p.currentStruct = newStruct(getAttribute(elem.Attr, "name"))
+			p.currentStruct.Namespace = elem.Name.Space
 		} else {
-			//currentField = newField(e.Name, e.Type)
+			p.currentField = newField(getAttribute(elem.Attr, "name"), getAttribute(elem.Attr, "type"))
+			p.currentField.Namespace = elem.Name.Space
 		}
-	//case "complexType":
-	//	c := ComplexType{}
-	//	decoder.DecodeElement(c, elem)
+		//case "complexType":
+		//	c := ComplexType{}
+		//	decoder.DecodeElement(c, elem)
 	}
 }
 
-func closeElements(elem *xml.EndElement) {
+func (p *Parser) closeElements(elem *xml.EndElement) {
 	switch elem.Name.Local {
 	case "element":
-		if currentField != nil {
-			currentStruct.Fields = append(currentStruct.Fields, currentField)
-			currentField = nil
+		if p.currentField != nil {
+			p.currentStruct.appendField(p.currentField)
+			p.currentField = nil
 		} else {
-			types = append(types, currentStruct)
-			currentStruct = nil
+			p.types = append(p.types, p.currentStruct)
+			p.currentStruct = nil
 		}
 	}
 }
-
 
 func getAttribute(attr []xml.Attr, name string) string {
 	for _, v := range attr {
