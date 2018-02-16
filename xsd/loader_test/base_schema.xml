@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xml.amadeus.com/ARBKUR_03_2_1A"
-           xmlns="http://xml.amadeus.com/ARBKUR_03_2_1A" elementFormDefault="qualified">
-</xs:schema>

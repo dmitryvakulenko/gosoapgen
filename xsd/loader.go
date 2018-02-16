@@ -1,8 +1,6 @@
 package xsd
 
 import (
-	"os"
-	"io/ioutil"
 	"encoding/xml"
 )
 
@@ -18,8 +16,6 @@ type Attribute struct {
 type Element struct {
 	Name string `xml:"name,attr"`
 	Type string `xml:"type,attr"`
-	SimpleType []SimpleType `xml:"simpleType"`
-	ComplexType []ComplexType `xml:"complexType"`
 }
 
 type Restriction struct {
@@ -39,22 +35,6 @@ type ComplexType struct {
 
 type Schema struct {
 	XMLName xml.Name `xml:"schema"`
-	Xmlns []xml.Attr `xml:",any,attr"`
-	SimpleType []SimpleType `xml:"simpleType"`
-	ComplexType []ComplexType `xml:"complexType"`
-	Element []Element `xml:"element"`
-}
-
-func LoadSchema(fileName string) (*Schema, error) {
-	xmlFile, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer xmlFile.Close()
-
-	content, _ := ioutil.ReadAll(xmlFile)
-	schema := Schema{}
-	xml.Unmarshal(content, &schema)
-
-	return &schema, nil
+	TargetNamespace string `xml:"targetNamespace,attr"`
+	Attrs []xml.Attr `xml:",any,attr"`
 }

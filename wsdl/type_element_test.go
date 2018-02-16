@@ -1,6 +1,0 @@
-package wsdl
-
-import (
-	"testing"
-)
-

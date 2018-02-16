@@ -31,8 +31,13 @@ func main() {
 	xmlFile.Close()
 
 	basePath := path.Dir(wsdlName)
+	res := ""
 	for _, attr := range def.Types {
-		xsd.LoadSchema(basePath + "/" + attr.SchemaLocation)
+		//schema, _ := xsd.LoadSchema(basePath + "/" + attr.SchemaLocation)
+		reader, _ := os.Open(basePath + "/" + attr.SchemaLocation)
+		xsd.Parse(reader)
+		reader.Close()
+		//xsd.Parse(basePath + "/" + attr.SchemaLocation)
 		//if err != nil {
 		//	fmt.Printf("Error loading schema. %s", err)
 		//	return
@@ -43,4 +48,6 @@ func main() {
 		//	}
 		//}
 	}
+	xsd.GetTypes()
+	fmt.Print(res)
 }
