@@ -5,19 +5,26 @@ import (
 	"io"
 )
 
+const (
+	STAGE_NONE = iota
+	STAGE_STRUCT
+	STAGE_FIELD
+)
+
 func CreateParser(reader io.Reader) Parser {
 	return Parser{
-		make(WsdlTypes, 0),
-		nil,
-		nil,
-		xml.NewDecoder(reader)}
+		types:   make(WsdlTypes, 0),
+		decoder: xml.NewDecoder(reader),
+		stage: STAGE_NONE}
 }
 
 type Parser struct {
 	types         WsdlTypes
-	currentStruct *Struct
-	currentField  *StructField
+	currentStruct *Type
+	currentField  *Type
+	lastElement   *Type
 	decoder       *xml.Decoder
+	stage         int
 }
 
 func (p *Parser) GetTypes() WsdlTypes {
@@ -47,18 +54,13 @@ func (p *Parser) parseElements(elem *xml.StartElement) {
 	//	s := Schema{}
 	//	decoder.DecodeElement(s, elem)
 	case "element":
-		//e := Element{}
-		//decoder.DecodeElement(&e, elem)
-		if p.currentStruct == nil {
-			p.currentStruct = newStruct(getAttribute(elem.Attr, "name"))
-			p.currentStruct.Namespace = elem.Name.Space
-		} else {
-			p.currentField = newField(getAttribute(elem.Attr, "name"), getAttribute(elem.Attr, "type"))
-			p.currentField.Namespace = elem.Name.Space
-		}
-		//case "complexType":
-		//	c := ComplexType{}
-		//	decoder.DecodeElement(c, elem)
+		p.lastElement = &Type{}
+		p.lastElement.Name = getAttribute(elem.Attr, "name")
+		p.lastElement.Namespace = elem.Name.Space
+		p.lastElement.TypeName = getAttribute(elem.Attr, "type")
+
+	case "complexType":
+		p.currentStruct = p.lastElement
 	}
 }
 
@@ -67,11 +69,11 @@ func (p *Parser) closeElements(elem *xml.EndElement) {
 	case "element":
 		if p.currentField != nil {
 			p.currentStruct.appendField(p.currentField)
-			p.currentField = nil
-		} else {
-			p.types = append(p.types, p.currentStruct)
-			p.currentStruct = nil
 		}
+		p.currentField = nil
+	case "complexType":
+		p.types = append(p.types, p.currentStruct)
+		p.currentStruct = nil
 	}
 }
 

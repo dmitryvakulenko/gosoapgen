@@ -14,7 +14,7 @@ func TestSingleElementSchema(t *testing.T) {
 	types := p.GetTypes()
 
 	if len(types) != 1 {
-		t.Errorf("Should be 1 type, %d instead", len(types))
+		t.Fatalf("Should be 1 type, %d instead", len(types))
 	}
 
 	if types[0].Name != "Session" {
@@ -41,11 +41,11 @@ func TestParsingComplexTypeWithAttributes(t *testing.T) {
 	types := p.GetTypes()
 
 	if len(types) != 1 {
-		t.Errorf("Should be 1 type, %d instead", len(types))
+		t.Fatalf("Should be 1 type, %d instead", len(types))
 	}
 
 	if len(types[0].Fields) != 3 {
-		t.Errorf("Fields amount sould be 3, %d instead", len(types[0].Fields))
+		t.Fatalf("Fields amount sould be 3, %d instead", len(types[0].Fields))
 	}
 
 	if types[0].Fields[2].Name != "SecurityToken" {
