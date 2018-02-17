@@ -13,17 +13,6 @@ func TestGetNoTypes(t *testing.T) {
 	}
 }
 
-func TestSingleEmptyStructure(t *testing.T) {
-	s := xsd.Schema{}
-	s.Element = append(s.Element, xsd.Element{Name: "Session"})
-
-	res := GenerateTypes([]xsd.Schema{s})
-	if len(res) != 1 {
-		t.Errorf("Should be 1 type, %d getting", len(res))
-	}
-}
-
-
 func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	elem := xsd.Element{Name: "Session"}
 	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, xsd.Element{Name: "SessionId", Type: "xs:string"})
@@ -54,6 +43,32 @@ func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	if field.XmlExpr != "sequenceNumber" {
 		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
 	}
+}
+
+
+func TestGenerateSchemaComplexTypes(t *testing.T) {
+	elem := xsd.ComplexType{Name: "Session"}
+	elem.Sequence.Element = append(elem.Sequence.Element, xsd.Element{Name: "SessionId", Type: "xs:string"})
+	elem.Sequence.Element = append(elem.Sequence.Element, xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
+	elem.Sequence.Element = append(elem.Sequence.Element, xsd.Element{Name: "SecurityToken", Type: "xs:string"})
+
+	s := xsd.Schema{}
+	s.ComplexType = append(s.ComplexType, elem)
+
+
+	res := GenerateTypes([]xsd.Schema{s})
+	if len(res) != 1 {
+		t.Fatalf("Should be 2 type, %d getting", len(res))
+	}
+
+	if res[0].Name != "Session" {
+		t.Fatalf("Type name should be 'Session', '%s' getting", res[0].Name)
+	}
+
+	if len(res[0].Fields) != 3 {
+		t.Fatalf("Type should has 3 fields, %d getting", len(res[0].Fields))
+	}
+
 }
 
 

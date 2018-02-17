@@ -19,9 +19,12 @@ func generateFromSchema(s *xsd.Schema) []*Struct {
 	var resTypes []*Struct
 
 	for _, elem := range s.Element {
-		curType, newTypes := generateFromComplexType(&elem.ComplexType)
-		curType.Name = elem.Name
-		resTypes = append(resTypes, curType)
+		newTypes := generateFromComplexType(&elem.ComplexType, elem.Name)
+		resTypes = append(resTypes, newTypes...)
+	}
+
+	for _, elem := range s.ComplexType {
+		newTypes := generateFromComplexType(&elem, "")
 		resTypes = append(resTypes, newTypes...)
 	}
 
@@ -35,12 +38,10 @@ func generateFromElement(element *xsd.Element) (*Field, []*Struct) {
 	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
 	field.XmlExpr = element.Name
 
-	curType, newTypes := generateFromComplexType(&element.ComplexType)
+	newTypes := generateFromComplexType(&element.ComplexType, field.Name)
 
-	if len(curType.Fields) != 0 {
-		curType.Name = field.Name
+	if element.Type == "" {
 		field.Type = field.Name
-		resTypes = append(resTypes, curType)
 	} else {
 		field.Type = parseStandardTypes(element.Type)
 	}
@@ -60,11 +61,21 @@ func generateFromAttribute(attribute *xsd.Attribute) *Field {
 }
 
 // Первое возвращаемое значение - текущий тип, второе - подтипы
-func generateFromComplexType(complexType *xsd.ComplexType) (*Struct, []*Struct) {
+func generateFromComplexType(complexType *xsd.ComplexType, name string) []*Struct {
+	if len(complexType.Sequence.Element) == 0 && len(complexType.Attribute) == 0 {
+		return []*Struct{}
+	}
+
 	var (
 		resTypes  []*Struct
-		curStruct = &Struct{}
+		curStruct = &Struct{Name: name}
 	)
+
+	resTypes = append(resTypes, curStruct)
+
+	if complexType.Name != "" {
+		curStruct.Name = complexType.Name
+	}
 
 	for _, childElem := range complexType.Sequence.Element {
 		field, types := generateFromElement(&childElem)
@@ -77,7 +88,7 @@ func generateFromComplexType(complexType *xsd.ComplexType) (*Struct, []*Struct) 
 		curStruct.Fields = append(curStruct.Fields, field)
 	}
 
-	return curStruct, resTypes
+	return resTypes
 }
 
 func parseStandardTypes(xmlType string) string {
