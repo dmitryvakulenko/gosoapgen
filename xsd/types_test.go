@@ -57,7 +57,7 @@ func TestParsingAdditionTypes(t *testing.T) {
 	}
 
 	if s.ComplexType[1].Name != "AvailabilityOptionsType" {
-		t.Fatalf("Complex type name should be 'AvailabilityOptionsType', %d instead", s.ComplexType[1].Name)
+		t.Fatalf("Complex type name should be 'AvailabilityOptionsType', %s instead", s.ComplexType[1].Name)
 	}
 
 	if len(s.SimpleType) != 2 {

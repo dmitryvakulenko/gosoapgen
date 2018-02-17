@@ -1,4 +1,4 @@
-package generator
+package translator
 
 type Struct struct {
 	Name string
