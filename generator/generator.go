@@ -28,8 +28,14 @@ func generateFromSchema(s *xsd.Schema) []*Struct {
 		resTypes = append(resTypes, newTypes...)
 	}
 
+	for _, elem := range s.SimpleType {
+		newTypes := generateFromSimpleType(&elem)
+		resTypes = append(resTypes, newTypes)
+	}
+
 	return resTypes
 }
+
 
 func generateFromElement(element *xsd.Element) (*Field, []*Struct) {
 	var resTypes []*Struct
@@ -89,6 +95,10 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) []*Struc
 	}
 
 	return resTypes
+}
+
+func generateFromSimpleType(simpleType *xsd.SimpleType) *Struct {
+	return &Struct{Name: simpleType.Name, Type: parseStandardTypes(simpleType.Restriction.Base)}
 }
 
 func parseStandardTypes(xmlType string) string {

@@ -13,6 +13,24 @@ func TestGetNoTypes(t *testing.T) {
 	}
 }
 
+func TestGenerateSimpleTypes(t *testing.T) {
+	s := xsd.Schema{}
+	s.SimpleType = append(s.SimpleType, xsd.SimpleType{Name: "AlphaNumericString_Length1To3", Restriction: xsd.Restriction{Base: "xs:string"} })
+
+	res := GenerateTypes([]xsd.Schema{s})
+	if len(res) != 1 {
+		t.Fatalf("Should be 1 type, %d getting", len(res))
+	}
+
+	if res[0].Name != "AlphaNumericString_Length1To3" {
+		t.Errorf("Type name should be 'AlphaNumericString_Length1To3', %s getting", res[0].Name)
+	}
+
+	if res[0].Type != "string" {
+		t.Errorf("Type should be 'string', %s getting", res[0].Type)
+	}
+}
+
 func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	elem := xsd.Element{Name: "Session"}
 	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, xsd.Element{Name: "SessionId", Type: "xs:string"})
@@ -24,7 +42,7 @@ func TestSimpleStructureHasSeveralFields(t *testing.T) {
 
 	res := GenerateTypes([]xsd.Schema{s})
 	if len(res) != 1 {
-		t.Errorf("Should be 1 type, %d getting", len(res))
+		t.Fatalf("Should be 1 type, %d getting", len(res))
 	}
 
 	if len(res[0].Fields) != 3 {
