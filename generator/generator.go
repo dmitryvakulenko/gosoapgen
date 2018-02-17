@@ -1,28 +1,89 @@
 package generator
 
-import "gosoapgen/xsd"
+import (
+	"gosoapgen/xsd"
+	"strings"
+)
 
-func GenerateTypes(v interface{}) []*Struct {
-	res := []*Struct{}
-	var newTypes []*Struct
-	switch v.(type) {
-	case xsd.Schema:
-		tmp := v.(xsd.Schema)
-		newTypes = generateFromSchema(&tmp)
+func GenerateTypes(s []xsd.Schema) []*Struct {
+	var res []*Struct
+
+	for _, v := range s {
+		_, newTypes := generateTypesImpl(v)
+		res = append(res, newTypes...)
 	}
-	res = append(res, newTypes...)
 
 	return res
 }
 
+func generateTypesImpl(v interface{}) (*Field, []*Struct) {
+	var (
+		resTypes, newTypes []*Struct
+		newField           *Field
+	)
+	switch v.(type) {
+	case xsd.Schema:
+		tmp := v.(xsd.Schema)
+		newTypes = generateFromSchema(&tmp)
+	case xsd.Element:
+		tmp := v.(xsd.Element)
+		newField, newTypes = generateFromElement(&tmp)
+	}
+	resTypes = append(resTypes, newTypes...)
+
+	return newField, resTypes
+}
+
 func generateFromSchema(s *xsd.Schema) []*Struct {
-	var res []*Struct
+	var resTypes []*Struct
 
 	for _, elem := range s.Element {
 		newStruct := &Struct{}
+		resTypes = append(resTypes, newStruct)
+
 		newStruct.Name = elem.Name
-		res = append(res, newStruct)
+
+		for _, childElem := range elem.ComplexType.Sequence.Element {
+			field, types := generateTypesImpl(childElem)
+			resTypes = append(resTypes, types...)
+			newStruct.Fields = append(newStruct.Fields, field)
+		}
+
 	}
 
-	return res
+	return resTypes
+}
+
+func generateFromElement(element *xsd.Element) (*Field, []*Struct) {
+	field := &Field{}
+	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
+	field.XmlExpr = element.Name
+	field.Type = parseStandardTypes(element.Type)
+
+	return field, []*Struct{}
+}
+
+func parseStandardTypes(xmlType string) string {
+	parts := strings.Split(xmlType, ":")
+
+	var fieldType string
+	if len(parts) == 2 {
+		fieldType = parts[1]
+	} else {
+		fieldType = parts[0]
+	}
+
+	switch fieldType {
+	case "integer":
+		return "int"
+	case "decimal":
+		return "float64"
+	case "boolean":
+		return "bool"
+	case "date":
+		return "time.time"
+	default:
+		return fieldType
+	}
+
 }
