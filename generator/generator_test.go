@@ -39,7 +39,7 @@ func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	}
 
 	if len(res[0].Fields) != 3 {
-		t.Fatalf("Should be 3 type, %d getting", len(res[0].Fields))
+		t.Fatalf("Should be 3 fields, %d getting", len(res[0].Fields))
 	}
 
 	field := res[0].Fields[1]
@@ -52,6 +52,34 @@ func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	}
 
 	if field.XmlExpr != "sequenceNumber" {
+		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
+	}
+}
+
+
+func TestComplexTypeWithAttributes(t *testing.T) {
+	elem := xsd.Element{Name: "Session"}
+	elem.ComplexType.Attribute = append(elem.ComplexType.Attribute, xsd.Attribute{Name: "TransactionStatusCode", Type: "xs:NMTOKEN"})
+
+	s := xsd.Schema{}
+	s.Element = append(s.Element, elem)
+
+	res := GenerateTypes([]xsd.Schema{s})
+
+	if len(res[0].Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(res[0].Fields))
+	}
+
+	field := res[0].Fields[0]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if field.Type != "NMTOKEN" {
+		t.Errorf("Field type should be 'NMTOKEN' %s instead", field.Type)
+	}
+
+	if field.XmlExpr != "TransactionStatusCode,attr" {
 		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
 	}
 }

@@ -28,11 +28,16 @@ func generateTypesImpl(v interface{}) (*Field, []*Struct) {
 	case xsd.Element:
 		tmp := v.(xsd.Element)
 		newField, newTypes = generateFromElement(&tmp)
+	case xsd.Attribute:
+		tmp := v.(xsd.Attribute)
+		newField = generateFromAttribute(&tmp)
 	}
+
 	resTypes = append(resTypes, newTypes...)
 
 	return newField, resTypes
 }
+
 
 func generateFromSchema(s *xsd.Schema) []*Struct {
 	var resTypes []*Struct
@@ -44,6 +49,12 @@ func generateFromSchema(s *xsd.Schema) []*Struct {
 		newStruct.Name = elem.Name
 
 		for _, childElem := range elem.ComplexType.Sequence.Element {
+			field, types := generateTypesImpl(childElem)
+			resTypes = append(resTypes, types...)
+			newStruct.Fields = append(newStruct.Fields, field)
+		}
+
+		for _, childElem := range elem.ComplexType.Attribute {
 			field, types := generateTypesImpl(childElem)
 			resTypes = append(resTypes, types...)
 			newStruct.Fields = append(newStruct.Fields, field)
@@ -62,6 +73,16 @@ func generateFromElement(element *xsd.Element) (*Field, []*Struct) {
 
 	return field, []*Struct{}
 }
+
+func generateFromAttribute(attribute *xsd.Attribute) *Field {
+	field := &Field{}
+	field.Name = strings.ToUpper(attribute.Name[0:1]) + attribute.Name[1:]
+	field.XmlExpr = attribute.Name + ",attr"
+	field.Type = parseStandardTypes(attribute.Type)
+
+	return field
+}
+
 
 func parseStandardTypes(xmlType string) string {
 	parts := strings.Split(xmlType, ":")
@@ -85,5 +106,4 @@ func parseStandardTypes(xmlType string) string {
 	default:
 		return fieldType
 	}
-
 }
