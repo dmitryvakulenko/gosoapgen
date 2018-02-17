@@ -40,4 +40,11 @@ type Schema struct {
 	Attrs []xml.Attr `xml:",any,attr"`
 	SimpleType []SimpleType `xml:"simpleType"`
 	ComplexType []ComplexType `xml:"complexType"`
+	Import []Import `xml:"import"`
+	Include []Import `xml:"include"`
+}
+
+type Import struct {
+	Namespace string `xml:"namespace,attr"`
+	SchemaLocation string `xml:"schemaLocation,attr"`
 }

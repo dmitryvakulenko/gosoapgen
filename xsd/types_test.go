@@ -1,9 +1,6 @@
 package xsd
 
 import (
-	"encoding/xml"
-	"io/ioutil"
-	"os"
 	"testing"
 )
 
@@ -68,18 +65,14 @@ func TestParsingAdditionTypes(t *testing.T) {
 	}
 }
 
+func TestImportInclude(t *testing.T) {
+	s := ParseSchema("./types_test/4.xsd")
+
+	if len(s) != 3 {
+		t.Fatalf("Should be imported 3 schemas, %d instead", len(s))
+	}
+}
 
 func parseSchema(fileName string) *Schema {
-	reader, err := os.Open(fileName)
-	defer reader.Close()
-
-	if err != nil {
-		panic(err)
-	}
-
-	content, _ := ioutil.ReadAll(reader)
-	s := &Schema{}
-	xml.Unmarshal(content, s)
-
-	return s
+	return ParseSchema(fileName)[0]
 }
