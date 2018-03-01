@@ -39,8 +39,8 @@ type Schema struct {
 	TargetNamespace string        `xml:"targetNamespace,attr"`
 	Element         []Element     `xml:"element"`
 	Attrs           []xml.Attr    `xml:",any,attr"`
-	SimpleType      *[]*SimpleType  `xml:"simpleType"`
-	ComplexType     *[]*ComplexType `xml:"complexType"`
+	SimpleType      []*SimpleType  `xml:"simpleType"`
+	ComplexType     []*ComplexType `xml:"complexType"`
 	Import          []*Import      `xml:"import"`
 	Include         []*Import      `xml:"include"`
 }

@@ -52,16 +52,16 @@ func TestParsingComplexTypeWithAttributes(t *testing.T) {
 func TestParsingAdditionTypes(t *testing.T) {
 	s := parseSchema("./types_test/3.xsd")
 
-	if len(*s.ComplexType) != 2 {
-		t.Fatalf("Comples types amount sould be 2, %d instead", len(*s.ComplexType))
+	if len(s.ComplexType) != 2 {
+		t.Fatalf("Comples types amount sould be 2, %d instead", len(s.ComplexType))
 	}
 
-	if (*s.ComplexType)[1].Name != "AvailabilityOptionsType" {
-		t.Fatalf("Complex type name should be 'AvailabilityOptionsType', %s instead", (*s.ComplexType)[1].Name)
+	if s.ComplexType[1].Name != "AvailabilityOptionsType" {
+		t.Fatalf("Complex type name should be 'AvailabilityOptionsType', %s instead", s.ComplexType[1].Name)
 	}
 
-	if len(*s.SimpleType) != 2 {
-		t.Fatalf("Simple types amount sould be 2, %d instead", len(*s.SimpleType))
+	if len(s.SimpleType) != 2 {
+		t.Fatalf("Simple types amount sould be 2, %d instead", len(s.SimpleType))
 	}
 }
 
