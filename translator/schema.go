@@ -5,19 +5,12 @@ import (
 	"strings"
 )
 
-var types []*Struct
+var types []*ComplexType
 
-func GenerateTypes(s []*xsd.Schema) []*Struct {
-	types = []*Struct{}
 
-	for _, v := range s {
-		generateFromSchema(v)
-	}
+func Parse(s *xsd.Schema) *SchemaTypes {
+	types := SchemaTypes{}
 
-	return types
-}
-
-func generateFromSchema(s *xsd.Schema) {
 	for _, elem := range s.Element {
 		generateFromComplexType(elem.ComplexType, elem.Name)
 	}
@@ -33,6 +26,8 @@ func generateFromSchema(s *xsd.Schema) {
 	for _, elem := range s.SimpleType {
 		generateFromSimpleType(elem)
 	}
+
+	return &types
 }
 
 func generateFromElement(element *xsd.Element) *Field {
@@ -73,7 +68,7 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 		return
 	}
 
-	var curStruct = &Struct{Name: name}
+	var curStruct = &ComplexType{Name: name}
 	types = append(types, curStruct)
 
 	if complexType.Name != "" {
@@ -98,8 +93,8 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 		curStruct.Embed = append(curStruct.Embed, attrGr.Ref)
 	}
 }
-func generateFromAttributeGroup(attrGr *xsd.AttributeGroup) *Struct {
-	curType := &Struct{Name: attrGr.Name}
+func generateFromAttributeGroup(attrGr *xsd.AttributeGroup) *ComplexType {
+	curType := &ComplexType{Name: attrGr.Name}
 	types = append(types, curType)
 
 	for _, attr := range attrGr.Attribute {
@@ -115,7 +110,7 @@ func generateFromAttributeGroup(attrGr *xsd.AttributeGroup) *Struct {
 }
 
 func generateFromSimpleType(simpleType *xsd.SimpleType) {
-	curType := &Struct{Name: simpleType.Name, Type: parseStandardTypes(simpleType.Restriction.Base)}
+	curType := &ComplexType{Name: simpleType.Name, Type: parseStandardTypes(simpleType.Restriction.Base)}
 	types = append(types, curType)
 }
 

@@ -2,7 +2,7 @@ package generating
 
 import "github.com/dmitryvakulenko/gosoapgen/translator"
 
-func Types(structs []*translator.Struct) string {
+func Types(structs []*translator.ComplexType) string {
 	res := ""
 	for _, s := range structs {
 		res += "type " + s.Name + " struct {\n"

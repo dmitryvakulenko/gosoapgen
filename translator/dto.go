@@ -1,16 +1,25 @@
 package translator
 
-type Struct struct {
-	Name string
-	// признак того, что это не структура, а SimpleType
-	// идея не очень хорошая, но пока так
-	Type string
-	Embed []string
+type SchemaTypes struct {
+	cType []*ComplexType
+	sType []*ComplexType
+}
+
+type ComplexType struct {
+	Name   string
+	Type   string
+	Embed  []string
 	Fields []*Field
 }
 
-type Field struct {
+type SimpleType struct {
 	Name string
 	Type string
+}
+
+type Field struct {
+	Name    string
+	Type    string
 	XmlExpr string
+	Comment string
 }
