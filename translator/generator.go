@@ -19,15 +19,15 @@ func GenerateTypes(s []*xsd.Schema) []*Struct {
 
 func generateFromSchema(s *xsd.Schema) {
 	for _, elem := range s.Element {
-		generateFromComplexType(&elem.ComplexType, elem.Name)
+		generateFromComplexType(elem.ComplexType, elem.Name)
 	}
 
 	for _, elem := range s.ComplexType {
-		generateFromComplexType(&elem, "")
+		generateFromComplexType(elem, "")
 	}
 
 	for _, elem := range s.SimpleType {
-		generateFromSimpleType(&elem)
+		generateFromSimpleType(elem)
 	}
 }
 
@@ -36,7 +36,9 @@ func generateFromElement(element *xsd.Element) *Field {
 	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
 	field.XmlExpr = element.Name
 
-	generateFromComplexType(&element.ComplexType, field.Name)
+	if element.ComplexType != nil {
+		generateFromComplexType(element.ComplexType, field.Name)
+	}
 
 	if element.Type == "" {
 		field.Type = field.Name
@@ -56,9 +58,8 @@ func generateFromAttribute(attribute *xsd.Attribute) *Field {
 	return field
 }
 
-// Первое возвращаемое значение - текущий тип, второе - подтипы
 func generateFromComplexType(complexType *xsd.ComplexType, name string) {
-	if len(complexType.Sequence.Element) == 0 && len(complexType.Attribute) == 0 {
+	if complexType.Sequence == nil && len(complexType.Attribute) == 0 {
 		return
 	}
 
@@ -69,13 +70,15 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 		curStruct.Name = complexType.Name
 	}
 
-	for _, childElem := range complexType.Sequence.Element {
-		field := generateFromElement(&childElem)
-		curStruct.Fields = append(curStruct.Fields, field)
+	if complexType.Sequence != nil {
+		for _, childElem := range complexType.Sequence.Element {
+			field := generateFromElement(childElem)
+			curStruct.Fields = append(curStruct.Fields, field)
+		}
 	}
 
 	for _, childElem := range complexType.Attribute {
-		field := generateFromAttribute(&childElem)
+		field := generateFromAttribute(childElem)
 		curStruct.Fields = append(curStruct.Fields, field)
 	}
 }

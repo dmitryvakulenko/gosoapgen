@@ -3,7 +3,7 @@ package xsd
 import "encoding/xml"
 
 type Sequence struct {
-	Element []Element `xml:"element"`
+	Element []*Element `xml:"element"`
 }
 
 type Attribute struct {
@@ -30,15 +30,15 @@ type SimpleType struct {
 
 type ComplexType struct {
 	Name      string      `xml:"name,attr"`
-	Sequence  Sequence    `xml:"sequence"`
-	Attribute []Attribute `xml:"attribute"`
+	Sequence  *Sequence    `xml:"sequence"`
+	Attribute []*Attribute `xml:"attribute"`
 }
 
 type Schema struct {
 	XMLName         xml.Name      `xml:"schema"`
 	TargetNamespace string        `xml:"targetNamespace,attr"`
-	Element         []Element     `xml:"element"`
-	Attrs           []xml.Attr    `xml:",any,attr"`
+	Element         []*Element     `xml:"element"`
+	Attrs           []*xml.Attr    `xml:",any,attr"`
 	SimpleType      []*SimpleType  `xml:"simpleType"`
 	ComplexType     []*ComplexType `xml:"complexType"`
 	Import          []*Import      `xml:"import"`

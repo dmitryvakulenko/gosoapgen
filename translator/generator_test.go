@@ -16,7 +16,7 @@ func TestGetNoTypes(t *testing.T) {
 
 func TestGenerateSimpleTypes(t *testing.T) {
 	s := xsd.Schema{}
-	s.SimpleType = append(s.SimpleType, xsd.SimpleType{Name: "AlphaNumericString_Length1To3", Restriction: xsd.Restriction{Base: "xs:string"} })
+	s.SimpleType = append(s.SimpleType, &xsd.SimpleType{Name: "AlphaNumericString_Length1To3", Restriction: xsd.Restriction{Base: "xs:string"} })
 
 	schemas := []*xsd.Schema{&s}
 	res := GenerateTypes(schemas)
@@ -35,12 +35,14 @@ func TestGenerateSimpleTypes(t *testing.T) {
 
 func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	elem := xsd.Element{Name: "Session"}
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, xsd.Element{Name: "SessionId", Type: "xs:string"})
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, xsd.Element{Name: "SecurityToken", Type: "xs:string"})
+	elem.ComplexType = &xsd.ComplexType{}
+	elem.ComplexType.Sequence = &xsd.Sequence{}
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
 
 	s := xsd.Schema{}
-	s.Element = append(s.Element, elem)
+	s.Element = append(s.Element, &elem)
 
 	schemas := []*xsd.Schema{&s}
 	res := GenerateTypes(schemas)
@@ -69,12 +71,13 @@ func TestSimpleStructureHasSeveralFields(t *testing.T) {
 
 func TestGenerateSchemaComplexTypes(t *testing.T) {
 	elem := xsd.ComplexType{Name: "Session"}
-	elem.Sequence.Element = append(elem.Sequence.Element, xsd.Element{Name: "SessionId", Type: "xs:string"})
-	elem.Sequence.Element = append(elem.Sequence.Element, xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
-	elem.Sequence.Element = append(elem.Sequence.Element, xsd.Element{Name: "SecurityToken", Type: "xs:string"})
+	elem.Sequence = &xsd.Sequence{}
+	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
+	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
+	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
 
 	s := xsd.Schema{}
-	s.ComplexType = append(s.ComplexType, elem)
+	s.ComplexType = append(s.ComplexType, &elem)
 
 	schemas := []*xsd.Schema{&s}
 	res := GenerateTypes(schemas)
@@ -95,10 +98,11 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 
 func TestComplexTypeWithAttributes(t *testing.T) {
 	elem := xsd.Element{Name: "Session"}
-	elem.ComplexType.Attribute = append(elem.ComplexType.Attribute, xsd.Attribute{Name: "TransactionStatusCode", Type: "xs:NMTOKEN"})
+	elem.ComplexType = &xsd.ComplexType{}
+	elem.ComplexType.Attribute = append(elem.ComplexType.Attribute, &xsd.Attribute{Name: "TransactionStatusCode", Type: "xs:NMTOKEN"})
 
 	s := xsd.Schema{}
-	s.Element = append(s.Element, elem)
+	s.Element = append(s.Element, &elem)
 
 	schemas := []*xsd.Schema{&s}
 	res := GenerateTypes(schemas)
@@ -125,13 +129,17 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 func TestInnerComplexTypes(t *testing.T) {
 	innerElem := xsd.Element{}
 	innerElem.Name = "innerElement"
-	innerElem.ComplexType.Sequence.Element = append(innerElem.ComplexType.Sequence.Element, xsd.Element{Name: "innerField", Type: "xs:string"})
+	innerElem.ComplexType = &xsd.ComplexType{}
+	innerElem.ComplexType.Sequence = &xsd.Sequence{}
+	innerElem.ComplexType.Sequence.Element = append(innerElem.ComplexType.Sequence.Element, &xsd.Element{Name: "innerField", Type: "xs:string"})
 
 	elem := xsd.Element{Name: "Session"}
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, innerElem)
+	elem.ComplexType = &xsd.ComplexType{}
+	elem.ComplexType.Sequence = &xsd.Sequence{}
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &innerElem)
 
 	s := xsd.Schema{}
-	s.Element = append(s.Element, elem)
+	s.Element = append(s.Element, &elem)
 
 	schemas := []*xsd.Schema{&s}
 	res := GenerateTypes(schemas)
