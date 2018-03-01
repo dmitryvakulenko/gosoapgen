@@ -187,20 +187,32 @@ func TestAttributeGroup(t *testing.T) {
 	group.Name = "attributeGroup"
 	group.Attribute = append(group.Attribute, &xsd.Attribute{Name: "innerAttribute", Type: "xs:string"})
 
+	inGr := xsd.AttributeGroup{}
+	inGr.Ref = group.Name
+
 	elem := xsd.ComplexType{Name: "Session"}
-	elem.AttributeGroup = append(elem.AttributeGroup, &group)
+	elem.AttributeGroup = append(elem.AttributeGroup, &inGr)
 
 	s := xsd.Schema{}
 	s.ComplexType = append(s.ComplexType, &elem)
+	s.AttributeGroup = append(s.AttributeGroup, &group)
 
 	schemas := []*xsd.Schema{&s}
 	res := GenerateTypes(schemas)
 
-	if len(res) != 1 {
-		t.Fatalf("Types amount should be 1, %d instead", len(res))
+	if len(res) != 2 {
+		t.Fatalf("Types amount should be 2, %d instead", len(res))
 	}
 
-	if len(res[0].Embed) != 1 {
+	if res[0].Name != "attributeGroup" {
+		t.Fatalf("No attributeGroup type")
+	}
+
+	if len(res[1].Embed) != 1 {
 		t.Fatalf("Embed types amount should be 1")
+	}
+
+	if res[1].Embed[0] != group.Name {
+		t.Fatalf("Embed types amount should be " + group.Name)
 	}
 }

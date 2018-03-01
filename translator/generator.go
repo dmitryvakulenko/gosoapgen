@@ -22,6 +22,10 @@ func generateFromSchema(s *xsd.Schema) {
 		generateFromComplexType(elem.ComplexType, elem.Name)
 	}
 
+	for _, attrGr := range s.AttributeGroup {
+		generateFromAttributeGroup(attrGr)
+	}
+
 	for _, elem := range s.ComplexType {
 		generateFromComplexType(elem, "")
 	}
@@ -83,12 +87,23 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 	}
 
 	for _, attrGr := range complexType.AttributeGroup {
-		field := generateFromAttributeGroup(attrGr)
-		curStruct.Embed = append(curStruct.Embed, field)
+		curStruct.Embed = append(curStruct.Embed, attrGr.Ref)
 	}
 }
-func generateFromAttributeGroup(group *xsd.AttributeGroup) string {
-	return group.Ref
+func generateFromAttributeGroup(attrGr *xsd.AttributeGroup) *Struct {
+	curType := &Struct{Name: attrGr.Name}
+	types = append(types, curType)
+
+	for _, attr := range attrGr.Attribute {
+		field := generateFromAttribute(attr)
+		curType.Fields = append(curType.Fields, field)
+	}
+
+	for _, inAttrGr := range attrGr.AttributeGroup {
+		curType.Embed = append(curType.Embed, inAttrGr.Ref)
+	}
+
+	return curType
 }
 
 func generateFromSimpleType(simpleType *xsd.SimpleType) {

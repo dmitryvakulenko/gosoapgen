@@ -29,16 +29,17 @@ type SimpleType struct {
 }
 
 type ComplexType struct {
-	Name      string       `xml:"name,attr"`
-	Sequence  *Sequence    `xml:"sequence"`
-	Attribute []*Attribute `xml:"attribute"`
+	Name           string            `xml:"name,attr"`
+	Sequence       *Sequence         `xml:"sequence"`
+	Attribute      []*Attribute      `xml:"attribute"`
 	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
 }
 
 type AttributeGroup struct {
-	Name      string       `xml:"name,attr"`
-	Attribute []*Attribute `xml:"attribute"`
-	Ref       string       `xml:"ref,attr"`
+	Name           string            `xml:"name,attr"`
+	Attribute      []*Attribute      `xml:"attribute"`
+	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
+	Ref            string            `xml:"ref,attr"`
 }
 
 type Schema struct {
