@@ -1,7 +1,7 @@
 package translator
 
 import (
-	"gosoapgen/xsd"
+	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"strings"
 )
 

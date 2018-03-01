@@ -2,7 +2,7 @@ package translator
 
 import (
 	"testing"
-	"gosoapgen/xsd"
+	"github.com/dmitryvakulenko/gosoapgen/xsd"
 )
 
 func TestGetNoTypes(t *testing.T) {

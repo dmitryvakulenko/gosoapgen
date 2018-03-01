@@ -4,11 +4,11 @@ import (
 	"os"
 	"fmt"
 	"encoding/xml"
-	"gosoapgen/wsdl"
+	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"path"
-	"gosoapgen/xsd"
-	"gosoapgen/translator"
-	"gosoapgen/generating"
+	"github.com/dmitryvakulenko/gosoapgen/translator"
+	"github.com/dmitryvakulenko/gosoapgen/generating"
+	"github.com/dmitryvakulenko/gosoapgen/xsd"
 )
 
 func main() {

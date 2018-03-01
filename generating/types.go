@@ -1,6 +1,6 @@
 package generating
 
-import "gosoapgen/translator"
+import "github.com/dmitryvakulenko/gosoapgen/translator"
 
 func Types(structs []*translator.Struct) string {
 	res := ""
