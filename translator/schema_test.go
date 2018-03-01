@@ -40,42 +40,47 @@ func TestGenerateSimpleTypes(t *testing.T) {
 	}
 }
 
-//func TestSimpleStructureHasSeveralFields(t *testing.T) {
-//	elem := xsd.Element{Name: "Session"}
-//	elem.ComplexType = &xsd.ComplexType{}
-//	elem.ComplexType.Sequence = &xsd.Sequence{}
-//	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
-//	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
-//	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
-//
-//	s := xsd.Schema{}
-//	s.Element = append(s.Element, &elem)
-//
-//	schemas := []*xsd.Schema{&s}
-//	res := Parse(&s)
-//	if len(res) != 1 {
-//		t.Fatalf("Should be 1 type, %d getting", len(res))
-//	}
-//
-//	if len(res[0].Fields) != 3 {
-//		t.Fatalf("Should be 3 fields, %d getting", len(res[0].Fields))
-//	}
-//
-//	field := res[0].Fields[1]
-//	if field.Name != "SequenceNumber" {
-//		t.Errorf("Field name should be 'SequenceNumber' %s instead", field.Name)
-//	}
-//
-//	if field.Type != "string" {
-//		t.Errorf("Field type should be 'string' %s instead", field.Type)
-//	}
-//
-//	if field.XmlExpr != "sequenceNumber" {
-//		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
-//	}
-//}
-//
-//
+func TestParseElementTypes(t *testing.T) {
+	elem := xsd.Element{Name: "Session"}
+	elem.ComplexType = &xsd.ComplexType{}
+	elem.ComplexType.Sequence = &xsd.Sequence{}
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
+	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
+
+	s := xsd.Schema{}
+	s.Element = append(s.Element, &elem)
+
+	res := Parse(&s)
+
+	if len(res.sType) != 0 {
+		t.Fatalf("Schema should not contain simple types")
+	}
+
+	if len(res.cType) != 1 {
+		t.Fatalf("Should be 1 type, %d getting", len(res.sType))
+	}
+
+	cType := res.cType[0]
+	if len(cType.Fields) != 3 {
+		t.Fatalf("Should be 3 fields, %d getting", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "SequenceNumber" {
+		t.Errorf("Field name should be 'SequenceNumber' %s instead", field.Name)
+	}
+
+	if field.Type != "string" {
+		t.Errorf("Field type should be 'string' %s instead", field.Type)
+	}
+
+	if field.XmlExpr != "sequenceNumber" {
+		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
+	}
+}
+
+
 //func TestGenerateSchemaComplexTypes(t *testing.T) {
 //	elem := xsd.ComplexType{Name: "Session"}
 //	elem.Sequence = &xsd.Sequence{}

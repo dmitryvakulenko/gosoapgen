@@ -12,16 +12,16 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 	res := SchemaTypes{}
 
 	for _, elem := range s.Element {
-		generateFromComplexType(elem.ComplexType, elem.Name)
+		res.generateFromComplexType(elem.ComplexType, elem.Name)
 	}
 
-	for _, attrGr := range s.AttributeGroup {
-		generateFromAttributeGroup(attrGr)
-	}
+	//for _, attrGr := range s.AttributeGroup {
+	//	generateFromAttributeGroup(attrGr)
+	//}
 
-	for _, elem := range s.ComplexType {
-		generateFromComplexType(elem, "")
-	}
+	//for _, elem := range s.ComplexType {
+	//	res.generateFromComplexType(elem, "")
+	//}
 
 	for _, elem := range s.SimpleType {
 		res.generateFromSimpleType(elem)
@@ -30,7 +30,7 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 	return &res
 }
 
-func generateFromElement(element *xsd.Element) *Field {
+func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	if element == nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func generateFromElement(element *xsd.Element) *Field {
 	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
 	field.XmlExpr = element.Name
 
-	generateFromComplexType(element.ComplexType, field.Name)
+	t.generateFromComplexType(element.ComplexType, field.Name)
 
 	if element.Type == "" {
 		field.Type = field.Name
@@ -59,7 +59,7 @@ func generateFromAttribute(attribute *xsd.Attribute) *Field {
 	return field
 }
 
-func generateFromComplexType(complexType *xsd.ComplexType, name string) {
+func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name string) {
 	if complexType == nil {
 		return
 	}
@@ -69,7 +69,7 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 	}
 
 	var curStruct = &ComplexType{Name: name}
-	types = append(types, curStruct)
+	t.cType = append(t.cType, curStruct)
 
 	if complexType.Name != "" {
 		curStruct.Name = complexType.Name
@@ -77,7 +77,7 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 
 	if complexType.Sequence != nil {
 		for _, childElem := range complexType.Sequence.Element {
-			field := generateFromElement(childElem)
+			field := t.generateFromElement(childElem)
 			if field != nil {
 				curStruct.Fields = append(curStruct.Fields, field)
 			}
