@@ -9,7 +9,7 @@ import (
 
 func TestGetNoTypes(t *testing.T) {
 	s := loadXsd("empty.xsd")
-	res := Parse(&s)
+	res := Parse(s)
 
 	if len(res.cType) != 0 {
 		t.Errorf("Should be no types")
@@ -23,7 +23,7 @@ func TestGetNoTypes(t *testing.T) {
 func TestGenerateSimpleTypes(t *testing.T) {
 	s := loadXsd("simpleType.xsd")
 
-	res := Parse(&s)
+	res := Parse(s)
 	if len(res.cType) != 0 {
 		t.Fatalf("Complex types should be empty")
 	}
@@ -44,7 +44,7 @@ func TestGenerateSimpleTypes(t *testing.T) {
 
 func TestParseElementTypes(t *testing.T) {
 	s := loadXsd("element.xsd")
-	res := Parse(&s)
+	res := Parse(s)
 
 	if len(res.sType) != 0 {
 		t.Fatalf("Schema should not contain simple types")
@@ -85,7 +85,8 @@ func TestParseElementTypes(t *testing.T) {
 
 func TestGenerateSchemaComplexTypes(t *testing.T) {
 	s := loadXsd("complexType.xsd")
-	res := Parse(&s)
+	res := Parse(s)
+
 	if len(res.sType) != 0 {
 		t.Fatalf("Schema should not contain simple types")
 	}
@@ -105,36 +106,29 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 }
 
 
-//func TestComplexTypeWithAttributes(t *testing.T) {
-//	elem := xsd.Element{Name: "Session"}
-//	elem.ComplexType = &xsd.ComplexType{}
-//	elem.ComplexType.Attribute = append(elem.ComplexType.Attribute, &xsd.Attribute{Name: "TransactionStatusCode", Type: "xs:NMTOKEN"})
-//
-//	s := xsd.Schema{}
-//	s.Element = append(s.Element, &elem)
-//
-//	schemas := []*xsd.Schema{&s}
-//	res := Parse(&s)
-//
-//	if len(res[0].Fields) != 1 {
-//		t.Fatalf("Should be 1 fields, %d getting", len(res[0].Fields))
-//	}
-//
-//	field := res[0].Fields[0]
-//	if field.Name != "TransactionStatusCode" {
-//		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
-//	}
-//
-//	if field.Type != "NMTOKEN" {
-//		t.Errorf("Field type should be 'NMTOKEN' %s instead", field.Type)
-//	}
-//
-//	if field.XmlExpr != "TransactionStatusCode,attr" {
-//		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
-//	}
-//}
-//
-//
+func TestComplexTypeWithAttributes(t *testing.T) {
+	s := loadXsd("attribute.xsd")
+	res := Parse(s)
+
+	if len(res.cType[0].Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(res.cType[0].Fields))
+	}
+
+	field := res.cType[0].Fields[0]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if field.Type != "NMTOKEN" {
+		t.Errorf("Field type should be 'NMTOKEN' %s instead", field.Type)
+	}
+
+	if field.XmlExpr != "TransactionStatusCode,attr" {
+		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
+	}
+}
+
+
 //func TestInnerComplexTypes(t *testing.T) {
 //	innerElem := xsd.Element{}
 //	innerElem.Name = "innerElement"
@@ -226,7 +220,7 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 //	}
 //}
 
-func loadXsd(name string) xsd.Schema {
+func loadXsd(name string) *xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)
 	defer reader.Close()
 
@@ -240,5 +234,5 @@ func loadXsd(name string) xsd.Schema {
 		panic(err)
 	}
 
-	return s
+	return &s
 }
