@@ -9,7 +9,7 @@ var types []*ComplexType
 
 
 func Parse(s *xsd.Schema) *SchemaTypes {
-	types := SchemaTypes{}
+	res := SchemaTypes{}
 
 	for _, elem := range s.Element {
 		generateFromComplexType(elem.ComplexType, elem.Name)
@@ -24,10 +24,10 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 	}
 
 	for _, elem := range s.SimpleType {
-		generateFromSimpleType(elem)
+		res.generateFromSimpleType(elem)
 	}
 
-	return &types
+	return &res
 }
 
 func generateFromElement(element *xsd.Element) *Field {
@@ -109,9 +109,9 @@ func generateFromAttributeGroup(attrGr *xsd.AttributeGroup) *ComplexType {
 	return curType
 }
 
-func generateFromSimpleType(simpleType *xsd.SimpleType) {
+func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
 	curType := &ComplexType{Name: simpleType.Name, Type: parseStandardTypes(simpleType.Restriction.Base)}
-	types = append(types, curType)
+	t.sType = append(t.sType, curType)
 }
 
 func parseStandardTypes(xmlType string) string {

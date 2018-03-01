@@ -1,8 +1,9 @@
 package translator
 
 type SchemaTypes struct {
-	cType []*ComplexType
-	sType []*ComplexType
+	include []string
+	cType   []*ComplexType
+	sType   []*ComplexType
 }
 
 type ComplexType struct {
