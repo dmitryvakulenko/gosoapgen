@@ -81,33 +81,36 @@ func TestParseElementTypes(t *testing.T) {
 }
 
 
-//func TestGenerateSchemaComplexTypes(t *testing.T) {
-//	elem := xsd.ComplexType{Name: "Session"}
-//	elem.Sequence = &xsd.Sequence{}
-//	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
-//	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
-//	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
-//
-//	s := xsd.Schema{}
-//	s.ComplexType = append(s.ComplexType, &elem)
-//
-//	schemas := []*xsd.Schema{&s}
-//	res := Parse(&s)
-//	if len(res) != 1 {
-//		t.Fatalf("Should be 2 type, %d getting", len(res))
-//	}
-//
-//	if res[0].Name != "Session" {
-//		t.Fatalf("Type name should be 'Session', '%s' getting", res[0].Name)
-//	}
-//
-//	if len(res[0].Fields) != 3 {
-//		t.Fatalf("Type should has 3 fields, %d getting", len(res[0].Fields))
-//	}
-//
-//}
-//
-//
+func TestGenerateSchemaComplexTypes(t *testing.T) {
+	elem := xsd.ComplexType{Name: "Session"}
+	elem.Sequence = &xsd.Sequence{}
+	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
+	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
+	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
+
+	s := xsd.Schema{}
+	s.ComplexType = append(s.ComplexType, &elem)
+
+	res := Parse(&s)
+	if len(res.sType) != 0 {
+		t.Fatalf("Schema should not contain simple types")
+	}
+
+	if len(res.cType) != 1 {
+		t.Fatalf("Should be 1 complex type, %d getting", len(res.cType))
+	}
+
+	if res.cType[0].Name != "Session" {
+		t.Fatalf("Type name should be 'Session', '%s' getting", res.cType[0].Name)
+	}
+
+	if len(res.cType[0].Fields) != 3 {
+		t.Fatalf("Type should has 3 fields, %d getting", len(res.cType[0].Fields))
+	}
+
+}
+
+
 //func TestComplexTypeWithAttributes(t *testing.T) {
 //	elem := xsd.Element{Name: "Session"}
 //	elem.ComplexType = &xsd.ComplexType{}

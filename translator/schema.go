@@ -19,9 +19,9 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 	//	generateFromAttributeGroup(attrGr)
 	//}
 
-	//for _, elem := range s.ComplexType {
-	//	res.generateFromComplexType(elem, "")
-	//}
+	for _, elem := range s.ComplexType {
+		res.generateFromComplexType(elem, "")
+	}
 
 	for _, elem := range s.SimpleType {
 		res.generateFromSimpleType(elem)
