@@ -33,7 +33,7 @@ func main() {
 	xmlFile.Close()
 
 	basePath := path.Dir(wsdlName)
-	schemas := []*xsd.Schema{}
+	var schemas []*xsd.Schema
 	for _, attr := range def.Types {
 		s := xsd.ParseSchema(basePath + "/" + attr.SchemaLocation)
 		schemas = append(schemas, s...)

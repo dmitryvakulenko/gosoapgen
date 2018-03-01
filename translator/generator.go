@@ -36,13 +36,15 @@ func generateFromSchema(s *xsd.Schema) {
 }
 
 func generateFromElement(element *xsd.Element) *Field {
+	if element == nil {
+		return nil
+	}
+
 	field := &Field{}
 	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
 	field.XmlExpr = element.Name
 
-	if element.ComplexType != nil {
-		generateFromComplexType(element.ComplexType, field.Name)
-	}
+	generateFromComplexType(element.ComplexType, field.Name)
 
 	if element.Type == "" {
 		field.Type = field.Name
@@ -63,6 +65,10 @@ func generateFromAttribute(attribute *xsd.Attribute) *Field {
 }
 
 func generateFromComplexType(complexType *xsd.ComplexType, name string) {
+	if complexType == nil {
+		return
+	}
+
 	if complexType.Sequence == nil && len(complexType.Attribute) == 0 && len(complexType.AttributeGroup) == 0 {
 		return
 	}
@@ -77,7 +83,9 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 	if complexType.Sequence != nil {
 		for _, childElem := range complexType.Sequence.Element {
 			field := generateFromElement(childElem)
-			curStruct.Fields = append(curStruct.Fields, field)
+			if field != nil {
+				curStruct.Fields = append(curStruct.Fields, field)
+			}
 		}
 	}
 
