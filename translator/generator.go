@@ -7,11 +7,11 @@ import (
 
 var types []*Struct
 
-func GenerateTypes(s []xsd.Schema) []*Struct {
+func GenerateTypes(s []*xsd.Schema) []*Struct {
 	types = []*Struct{}
 
 	for _, v := range s {
-		generateFromSchema(&v)
+		generateFromSchema(v)
 	}
 
 	return types

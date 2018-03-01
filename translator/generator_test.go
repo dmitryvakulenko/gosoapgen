@@ -6,7 +6,8 @@ import (
 )
 
 func TestGetNoTypes(t *testing.T) {
-	res := GenerateTypes([]xsd.Schema{{}})
+	schemas := []*xsd.Schema{{}}
+	res := GenerateTypes(schemas)
 
 	if len(res) != 0 {
 		t.Errorf("Should be no types")
@@ -17,7 +18,8 @@ func TestGenerateSimpleTypes(t *testing.T) {
 	s := xsd.Schema{}
 	s.SimpleType = append(s.SimpleType, xsd.SimpleType{Name: "AlphaNumericString_Length1To3", Restriction: xsd.Restriction{Base: "xs:string"} })
 
-	res := GenerateTypes([]xsd.Schema{s})
+	schemas := []*xsd.Schema{&s}
+	res := GenerateTypes(schemas)
 	if len(res) != 1 {
 		t.Fatalf("Should be 1 type, %d getting", len(res))
 	}
@@ -40,7 +42,8 @@ func TestSimpleStructureHasSeveralFields(t *testing.T) {
 	s := xsd.Schema{}
 	s.Element = append(s.Element, elem)
 
-	res := GenerateTypes([]xsd.Schema{s})
+	schemas := []*xsd.Schema{&s}
+	res := GenerateTypes(schemas)
 	if len(res) != 1 {
 		t.Fatalf("Should be 1 type, %d getting", len(res))
 	}
@@ -73,8 +76,8 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 	s := xsd.Schema{}
 	s.ComplexType = append(s.ComplexType, elem)
 
-
-	res := GenerateTypes([]xsd.Schema{s})
+	schemas := []*xsd.Schema{&s}
+	res := GenerateTypes(schemas)
 	if len(res) != 1 {
 		t.Fatalf("Should be 2 type, %d getting", len(res))
 	}
@@ -97,7 +100,8 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	s := xsd.Schema{}
 	s.Element = append(s.Element, elem)
 
-	res := GenerateTypes([]xsd.Schema{s})
+	schemas := []*xsd.Schema{&s}
+	res := GenerateTypes(schemas)
 
 	if len(res[0].Fields) != 1 {
 		t.Fatalf("Should be 1 fields, %d getting", len(res[0].Fields))
@@ -129,7 +133,8 @@ func TestInnerComplexTypes(t *testing.T) {
 	s := xsd.Schema{}
 	s.Element = append(s.Element, elem)
 
-	res := GenerateTypes([]xsd.Schema{s})
+	schemas := []*xsd.Schema{&s}
+	res := GenerateTypes(schemas)
 
 	if len(res) != 2 {
 		t.Fatalf("Types amount should be 2, %d instead", len(res))
