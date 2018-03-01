@@ -3,10 +3,12 @@ package translator
 import (
 	"testing"
 	"github.com/dmitryvakulenko/gosoapgen/xsd"
+	"os"
+	"encoding/xml"
 )
 
 func TestGetNoTypes(t *testing.T) {
-	s := xsd.Schema{}
+	s := loadXsd("empty.xsd")
 	res := Parse(&s)
 
 	if len(res.cType) != 0 {
@@ -19,8 +21,7 @@ func TestGetNoTypes(t *testing.T) {
 }
 
 func TestGenerateSimpleTypes(t *testing.T) {
-	s := xsd.Schema{}
-	s.SimpleType = append(s.SimpleType, &xsd.SimpleType{Name: "AlphaNumericString_Length1To3", Restriction: xsd.Restriction{Base: "xs:string"} })
+	s := loadXsd("simpleType.xsd")
 
 	res := Parse(&s)
 	if len(res.cType) != 0 {
@@ -31,8 +32,9 @@ func TestGenerateSimpleTypes(t *testing.T) {
 		t.Fatalf("Schema should has one simple type")
 	}
 
-	if res.sType[0].Name != "AlphaNumericString_Length1To3" {
-		t.Errorf("Type name should be 'AlphaNumericString_Length1To3', %s getting", res.sType[0].Name)
+	typeName := "AlphaString_Length1To2"
+	if res.sType[0].Name != typeName {
+		t.Errorf("Type name should be %q, %q getting", typeName, res.sType[0].Name)
 	}
 
 	if res.sType[0].Type != "string" {
@@ -41,16 +43,7 @@ func TestGenerateSimpleTypes(t *testing.T) {
 }
 
 func TestParseElementTypes(t *testing.T) {
-	elem := xsd.Element{Name: "Session"}
-	elem.ComplexType = &xsd.ComplexType{}
-	elem.ComplexType.Sequence = &xsd.Sequence{}
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
-	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
-
-	s := xsd.Schema{}
-	s.Element = append(s.Element, &elem)
-
+	s := loadXsd("element.xsd")
 	res := Parse(&s)
 
 	if len(res.sType) != 0 {
@@ -62,13 +55,13 @@ func TestParseElementTypes(t *testing.T) {
 	}
 
 	cType := res.cType[0]
-	if len(cType.Fields) != 3 {
-		t.Fatalf("Should be 3 fields, %d getting", len(cType.Fields))
+	if len(cType.Fields) != 4 {
+		t.Fatalf("Should be 4 fields, %d getting", len(cType.Fields))
 	}
 
 	field := cType.Fields[1]
 	if field.Name != "SequenceNumber" {
-		t.Errorf("Field name should be 'SequenceNumber' %s instead", field.Name)
+		t.Errorf("Field name should be 'SequenceNumber', %q instead", field.Name)
 	}
 
 	if field.Type != "string" {
@@ -76,21 +69,22 @@ func TestParseElementTypes(t *testing.T) {
 	}
 
 	if field.XmlExpr != "sequenceNumber" {
-		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
+		t.Errorf("Field xml expression should be 'sequenceNumber', %q instead", field.XmlExpr)
+	}
+
+	field = cType.Fields[3]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if field.XmlExpr != "TransactionStatusCode,attr" {
+		t.Errorf("Field xml expr should be 'TransactionStatusCode,attr' %s instead", field.XmlExpr)
 	}
 }
 
 
 func TestGenerateSchemaComplexTypes(t *testing.T) {
-	elem := xsd.ComplexType{Name: "Session"}
-	elem.Sequence = &xsd.Sequence{}
-	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SessionId", Type: "xs:string"})
-	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "sequenceNumber", Type: "xs:string"})
-	elem.Sequence.Element = append(elem.Sequence.Element, &xsd.Element{Name: "SecurityToken", Type: "xs:string"})
-
-	s := xsd.Schema{}
-	s.ComplexType = append(s.ComplexType, &elem)
-
+	s := loadXsd("complexType.xsd")
 	res := Parse(&s)
 	if len(res.sType) != 0 {
 		t.Fatalf("Schema should not contain simple types")
@@ -100,12 +94,12 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 		t.Fatalf("Should be 1 complex type, %d getting", len(res.cType))
 	}
 
-	if res.cType[0].Name != "Session" {
+	if res.cType[0].Name != "AMA_SecurityHostedUser" {
 		t.Fatalf("Type name should be 'Session', '%s' getting", res.cType[0].Name)
 	}
 
-	if len(res.cType[0].Fields) != 3 {
-		t.Fatalf("Type should has 3 fields, %d getting", len(res.cType[0].Fields))
+	if len(res.cType[0].Fields) != 4 {
+		t.Fatalf("Type should has 4 fields, %d getting", len(res.cType[0].Fields))
 	}
 
 }
@@ -231,3 +225,20 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 //		t.Fatalf("Embed types amount should be " + group.Name)
 //	}
 //}
+
+func loadXsd(name string) xsd.Schema {
+	reader, err := os.Open("./translator/schema_test/" + name)
+	defer reader.Close()
+
+	if err != nil {
+		panic(err)
+	}
+
+	s := xsd.Schema{};
+	err = xml.NewDecoder(reader).Decode(&s)
+	if err != nil {
+		panic(err)
+	}
+
+	return s
+}
