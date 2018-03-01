@@ -129,62 +129,50 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 }
 
 
-//func TestInnerComplexTypes(t *testing.T) {
-//	innerElem := xsd.Element{}
-//	innerElem.Name = "innerElement"
-//	innerElem.ComplexType = &xsd.ComplexType{}
-//	innerElem.ComplexType.Sequence = &xsd.Sequence{}
-//	innerElem.ComplexType.Sequence.Element = append(innerElem.ComplexType.Sequence.Element, &xsd.Element{Name: "innerField", Type: "xs:string"})
-//
-//	elem := xsd.Element{Name: "Session"}
-//	elem.ComplexType = &xsd.ComplexType{}
-//	elem.ComplexType.Sequence = &xsd.Sequence{}
-//	elem.ComplexType.Sequence.Element = append(elem.ComplexType.Sequence.Element, &innerElem)
-//
-//	s := xsd.Schema{}
-//	s.Element = append(s.Element, &elem)
-//
-//	schemas := []*xsd.Schema{&s}
-//	res := Parse(&s)
-//
-//	if len(res) != 2 {
-//		t.Fatalf("Types amount should be 2, %d instead", len(res))
-//	}
-//
-//	if len(res[0].Fields) != 1 {
-//		t.Fatalf("Should be 1 fields, %d getting", len(res[0].Fields))
-//	}
-//
-//	field := res[0].Fields[0]
-//	if field.Name != "InnerElement" {
-//		t.Errorf("Field name should be 'InnerElement' %s instead", field.Name)
-//	}
-//
-//	if field.Type != "InnerElement" {
-//		t.Errorf("Field type should be 'InnerElement' %s instead", field.Type)
-//	}
-//
-//	if field.XmlExpr != "innerElement" {
-//		t.Errorf("Field xml name should be 'innerElement' %s instead", field.XmlExpr)
-//	}
-//
-//	if res[1].Name != "InnerElement" {
-//		t.Errorf("Second type name shoud be 'InnerElement' %s instead", res[1].Name)
-//	}
-//
-//	if len(res[1].Fields) != 1 {
-//		t.Fatalf("Second type fields amount should be 2, got %d instead", len(res[1].Fields))
-//	}
-//
-//	if res[1].Fields[0].Name != "InnerField" {
-//		t.Errorf("Second type name shoud be 'InnerField' %s instead", res[1].Fields[0].Name)
-//	}
-//
-//	if res[1].Fields[0].XmlExpr != "innerField" {
-//		t.Errorf("Second type name shoud be 'innerField' %s instead", res[1].Fields[0].XmlExpr)
-//	}
-//}
-//
+func TestInnerComplexTypes(t *testing.T) {
+	s := loadXsd("innerComplexType.xsd")
+	res := Parse(s)
+
+	if len(res.cType) != 2 {
+		t.Fatalf("Types amount should be 2, %d instead", len(res.cType))
+	}
+
+	if len(res.cType[0].Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(res.cType[0].Fields))
+	}
+
+	field := res.cType[0].Fields[0]
+	if field.Name != "TravellerInfo" {
+		t.Errorf("Field name should be 'TravellerInfo', %q instead", field.Name)
+	}
+
+	if field.Type != "TravellerInfo" {
+		t.Errorf("Field type should be 'TravellerInfo', %q instead", field.Type)
+	}
+
+	if field.XmlExpr != "travellerInfo" {
+		t.Errorf("Field xml name should be 'travellerInfo' %s instead", field.XmlExpr)
+	}
+
+	if res.cType[1].Name != "TravellerInfo" {
+		t.Errorf("Second type name shoud be 'TravellerInfo' %s instead", res.cType[1].Name)
+	}
+
+
+	if len(res.cType[1].Fields) != 1 {
+		t.Fatalf("Second type fields amount should be 1, got %d instead", len(res.cType[1].Fields))
+	}
+
+	if res.cType[1].Fields[0].Name != "ElementManagementPassenger" {
+		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", res.cType[1].Fields[0].Name)
+	}
+
+	if res.cType[1].Fields[0].XmlExpr != "elementManagementPassenger" {
+		t.Errorf("Second type name shoud be 'elementManagementPassenger', %q instead", res.cType[1].Fields[0].XmlExpr)
+	}
+}
+
+
 //func TestAttributeGroup(t *testing.T) {
 //	group := xsd.AttributeGroup{}
 //	group.Name = "attributeGroup"
@@ -228,7 +216,7 @@ func loadXsd(name string) *xsd.Schema {
 		panic(err)
 	}
 
-	s := xsd.Schema{};
+	s := xsd.Schema{}
 	err = xml.NewDecoder(reader).Decode(&s)
 	if err != nil {
 		panic(err)
