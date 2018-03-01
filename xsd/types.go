@@ -12,9 +12,9 @@ type Attribute struct {
 }
 
 type Element struct {
-	Name        string       `xml:"name,attr"`
-	Type        string       `xml:"type,attr"`
-	Ref         string       `xml:"ref,attr"`
+	Name        string        `xml:"name,attr"`
+	Type        string        `xml:"type,attr"`
+	Ref         string        `xml:"ref,attr"`
 	SimpleType  []*SimpleType `xml:"simpleType"`
 	ComplexType *ComplexType  `xml:"complexType"`
 }
@@ -29,20 +29,28 @@ type SimpleType struct {
 }
 
 type ComplexType struct {
-	Name      string      `xml:"name,attr"`
+	Name      string       `xml:"name,attr"`
 	Sequence  *Sequence    `xml:"sequence"`
 	Attribute []*Attribute `xml:"attribute"`
+	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
+}
+
+type AttributeGroup struct {
+	Name      string       `xml:"name,attr"`
+	Attribute []*Attribute `xml:"attribute"`
+	Ref       string       `xml:"ref,attr"`
 }
 
 type Schema struct {
-	XMLName         xml.Name      `xml:"schema"`
-	TargetNamespace string        `xml:"targetNamespace,attr"`
-	Element         []*Element     `xml:"element"`
-	Attrs           []*xml.Attr    `xml:",any,attr"`
-	SimpleType      []*SimpleType  `xml:"simpleType"`
-	ComplexType     []*ComplexType `xml:"complexType"`
-	Import          []*Import      `xml:"import"`
-	Include         []*Import      `xml:"include"`
+	XMLName         xml.Name          `xml:"schema"`
+	TargetNamespace string            `xml:"targetNamespace,attr"`
+	Element         []*Element        `xml:"element"`
+	Attrs           []*xml.Attr       `xml:",any,attr"`
+	SimpleType      []*SimpleType     `xml:"simpleType"`
+	ComplexType     []*ComplexType    `xml:"complexType"`
+	Import          []*Import         `xml:"import"`
+	Include         []*Import         `xml:"include"`
+	AttributeGroup  []*AttributeGroup `xml:"attributeGroup"`
 }
 
 type Import struct {

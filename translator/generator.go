@@ -59,7 +59,7 @@ func generateFromAttribute(attribute *xsd.Attribute) *Field {
 }
 
 func generateFromComplexType(complexType *xsd.ComplexType, name string) {
-	if complexType.Sequence == nil && len(complexType.Attribute) == 0 {
+	if complexType.Sequence == nil && len(complexType.Attribute) == 0 && len(complexType.AttributeGroup) == 0 {
 		return
 	}
 
@@ -81,6 +81,14 @@ func generateFromComplexType(complexType *xsd.ComplexType, name string) {
 		field := generateFromAttribute(childElem)
 		curStruct.Fields = append(curStruct.Fields, field)
 	}
+
+	for _, attrGr := range complexType.AttributeGroup {
+		field := generateFromAttributeGroup(attrGr)
+		curStruct.Embed = append(curStruct.Embed, field)
+	}
+}
+func generateFromAttributeGroup(group *xsd.AttributeGroup) string {
+	return group.Ref
 }
 
 func generateFromSimpleType(simpleType *xsd.SimpleType) {

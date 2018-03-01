@@ -181,3 +181,26 @@ func TestInnerComplexTypes(t *testing.T) {
 		t.Errorf("Second type name shoud be 'innerField' %s instead", res[1].Fields[0].XmlExpr)
 	}
 }
+
+func TestAttributeGroup(t *testing.T) {
+	group := xsd.AttributeGroup{}
+	group.Name = "attributeGroup"
+	group.Attribute = append(group.Attribute, &xsd.Attribute{Name: "innerAttribute", Type: "xs:string"})
+
+	elem := xsd.ComplexType{Name: "Session"}
+	elem.AttributeGroup = append(elem.AttributeGroup, &group)
+
+	s := xsd.Schema{}
+	s.ComplexType = append(s.ComplexType, &elem)
+
+	schemas := []*xsd.Schema{&s}
+	res := GenerateTypes(schemas)
+
+	if len(res) != 1 {
+		t.Fatalf("Types amount should be 1, %d instead", len(res))
+	}
+
+	if len(res[0].Embed) != 1 {
+		t.Fatalf("Embed types amount should be 1")
+	}
+}
