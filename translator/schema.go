@@ -5,19 +5,19 @@ import (
 	"strings"
 )
 
-var types []*ComplexType
-
+var attrGroups map[string]*attributeGroup
 
 func Parse(s *xsd.Schema) *SchemaTypes {
+	attrGroups = make(map[string]*attributeGroup)
+	for _, attrGr := range s.AttributeGroup {
+		parseAttributeGroup(attrGr)
+	}
+
 	res := SchemaTypes{}
 
 	for _, elem := range s.Element {
 		res.generateFromComplexType(elem.ComplexType, elem.Name)
 	}
-
-	//for _, attrGr := range s.AttributeGroup {
-	//	generateFromAttributeGroup(attrGr)
-	//}
 
 	for _, elem := range s.ComplexType {
 		res.generateFromComplexType(elem, "")
@@ -89,24 +89,22 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 		curStruct.Fields = append(curStruct.Fields, field)
 	}
 
-	for _, attrGr := range complexType.AttributeGroup {
-		curStruct.Embed = append(curStruct.Embed, attrGr.Ref)
+	for _, gr := range complexType.AttributeGroup {
+		group := attrGroups[gr.Ref]
+		curStruct.Fields = append(curStruct.Fields, group.Fields...)
 	}
 }
-func generateFromAttributeGroup(attrGr *xsd.AttributeGroup) *ComplexType {
-	curType := &ComplexType{Name: attrGr.Name}
-	types = append(types, curType)
+
+
+func parseAttributeGroup(attrGr *xsd.AttributeGroup) {
+	curType := &attributeGroup{}
 
 	for _, attr := range attrGr.Attribute {
 		field := generateFromAttribute(attr)
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	for _, inAttrGr := range attrGr.AttributeGroup {
-		curType.Embed = append(curType.Embed, inAttrGr.Ref)
-	}
-
-	return curType
+	attrGroups[attrGr.Name] = curType
 }
 
 func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {

@@ -9,7 +9,6 @@ type SchemaTypes struct {
 type ComplexType struct {
 	Name   string
 	Type   string
-	Embed  []string
 	Fields []*Field
 }
 
@@ -23,4 +22,8 @@ type Field struct {
 	Type    string
 	XmlExpr string
 	Comment string
+}
+
+type attributeGroup struct {
+	Fields []*Field
 }

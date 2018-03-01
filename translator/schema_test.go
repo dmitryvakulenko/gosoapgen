@@ -173,40 +173,31 @@ func TestInnerComplexTypes(t *testing.T) {
 }
 
 
-//func TestAttributeGroup(t *testing.T) {
-//	group := xsd.AttributeGroup{}
-//	group.Name = "attributeGroup"
-//	group.Attribute = append(group.Attribute, &xsd.Attribute{Name: "innerAttribute", Type: "xs:string"})
-//
-//	inGr := xsd.AttributeGroup{}
-//	inGr.Ref = group.Name
-//
-//	elem := xsd.ComplexType{Name: "Session"}
-//	elem.AttributeGroup = append(elem.AttributeGroup, &inGr)
-//
-//	s := xsd.Schema{}
-//	s.ComplexType = append(s.ComplexType, &elem)
-//	s.AttributeGroup = append(s.AttributeGroup, &group)
-//
-//	schemas := []*xsd.Schema{&s}
-//	res := Parse(&s)
-//
-//	if len(res) != 2 {
-//		t.Fatalf("Types amount should be 2, %d instead", len(res))
-//	}
-//
-//	if res[0].Name != "attributeGroup" {
-//		t.Fatalf("No attributeGroup type")
-//	}
-//
-//	if len(res[1].Embed) != 1 {
-//		t.Fatalf("Embed types amount should be 1")
-//	}
-//
-//	if res[1].Embed[0] != group.Name {
-//		t.Fatalf("Embed types amount should be " + group.Name)
-//	}
-//}
+func TestAttributeGroup(t *testing.T) {
+	s := loadXsd("attributeGroup.xsd")
+	res := Parse(s)
+
+	if len(res.cType) != 1 {
+		t.Fatalf("Types amount should be 1, %d instead", len(res.cType))
+	}
+
+	if res.cType[0].Name != "CodeType" {
+		t.Fatalf("Type name should be CodeType, %q instead", res.cType[0].Name)
+	}
+
+	if len(res.cType[0].Fields) != 5 {
+		t.Fatalf("Embed types amount should be 5, %d instead", len(res.cType[0].Fields))
+	}
+
+	field := res.cType[0].Fields[1]
+	if field.Name != "Owner" {
+		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
+	}
+
+	if field.XmlExpr != "Owner,attr" {
+		t.Fatalf("Field xml expression should be 'Owner,attr', %q instead", field.XmlExpr)
+	}
+}
 
 func loadXsd(name string) *xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)
