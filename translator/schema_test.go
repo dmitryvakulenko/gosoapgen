@@ -199,6 +199,12 @@ func TestAttributeGroup(t *testing.T) {
 	}
 }
 
+
+func TestSimpleContent(t *testing.T) {
+
+}
+
+
 func loadXsd(name string) *xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)
 	defer reader.Close()

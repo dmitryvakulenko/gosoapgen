@@ -33,6 +33,8 @@ type ComplexType struct {
 	Sequence       *Sequence         `xml:"sequence"`
 	Attribute      []*Attribute      `xml:"attribute"`
 	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
+	SimpleContent  *Content          `xml:"simpleContent"`
+	ComplexContent *Content   `xml:"complexContent"`
 }
 
 type AttributeGroup struct {
@@ -57,4 +59,9 @@ type Schema struct {
 type Import struct {
 	Namespace      string `xml:"namespace,attr"`
 	SchemaLocation string `xml:"schemaLocation,attr"`
+}
+
+type Content struct {
+	RestrictionType string `xml:"restriction>base,attr"`
+	ExtensionType   string `xml:"extension>base,attr"`
 }
