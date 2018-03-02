@@ -3,9 +3,9 @@ package translator
 import "testing"
 
 func TestGetTypeFromEmptyCollection(t *testing.T) {
-	collector := new(xsdTypes)
+	collector := makeTypesCollection()
 
-	curType, ok := collector.findType("aa", "bbbb")
+	curType, ok := collector.find("aa", "bbbb")
 	if ok {
 		t.Errorf("Should be error")
 	}

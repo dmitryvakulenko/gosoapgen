@@ -7,11 +7,11 @@ type xsdTypes struct {
 	typesList namespacedTypes
 }
 
-func makeTypesCollection() xsdTypes {
-	return xsdTypes{}
+func makeTypesCollection() *xsdTypes {
+	return &xsdTypes{}
 }
 
-func (t *xsdTypes) findType(namespace, typeName string) (*interface{}, bool) {
+func (t *xsdTypes) find(namespace, typeName string) (*interface{}, bool) {
 	var ns *typesCollection
 	var ok bool
 	var curType *interface{}
