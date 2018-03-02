@@ -14,3 +14,21 @@ func TestGetTypeFromEmptyCollection(t *testing.T) {
 		t.Errorf("Type should be nil")
 	}
 }
+
+func TestStoringType(t *testing.T) {
+	collector := makeTypesCollection()
+
+	ns := "namespace"
+	typeName := "ComplexType"
+	addedType := &ComplexType{}
+	collector.put(ns, typeName, addedType)
+	res, ok := collector.find(ns, typeName)
+	if !ok {
+		t.Errorf("Type should exists!")
+	}
+
+	resType, ok := res.(*ComplexType)
+	if resType != addedType {
+		t.Errorf("Types addresses are not equal %p != %p", resType, addedType)
+	}
+}
