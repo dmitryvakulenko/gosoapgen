@@ -14,6 +14,7 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 	}
 
 	res := SchemaTypes{}
+	res.targetNamespace = s.TargetNamespace
 
 	for _, elem := range s.Element {
 		res.generateFromComplexType(elem.ComplexType, elem.Name)
@@ -38,6 +39,7 @@ func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	field := &Field{}
 	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
 	field.XmlExpr = element.Name
+	field.Namespace = t.targetNamespace
 
 	t.generateFromComplexType(element.ComplexType, field.Name)
 
@@ -95,7 +97,6 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 }
 
-
 func parseAttributeGroup(attrGr *xsd.AttributeGroup) {
 	curType := &attributeGroup{}
 
@@ -108,7 +109,10 @@ func parseAttributeGroup(attrGr *xsd.AttributeGroup) {
 }
 
 func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
-	curType := &ComplexType{Name: simpleType.Name, Type: parseStandardTypes(simpleType.Restriction.Base)}
+	curType := &SimpleType{
+		Name: simpleType.Name,
+		Type: parseStandardTypes(simpleType.Restriction.Base),
+		Namespace: t.targetNamespace}
 	t.sType = append(t.sType, curType)
 }
 

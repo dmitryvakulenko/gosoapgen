@@ -1,9 +1,10 @@
 package translator
 
 type SchemaTypes struct {
-	include []string
-	cType   []*ComplexType
-	sType   []*ComplexType
+	include         []string
+	targetNamespace string
+	cType           []*ComplexType
+	sType           []*SimpleType
 }
 
 type ComplexType struct {
@@ -13,15 +14,17 @@ type ComplexType struct {
 }
 
 type SimpleType struct {
-	Name string
-	Type string
+	Name      string
+	Type      string
+	Namespace string
 }
 
 type Field struct {
-	Name    string
-	Type    string
-	XmlExpr string
-	Comment string
+	Name      string
+	Type      string
+	XmlExpr   string
+	Comment   string
+	Namespace string
 }
 
 type attributeGroup struct {

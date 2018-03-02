@@ -40,7 +40,13 @@ func TestGenerateSimpleTypes(t *testing.T) {
 	if res.sType[0].Type != "string" {
 		t.Errorf("Type should be 'string', %s getting", res.sType[0].Type)
 	}
+
+	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
+	if res.sType[0].Namespace != ns {
+		t.Errorf("Type should be %q, %q getting", ns, res.sType[0].Namespace)
+	}
 }
+
 
 func TestParseElementTypes(t *testing.T) {
 	s := loadXsd("element.xsd")
@@ -70,6 +76,11 @@ func TestParseElementTypes(t *testing.T) {
 
 	if field.XmlExpr != "sequenceNumber" {
 		t.Errorf("Field xml expression should be 'sequenceNumber', %q instead", field.XmlExpr)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Session_v3"
+	if field.Namespace != ns {
+		t.Errorf("Type should be %q, %q getting", ns, res.sType[0].Namespace)
 	}
 
 	field = cType.Fields[3]

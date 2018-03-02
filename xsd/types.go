@@ -19,10 +19,6 @@ type Element struct {
 	ComplexType *ComplexType  `xml:"complexType"`
 }
 
-type Restriction struct {
-	Base string `xml:"base,attr"`
-}
-
 type SimpleType struct {
 	Name        string      `xml:"name,attr"`
 	Restriction Restriction `xml:"restriction"`
@@ -34,7 +30,7 @@ type ComplexType struct {
 	Attribute      []*Attribute      `xml:"attribute"`
 	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
 	SimpleContent  *Content          `xml:"simpleContent"`
-	ComplexContent *Content   `xml:"complexContent"`
+	ComplexContent *Content          `xml:"complexContent"`
 }
 
 type AttributeGroup struct {
@@ -62,6 +58,14 @@ type Import struct {
 }
 
 type Content struct {
-	RestrictionType string `xml:"restriction>base,attr"`
-	ExtensionType   string `xml:"extension>base,attr"`
+	Restriction Restriction `xml:"restriction"`
+	Extension   Extension   `xml:"extension"`
+}
+
+type Restriction struct {
+	Base string `xml:"base,attr"`
+}
+
+type Extension struct {
+	Base string `xml:"base,attr"`
 }
