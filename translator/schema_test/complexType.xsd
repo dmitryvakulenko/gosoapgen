@@ -7,21 +7,10 @@
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="UserID">
+                <xs:element name="UserID" type="xs:string">
                     <xs:annotation>
                         <xs:documentation>Specifies a user identifier</xs:documentation>
                     </xs:annotation>
-                    <xs:complexType>
-                        <xs:complexContent>
-                            <xs:extension base="ama_ct:PointOfSaleType">
-                                <xs:attribute name="RequestorType" type="ota:AlphaLength1" use="required">
-                                    <xs:annotation>
-                                        <xs:documentation>Identifies the type of requestor. It can be 'U' for 'UserId' or 'Z' for 'SignId'.</xs:documentation>
-                                    </xs:annotation>
-                                </xs:attribute>
-                            </xs:extension>
-                        </xs:complexContent>
-                    </xs:complexType>
                 </xs:element>
                 <xs:element name="FullLocation" type="ama_appmdw_v3:LocationType" minOccurs="0">
                     <xs:annotation>
