@@ -45,3 +45,15 @@ func (t *xsdTypes) put(namespace, typeName string, addedType interface{}) {
 
 	(*ns)[typeName] = addedType
 }
+
+func (t *xsdTypes) getAllTypes() []interface{} {
+	var res []interface{}
+
+	for _, nsList := range t.typesList {
+		for _, curType := range *nsList {
+			res = append(res, curType)
+		}
+	}
+
+	return res
+}

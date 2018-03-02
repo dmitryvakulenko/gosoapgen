@@ -66,10 +66,6 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 		return
 	}
 
-	if complexType.Sequence == nil && len(complexType.Attribute) == 0 && len(complexType.AttributeGroup) == 0 {
-		return
-	}
-
 	var curStruct = &ComplexType{Name: name}
 	t.cType = append(t.cType, curStruct)
 
@@ -95,6 +91,14 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 		group := attrGroups[gr.Ref]
 		curStruct.Fields = append(curStruct.Fields, group.Fields...)
 	}
+
+	if complexType.SimpleContent != nil {
+
+	}
+}
+
+func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) {
+
 }
 
 func parseAttributeGroup(attrGr *xsd.AttributeGroup) {

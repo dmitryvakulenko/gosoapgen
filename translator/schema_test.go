@@ -212,7 +212,30 @@ func TestAttributeGroup(t *testing.T) {
 
 
 func TestSimpleContent(t *testing.T) {
+	s := loadXsd("simpleContent.xsd")
+	res := Parse(s)
 
+	if len(res.sType) != 1 {
+		t.Fatalf("Schema should has 1 simple type, %d ", len(res.sType))
+	}
+
+	if len(res.cType) != 1 {
+		t.Fatalf("Schema should has 1 complex type, %d ", len(res.cType))
+	}
+
+	name := "StringLength0to128"
+	if res.sType[0].Name != name {
+		t.Errorf("Simple type name should be %q, %q instead", name, res.cType[0].Name)
+	}
+
+	name = "CompanyNameType"
+	if res.cType[0].Name != name {
+		t.Errorf("Complex type name should be %q, %q instead", name, res.cType[0].Name)
+	}
+
+	if len(res.cType[0].Fields) != 1 {
+		t.Errorf("CompanyNameType should has 1 field, %d instead", len(res.cType[0].Fields))
+	}
 }
 
 
