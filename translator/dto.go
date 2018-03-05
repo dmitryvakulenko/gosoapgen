@@ -3,20 +3,37 @@ package translator
 type SchemaTypes struct {
 	include         []string
 	targetNamespace string
-	cType           []*ComplexType
-	sType           []*SimpleType
+	cType           xsdTypes
+	sType           xsdTypes
+	attributeGroup  xsdTypes
 }
 
 type ComplexType struct {
-	Name   string
-	Type   string
-	Fields []*Field
+	Name      string
+	Namespace string
+	Fields    []*Field
+}
+
+func (t ComplexType) GetNamespace() string {
+	return t.Namespace
+}
+
+func (t ComplexType) GetName() string {
+	return t.Name
 }
 
 type SimpleType struct {
 	Name      string
 	Type      string
 	Namespace string
+}
+
+func (t SimpleType) GetNamespace() string {
+	return t.Namespace
+}
+
+func (t SimpleType) GetName() string {
+	return t.Name
 }
 
 type Field struct {
@@ -28,5 +45,15 @@ type Field struct {
 }
 
 type attributeGroup struct {
-	Fields []*Field
+	Name      string
+	Namespace string
+	Fields    []*Field
+}
+
+func (t attributeGroup) GetNamespace() string {
+	return t.Namespace
+}
+
+func (t attributeGroup) GetName() string {
+	return t.Name
 }

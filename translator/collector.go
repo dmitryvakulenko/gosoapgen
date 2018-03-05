@@ -9,6 +9,11 @@ type xsdTypes struct {
 	typesList namespacedTypes
 }
 
+type Namespaceable interface {
+	GetNamespace() string
+	GetName() string
+}
+
 func makeTypesCollection() *xsdTypes {
 	res := &xsdTypes{
 		typesList: make(namespacedTypes)}
@@ -31,8 +36,12 @@ func (t *xsdTypes) find(namespace, typeName string) (interface{}, bool) {
 	return curType, true
 }
 
+func (t *xsdTypes) put(addedType Namespaceable) {
+	var (
+		namespace = addedType.GetNamespace()
+		typeName = addedType.GetName()
+	)
 
-func (t *xsdTypes) put(namespace, typeName string, addedType interface{}) {
 	if _, ok := t.typesList[namespace]; !ok {
 		newCollection := make(typesCollection)
 		t.typesList[namespace] = &newCollection
@@ -45,6 +54,7 @@ func (t *xsdTypes) put(namespace, typeName string, addedType interface{}) {
 
 	(*ns)[typeName] = addedType
 }
+
 
 func (t *xsdTypes) getAllTypes() []interface{} {
 	var res []interface{}
