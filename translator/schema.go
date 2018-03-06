@@ -6,7 +6,7 @@ import (
 )
 
 func Parse(s *xsd.Schema) *SchemaTypes {
-	res := SchemaTypes{}
+	res := CreateSchemaTypes()
 	res.targetNamespace = s.TargetNamespace
 
 	for _, attrGr := range s.AttributeGroup {
@@ -34,7 +34,7 @@ func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	}
 
 	field := &Field{}
-	field.Name = strings.ToUpper(element.Name[0:1]) + element.Name[1:]
+	field.Name = element.Name
 	field.XmlExpr = element.Name
 	field.Namespace = t.targetNamespace
 
@@ -51,7 +51,7 @@ func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 
 func generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field := &Field{}
-	field.Name = strings.ToUpper(attribute.Name[0:1]) + attribute.Name[1:]
+	field.Name = attribute.Name
 	field.XmlExpr = attribute.Name + ",attr"
 	field.Type = parseStandardTypes(attribute.Type)
 

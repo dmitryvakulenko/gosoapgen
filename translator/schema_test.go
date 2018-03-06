@@ -1,10 +1,10 @@
 package translator
 
 import (
-	"testing"
+	"encoding/xml"
 	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"os"
-	"encoding/xml"
+	"testing"
 )
 
 func TestGetNoTypes(t *testing.T) {
@@ -25,23 +25,22 @@ func TestGenerateSimpleTypes(t *testing.T) {
 
 	res := Parse(s)
 	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
-	typeInterface, ok := res.cType.find(ns, "AlphaString_Length1To2")
-	curType := typeInterface.(*SimpleType)
+	typeInterface, ok := res.sType.find(ns, "AlphaString_Length1To2")
 
 	if !ok {
-		t.Errorf("%q should exist", curType.Name)
+		t.Fatalf("%q should exist", "AlphaString_Length1To2")
 	}
+
+	curType := typeInterface.(*SimpleType)
 
 	if curType.Type != "string" {
 		t.Errorf("Type should be 'string', %s getting", curType.Type)
 	}
 
-
 	if curType.Namespace != ns {
 		t.Errorf("Type should be %q, %q getting", ns, curType.Namespace)
 	}
 }
-
 
 func TestParseElementTypes(t *testing.T) {
 	s := loadXsd("element.xsd")
@@ -61,8 +60,8 @@ func TestParseElementTypes(t *testing.T) {
 	}
 
 	field := cType.Fields[1]
-	if field.Name != "SequenceNumber" {
-		t.Errorf("Field name should be 'SequenceNumber', %q instead", field.Name)
+	if field.Name != "sequenceNumber" {
+		t.Errorf("Field name should be 'sequenceNumber', %q instead", field.Name)
 	}
 
 	if field.Type != "string" {
@@ -87,7 +86,6 @@ func TestParseElementTypes(t *testing.T) {
 	}
 }
 
-
 func TestGenerateSchemaComplexTypes(t *testing.T) {
 	s := loadXsd("complexType.xsd")
 	res := Parse(s)
@@ -110,7 +108,6 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 	}
 
 }
-
 
 func TestComplexTypeWithAttributes(t *testing.T) {
 	s := loadXsd("attribute.xsd")
@@ -143,59 +140,54 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 }
 
-
 func TestInnerComplexTypes(t *testing.T) {
 	s := loadXsd("innerComplexType.xsd")
 	res := Parse(s)
 
-	typeName := "PNR_AddMultiElements"
-	cTypeInterface, ok := res.cType.find("http://xml.amadeus.com/2010/06/Session_v3", typeName)
-
-	if !ok {
-		t.Fatalf("Type %q should exists", typeName)
+	var (
+		firstTypeI, secTypeI interface{}
+		ok bool
+	)
+	if firstTypeI, ok = res.cType.find("http://xml.amadeus.com/PNRADD_10_1_1A", "PNR_AddMultiElements"); !ok {
+		t.Fatalf("Type %q should exists", "PNR_AddMultiElements")
 	}
 
-	cType := cTypeInterface.(*ComplexType)
-
-	if len(res.cType) != 2 {
-		t.Fatalf("Types amount should be 2, %d instead", len(res.cType))
+	if secTypeI, ok = res.cType.find("http://xml.amadeus.com/PNRADD_10_1_1A", "travellerInfo"); !ok {
+		t.Fatalf("Type %q should exists", "travellerInfo")
 	}
 
-	if len(res.cType[0].Fields) != 1 {
-		t.Fatalf("Should be 1 fields, %d getting", len(res.cType[0].Fields))
+	firstType := firstTypeI.(*ComplexType)
+	secType := secTypeI.(*ComplexType)
+
+	if len(firstType.Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(firstType.Fields))
 	}
 
-	field := res.cType[0].Fields[0]
-	if field.Name != "TravellerInfo" {
-		t.Errorf("Field name should be 'TravellerInfo', %q instead", field.Name)
+	field := firstType.Fields[0]
+	if field.Name != "travellerInfo" {
+		t.Errorf("Field name should be 'travellerInfo', %q instead", field.Name)
 	}
 
-	if field.Type != "TravellerInfo" {
-		t.Errorf("Field type should be 'TravellerInfo', %q instead", field.Type)
+	if field.Type != "travellerInfo" {
+		t.Errorf("Field type should be 'travellerInfo', %q instead", field.Type)
 	}
 
 	if field.XmlExpr != "travellerInfo" {
 		t.Errorf("Field xml name should be 'travellerInfo' %s instead", field.XmlExpr)
 	}
 
-	if res.cType[1].Name != "TravellerInfo" {
-		t.Errorf("Second type name shoud be 'TravellerInfo' %s instead", res.cType[1].Name)
+	if len(secType.Fields) != 1 {
+		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
 	}
 
-
-	if len(res.cType[1].Fields) != 1 {
-		t.Fatalf("Second type fields amount should be 1, got %d instead", len(res.cType[1].Fields))
+	if secType.Fields[0].Name != "elementManagementPassenger" {
+		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
 	}
 
-	if res.cType[1].Fields[0].Name != "ElementManagementPassenger" {
-		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", res.cType[1].Fields[0].Name)
-	}
-
-	if res.cType[1].Fields[0].XmlExpr != "elementManagementPassenger" {
-		t.Errorf("Second type name shoud be 'elementManagementPassenger', %q instead", res.cType[1].Fields[0].XmlExpr)
+	if secType.Fields[0].XmlExpr != "elementManagementPassenger" {
+		t.Errorf("Second type name shoud be 'elementManagementPassenger', %q instead", secType.Fields[0].XmlExpr)
 	}
 }
-
 
 //func TestAttributeGroup(t *testing.T) {
 //	s := loadXsd("attributeGroup.xsd")
@@ -250,7 +242,6 @@ func TestInnerComplexTypes(t *testing.T) {
 //		t.Errorf("CompanyNameType should has 1 field, %d instead", len(res.cType[0].Fields))
 //	}
 //}
-
 
 func loadXsd(name string) *xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)

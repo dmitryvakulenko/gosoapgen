@@ -3,9 +3,16 @@ package translator
 type SchemaTypes struct {
 	include         []string
 	targetNamespace string
-	cType           xsdTypes
-	sType           xsdTypes
-	attributeGroup  xsdTypes
+	cType           *xsdTypes
+	sType           *xsdTypes
+	attributeGroup  *xsdTypes
+}
+
+func CreateSchemaTypes() SchemaTypes {
+	return SchemaTypes{
+		cType: makeTypesCollection(),
+		sType: makeTypesCollection(),
+		attributeGroup: makeTypesCollection()}
 }
 
 type ComplexType struct {
