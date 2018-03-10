@@ -189,33 +189,36 @@ func TestInnerComplexTypes(t *testing.T) {
 	}
 }
 
-//func TestAttributeGroup(t *testing.T) {
-//	s := loadXsd("attributeGroup.xsd")
-//	res := Parse(s)
-//
-//	if len(res.cType) != 1 {
-//		t.Fatalf("Types amount should be 1, %d instead", len(res.cType))
-//	}
-//
-//	if res.cType[0].Name != "CodeType" {
-//		t.Fatalf("Type name should be CodeType, %q instead", res.cType[0].Name)
-//	}
-//
-//	if len(res.cType[0].Fields) != 5 {
-//		t.Fatalf("Embed types amount should be 5, %d instead", len(res.cType[0].Fields))
-//	}
-//
-//	field := res.cType[0].Fields[1]
-//	if field.Name != "Owner" {
-//		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
-//	}
-//
-//	if field.XmlExpr != "Owner,attr" {
-//		t.Fatalf("Field xml expression should be 'Owner,attr', %q instead", field.XmlExpr)
-//	}
-//}
-//
-//
+func TestAttributeGroup(t *testing.T) {
+	s := loadXsd("attributeGroup.xsd")
+	res := Parse(s)
+
+	cTypeI, ok := res.cType.find("http://xml.amadeus.com/2010/06/Types_v1", "CodeType")
+	if !ok {
+		t.Fatalf("Type %q should exists", "CodeType")
+	}
+
+	cType := cTypeI.(*ComplexType)
+
+	if cType.Name != "CodeType" {
+		t.Fatalf("Type name should be CodeType, %q instead", cType.Name)
+	}
+
+	if len(cType.Fields) != 5 {
+		t.Fatalf("Fields amount should be 5, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "Owner" {
+		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
+	}
+
+	if field.XmlExpr != "Owner,attr" {
+		t.Fatalf("Field xml expression should be 'Owner,attr', %q instead", field.XmlExpr)
+	}
+}
+
+
 //func TestSimpleContent(t *testing.T) {
 //	s := loadXsd("simpleContent.xsd")
 //	res := Parse(s)

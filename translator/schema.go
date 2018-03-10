@@ -86,8 +86,9 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 
 	//for _, gr := range complexType.AttributeGroup {
-		//group := attrGroups[gr.Ref]
-		//curStruct.Fields = append(curStruct.Fields, group.Fields...)
+	//
+	//	group := t.attributeGroup.find()[]
+	//	curStruct.Fields = append(curStruct.Fields, group.Fields...)
 	//}
 
 	if complexType.SimpleContent != nil {
