@@ -11,27 +11,27 @@
         <xs:annotation>
             <xs:documentation>Used for codes. It may contain merely codes or integer codes associated to a value in AMA_CodeTable.xls</xs:documentation>
         </xs:annotation>
-        <xs:attribute name="Code" type="ota:StringLength1to64" use="required">
+        <xs:attribute name="Code" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>The code value - Sample: 21</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="Owner" type="ota:StringLength1to16">
+        <xs:attribute name="Owner" type="xs:string">
             <xs:annotation>
                 <xs:documentation>Which owner defined this code, may be one of OTA, IATA or AMA</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="ListName" type="ota:StringLength1to64">
+        <xs:attribute name="ListName" type="xs:string">
             <xs:annotation>
                 <xs:documentation>The name of the code list this code refers too - sample: Transportation Code</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="ListCode" type="ota:StringLength1to8">
+        <xs:attribute name="ListCode" type="xs:string">
             <xs:annotation>
                 <xs:documentation>The code of the code list this code refers too - sample: TRP</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="Desc" type="ota:StringLength1to128">
+        <xs:attribute name="Desc" type="xs:string">
             <xs:annotation>
                 <xs:documentation>The textual value that describes the code - Sample: Train</xs:documentation>
             </xs:annotation>

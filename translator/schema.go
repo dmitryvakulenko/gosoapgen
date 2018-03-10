@@ -6,8 +6,9 @@ import (
 )
 
 func Parse(s *xsd.Schema) *SchemaTypes {
-	res := CreateSchemaTypes()
+	res := newSchemaTypes()
 	res.targetNamespace = s.TargetNamespace
+	res.fillNamespaces(s)
 
 	for _, attrGr := range s.AttributeGroup {
 		res.parseAttributeGroup(attrGr)
@@ -27,6 +28,18 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 
 	return &res
 }
+
+
+func (t *SchemaTypes) fillNamespaces(s *xsd.Schema) {
+	t.curXmlns = make(map[string]string)
+	for _, v := range s.Attrs {
+		if v.Name.Space != "xmlns" {
+			continue
+		}
+		t.curXmlns[v.Name.Local] = v.Value
+	}
+}
+
 
 func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	if element == nil {
@@ -85,11 +98,20 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 		curStruct.Fields = append(curStruct.Fields, field)
 	}
 
-	//for _, gr := range complexType.AttributeGroup {
-	//
-	//	group := t.attributeGroup.find()[]
-	//	curStruct.Fields = append(curStruct.Fields, group.Fields...)
-	//}
+	for _, gr := range complexType.AttributeGroup {
+		parts := strings.Split(gr.Ref, ":")
+		var ns, typeName string
+		if len(parts) == 2 {
+			ns = t.curXmlns[parts[0]]
+			typeName = parts[1]
+		} else {
+			ns = t.targetNamespace
+			typeName = parts[0]
+		}
+
+		group, _ := t.attributeGroup.find(ns, typeName)
+		curStruct.Fields = append(curStruct.Fields, group.(*attributeGroup).Fields...)
+	}
 
 	if complexType.SimpleContent != nil {
 

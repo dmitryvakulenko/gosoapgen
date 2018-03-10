@@ -6,13 +6,15 @@ type SchemaTypes struct {
 	cType           *xsdTypes
 	sType           *xsdTypes
 	attributeGroup  *xsdTypes
+	curXmlns        map[string]string
 }
 
-func CreateSchemaTypes() SchemaTypes {
+func newSchemaTypes() SchemaTypes {
 	return SchemaTypes{
-		cType: makeTypesCollection(),
-		sType: makeTypesCollection(),
-		attributeGroup: makeTypesCollection()}
+		cType:          makeTypesCollection(),
+		sType:          makeTypesCollection(),
+		attributeGroup: makeTypesCollection(),
+		curXmlns: make(map[string]string)}
 }
 
 type ComplexType struct {
