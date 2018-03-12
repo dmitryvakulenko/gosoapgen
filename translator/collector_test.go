@@ -3,7 +3,7 @@ package translator
 import "testing"
 
 func TestGetTypeFromEmptyCollection(t *testing.T) {
-	collector := makeTypesCollection()
+	collector := newTypesCollection()
 
 	curType, ok := collector.find("aa", "bbbb")
 	if ok {
@@ -16,7 +16,7 @@ func TestGetTypeFromEmptyCollection(t *testing.T) {
 }
 
 func TestStoringType(t *testing.T) {
-	collector := makeTypesCollection()
+	collector := newTypesCollection()
 
 	ns := "namespace"
 	typeName := "ComplexType"

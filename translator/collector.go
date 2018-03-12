@@ -5,27 +5,21 @@ import "log"
 type typesCollection map[string]interface{}
 type namespacedTypes map[string]*typesCollection
 
-type xsdTypes struct {
-	typesList namespacedTypes
-}
-
 type Namespaceable interface {
 	GetNamespace() string
 	GetName() string
 }
 
-func makeTypesCollection() *xsdTypes {
-	res := &xsdTypes{
-		typesList: make(namespacedTypes)}
-
-	return res
+func newTypesCollection() *namespacedTypes {
+	res := make(namespacedTypes)
+	return &res
 }
 
-func (t *xsdTypes) find(namespace, typeName string) (interface{}, bool) {
+func (t *namespacedTypes) find(namespace, typeName string) (interface{}, bool) {
 	var ns *typesCollection
 	var ok bool
 	var curType interface{}
-	if ns, ok = t.typesList[namespace]; !ok {
+	if ns, ok = (*t)[namespace]; !ok {
 		return nil, false
 	}
 
@@ -36,18 +30,18 @@ func (t *xsdTypes) find(namespace, typeName string) (interface{}, bool) {
 	return curType, true
 }
 
-func (t *xsdTypes) put(addedType Namespaceable) {
+func (t *namespacedTypes) put(addedType Namespaceable) {
 	var (
 		namespace = addedType.GetNamespace()
 		typeName = addedType.GetName()
 	)
 
-	if _, ok := t.typesList[namespace]; !ok {
+	if _, ok := (*t)[namespace]; !ok {
 		newCollection := make(typesCollection)
-		t.typesList[namespace] = &newCollection
+		(*t)[namespace] = &newCollection
 	}
 
-	ns := t.typesList[namespace]
+	ns := (*t)[namespace]
 	if _, ok := (*ns)[typeName]; ok {
 		log.Panicf("Namespace %q already contain type %q", namespace, typeName)
 	}
@@ -56,10 +50,10 @@ func (t *xsdTypes) put(addedType Namespaceable) {
 }
 
 
-func (t *xsdTypes) getAllTypes() []interface{} {
+func (t *namespacedTypes) getAllTypes() []interface{} {
 	var res []interface{}
 
-	for _, nsList := range t.typesList {
+	for _, nsList := range *t {
 		for _, curType := range *nsList {
 			res = append(res, curType)
 		}
