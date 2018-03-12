@@ -3,18 +3,14 @@ package translator
 type SchemaTypes struct {
 	include         []string
 	targetNamespace string
-	cType           *xsdTypes
-	sType           *xsdTypes
-	attributeGroup  *xsdTypes
+	typesList       *namespacedTypes
 	curXmlns        map[string]string
 }
 
 func newSchemaTypes() SchemaTypes {
 	return SchemaTypes{
-		cType:          makeTypesCollection(),
-		sType:          makeTypesCollection(),
-		attributeGroup: makeTypesCollection(),
-		curXmlns: make(map[string]string)}
+		typesList: newTypesCollection(),
+		curXmlns:  make(map[string]string)}
 }
 
 type ComplexType struct {

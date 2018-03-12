@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-func Parse(s *xsd.Schema) *SchemaTypes {
+func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 	res := newSchemaTypes()
-	res.targetNamespace = s.TargetNamespace
+	res.targetNamespace = targetNamespace
 	res.fillNamespaces(s)
 
 	for _, attrGr := range s.AttributeGroup {
@@ -27,6 +27,30 @@ func Parse(s *xsd.Schema) *SchemaTypes {
 	}
 
 	return &res
+}
+
+func (t *SchemaTypes) GetTypes() []interface{} {
+	return t.typesList.getAllTypes()
+}
+
+
+func (t *SchemaTypes) addType(newType Namespaceable) {
+	t.typesList.put(newType)
+}
+
+
+func (t *SchemaTypes) findType(fullTypeName string) (interface{}, bool)  {
+	parts := strings.Split(fullTypeName, ":")
+	var ns, typeName string
+	if len(parts) == 2 {
+		ns = t.curXmlns[parts[0]]
+		typeName = parts[1]
+	} else {
+		ns = t.targetNamespace
+		typeName = parts[0]
+	}
+
+	return t.typesList.find(ns, typeName)
 }
 
 
@@ -82,7 +106,7 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 	curStruct.Namespace = t.targetNamespace
 
-	t.cType.put(curStruct)
+	t.addType(curStruct)
 
 	if complexType.Sequence != nil {
 		for _, childElem := range complexType.Sequence.Element {
@@ -99,21 +123,13 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 
 	for _, gr := range complexType.AttributeGroup {
-		parts := strings.Split(gr.Ref, ":")
-		var ns, typeName string
-		if len(parts) == 2 {
-			ns = t.curXmlns[parts[0]]
-			typeName = parts[1]
-		} else {
-			ns = t.targetNamespace
-			typeName = parts[0]
-		}
-
-		group, _ := t.attributeGroup.find(ns, typeName)
+		group, _ := t.findType(gr.Ref)
 		curStruct.Fields = append(curStruct.Fields, group.(*attributeGroup).Fields...)
 	}
 
 	if complexType.SimpleContent != nil {
+		//baseTypeName := complexType.SimpleContent.Extension.Base
+
 
 	}
 }
@@ -130,7 +146,7 @@ func (t *SchemaTypes) parseAttributeGroup(attrGr *xsd.AttributeGroup) {
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	t.attributeGroup.put(curType)
+	t.addType(curType)
 }
 
 func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
@@ -138,7 +154,7 @@ func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
 		Name: simpleType.Name,
 		Type: parseStandardTypes(simpleType.Restriction.Base),
 		Namespace: t.targetNamespace}
-	t.sType.put(curType)
+	t.addType(curType)
 }
 
 func parseStandardTypes(xmlType string) string {
