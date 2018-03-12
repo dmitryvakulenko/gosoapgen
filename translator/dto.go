@@ -4,12 +4,14 @@ type SchemaTypes struct {
 	include         []string
 	targetNamespace string
 	typesList       *namespacedTypes
+	attributeGroup	*namespacedTypes
 	curXmlns        map[string]string
 }
 
 func newSchemaTypes() SchemaTypes {
 	return SchemaTypes{
 		typesList: newTypesCollection(),
+		attributeGroup: newTypesCollection(),
 		curXmlns:  make(map[string]string)}
 }
 

@@ -30,7 +30,17 @@ func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 }
 
 func (t *SchemaTypes) GetTypes() []interface{} {
-	return t.typesList.getAllTypes()
+	allTypes := t.typesList.getAllTypes()
+	res := make([]interface{}, 0)
+
+	for _, v := range allTypes {
+		if _, ok := v.(*xsd.AttributeGroup); ok {
+			continue
+		}
+		res = append(res, v)
+	}
+
+	return res
 }
 
 
@@ -38,21 +48,24 @@ func (t *SchemaTypes) addType(newType Namespaceable) {
 	t.typesList.put(newType)
 }
 
-
-func (t *SchemaTypes) findType(fullTypeName string) (interface{}, bool)  {
-	parts := strings.Split(fullTypeName, ":")
-	var ns, typeName string
-	if len(parts) == 2 {
-		ns = t.curXmlns[parts[0]]
-		typeName = parts[1]
-	} else {
-		ns = t.targetNamespace
-		typeName = parts[0]
-	}
-
-	return t.typesList.find(ns, typeName)
+func (t *SchemaTypes) findAttributeGroup(fullTypeName string) (interface{}, bool) {
+	ns, name := t.parseFullName(fullTypeName)
+	return t.attributeGroup.find(ns, name)
 }
 
+func (t *SchemaTypes) findType(fullTypeName string) (interface{}, bool)  {
+	ns, name := t.parseFullName(fullTypeName)
+	return t.typesList.find(ns, name)
+}
+
+func (t *SchemaTypes) parseFullName(fullTypeName string) (string, string) {
+	parts := strings.Split(fullTypeName, ":")
+	if len(parts) == 2 {
+		return t.curXmlns[parts[0]], parts[1]
+	} else {
+		return t.targetNamespace, parts[0]
+	}
+}
 
 func (t *SchemaTypes) fillNamespaces(s *xsd.Schema) {
 	t.curXmlns = make(map[string]string)
@@ -123,7 +136,7 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 
 	for _, gr := range complexType.AttributeGroup {
-		group, _ := t.findType(gr.Ref)
+		group, _ := t.findAttributeGroup(gr.Ref)
 		curStruct.Fields = append(curStruct.Fields, group.(*attributeGroup).Fields...)
 	}
 
@@ -146,7 +159,7 @@ func (t *SchemaTypes) parseAttributeGroup(attrGr *xsd.AttributeGroup) {
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	t.addType(curType)
+	t.attributeGroup.put(curType)
 }
 
 func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
