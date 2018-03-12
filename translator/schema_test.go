@@ -254,30 +254,40 @@ func TestAttributeGroup(t *testing.T) {
 }
 
 
-//func TestSimpleContent(t *testing.T) {
-//	s := loadXsd("simpleContent.xsd")
-//	ns := "namespace"
-//	res := Parse(s, ns)
-//
-//	name := "StringLength0to128"
-//	_, ok := res.sType.find(ns, name)
-//	if !ok {
-//		t.Fatalf("Simple type %q should exists", name)
-//	}
-//
-//	name = "CompanyNameType"
-//	cTypeI, ok := res.sType.find(ns, name)
-//	if !ok {
-//		t.Fatalf("Complex type %q should exists", name)
-//	}
-//
-//	cType := cTypeI.(*ComplexType)
-//	if len(cType.Fields) != 1 {
-//		t.Errorf("CompanyNameType should has 1 field, %d instead", len(cType.Fields))
-//	}
-//}
-//
-//
+func TestSimpleContent(t *testing.T) {
+	s := loadXsd("simpleContent.xsd")
+	ns := "namespace"
+	res := Parse(s, ns)
+	typesList := res.GetTypes()
+
+	if len(typesList) != 2 {
+		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[1].(*ComplexType)
+	name := "CompanyNameType"
+	if cType.Name != name {
+		t.Fatalf("Type name should be %q, got %q instead", name, cType.Name)
+	}
+
+	if len(cType.Fields) != 3 {
+		t.Errorf("CompanyNameType should has 3 field, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[0]
+
+	name = "Value"
+	if field.Name != name {
+		t.Fatalf("Field name should be %q, got %q instead", name, field.Name)
+	}
+
+	fType := "StringLength0to128"
+	if field.Type != fType {
+		t.Fatalf("Field type should be %q, got %q instead", fType, field.Type)
+	}
+}
+
+
 func loadXsd(name string) *xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)
 	defer reader.Close()

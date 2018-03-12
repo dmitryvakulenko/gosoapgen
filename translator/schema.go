@@ -8,10 +8,15 @@ import (
 func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 	res := newSchemaTypes()
 	res.targetNamespace = targetNamespace
+
 	res.fillNamespaces(s)
 
 	for _, attrGr := range s.AttributeGroup {
 		res.parseAttributeGroup(attrGr)
+	}
+
+	for _, elem := range s.SimpleType {
+		res.generateFromSimpleType(elem)
 	}
 
 	for _, elem := range s.Element {
@@ -20,10 +25,6 @@ func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 
 	for _, elem := range s.ComplexType {
 		res.generateFromComplexType(elem, "")
-	}
-
-	for _, elem := range s.SimpleType {
-		res.generateFromSimpleType(elem)
 	}
 
 	return &res
@@ -93,17 +94,17 @@ func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	if element.Type == "" {
 		field.Type = field.Name
 	} else {
-		field.Type = parseStandardTypes(element.Type)
+		field.Type = parseType(element.Type)
 	}
 
 	return field
 }
 
-func generateFromAttribute(attribute *xsd.Attribute) *Field {
+func (t *SchemaTypes) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field := &Field{}
 	field.Name = attribute.Name
 	field.XmlExpr = attribute.Name + ",attr"
-	field.Type = parseStandardTypes(attribute.Type)
+	field.Type = parseType(attribute.Type)
 
 	return field
 }
@@ -131,7 +132,7 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 
 	for _, childElem := range complexType.Attribute {
-		field := generateFromAttribute(childElem)
+		field := t.generateFromAttribute(childElem)
 		curStruct.Fields = append(curStruct.Fields, field)
 	}
 
@@ -141,21 +142,47 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 
 	if complexType.SimpleContent != nil {
-		//baseTypeName := complexType.SimpleContent.Extension.Base
-
-
+		curStruct.Fields = append(curStruct.Fields, t.generateFromSimpleContent(complexType.SimpleContent)...)
 	}
 }
 
-func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) {
+func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*Field {
+	var res []*Field
 
+	valField := &Field{
+		Name: "Value",
+		Namespace: t.targetNamespace,
+		XmlExpr: ",chardata"}
+
+	res = append(res, valField)
+
+	if simpleContent.Extension != nil {
+		valField.Type = parseType(simpleContent.Extension.Base)
+		for _, v := range simpleContent.Extension.Attribute {
+			res = append(res, t.generateFromAttribute(v))
+		}
+
+		for _, v := range simpleContent.Extension.AttributeGroup {
+			groupI, ok := t.findAttributeGroup(v.Ref)
+			if !ok {
+				panic("No attribute group " + v.Ref + " found", )
+			}
+			res = append(res, groupI.(*attributeGroup).Fields...)
+		}
+	}
+
+	if simpleContent.Restriction != nil {
+		valField.Type = parseType(simpleContent.Restriction.Base)
+	}
+
+	return res
 }
 
 func (t *SchemaTypes) parseAttributeGroup(attrGr *xsd.AttributeGroup) {
 	curType := &attributeGroup{Name: attrGr.Name, Namespace: t.targetNamespace}
 
 	for _, attr := range attrGr.Attribute {
-		field := generateFromAttribute(attr)
+		field := t.generateFromAttribute(attr)
 		curType.Fields = append(curType.Fields, field)
 	}
 
@@ -164,13 +191,14 @@ func (t *SchemaTypes) parseAttributeGroup(attrGr *xsd.AttributeGroup) {
 
 func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
 	curType := &SimpleType{
-		Name: simpleType.Name,
-		Type: parseStandardTypes(simpleType.Restriction.Base),
+		Name:      simpleType.Name,
+		Type:      parseType(simpleType.Restriction.Base),
 		Namespace: t.targetNamespace}
 	t.addType(curType)
 }
 
-func parseStandardTypes(xmlType string) string {
+
+func parseType(xmlType string) string {
 	parts := strings.Split(xmlType, ":")
 
 	var fieldType string

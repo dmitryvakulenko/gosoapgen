@@ -58,14 +58,18 @@ type Import struct {
 }
 
 type Content struct {
-	Restriction Restriction `xml:"restriction"`
-	Extension   Extension   `xml:"extension"`
+	Restriction *Restriction `xml:"restriction"`
+	Extension   *Extension   `xml:"extension"`
 }
 
 type Restriction struct {
-	Base string `xml:"base,attr"`
+	Base           string            `xml:"base,attr"`
+	Attribute      []*Attribute      `xml:"attribute"`
+	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
 }
 
 type Extension struct {
 	Base string `xml:"base,attr"`
+	Attribute      []*Attribute      `xml:"attribute"`
+	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
 }

@@ -17,6 +17,7 @@
         </xs:annotation>
         <xs:simpleContent>
             <xs:extension base="StringLength0to128">
+                <xs:attribute name="country" type="xs:string" />
                 <xs:attributeGroup ref="CompanyID_AttributesGroup" />
             </xs:extension>
         </xs:simpleContent>
