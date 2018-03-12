@@ -287,6 +287,17 @@ func TestSimpleContent(t *testing.T) {
 	}
 }
 
+func TestComplexContent(t *testing.T) {
+	s := loadXsd("simpleContent.xsd")
+	ns := "namespace"
+	res := Parse(s, ns)
+	typesList := res.GetTypes()
+
+	if len(typesList) != 4 {
+		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+	}
+}
+
 
 func loadXsd(name string) *xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)

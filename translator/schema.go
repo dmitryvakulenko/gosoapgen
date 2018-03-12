@@ -144,6 +144,10 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	if complexType.SimpleContent != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromSimpleContent(complexType.SimpleContent)...)
 	}
+
+	if complexType.ComplexContent != nil {
+		curStruct.Fields = append(curStruct.Fields, t.generateFromComplexContent(complexType.ComplexContent)...)
+	}
 }
 
 func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*Field {
@@ -176,6 +180,10 @@ func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*F
 	}
 
 	return res
+}
+
+func (t *SchemaTypes) generateFromComplexContent(simpleContent *xsd.Content) []*Field {
+
 }
 
 func (t *SchemaTypes) parseAttributeGroup(attrGr *xsd.AttributeGroup) {
