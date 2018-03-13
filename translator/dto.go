@@ -1,18 +1,20 @@
 package translator
 
 type SchemaTypes struct {
-	include         []string
-	targetNamespace string
-	typesList       *namespacedTypes
-	attributeGroup	*namespacedTypes
-	curXmlns        map[string]string
+	include             []string
+	targetNamespace     string
+	typesList           []interface{}
+	typesListCache      *namespacedTypes
+	attributeGroupCache *namespacedTypes
+	curXmlns            map[string]string
 }
 
 func newSchemaTypes() SchemaTypes {
 	return SchemaTypes{
-		typesList: newTypesCollection(),
-		attributeGroup: newTypesCollection(),
-		curXmlns:  make(map[string]string)}
+		typesList:           make([]interface{}, 0),
+		typesListCache:      newTypesCollection(),
+		attributeGroupCache: newTypesCollection(),
+		curXmlns:            make(map[string]string)}
 }
 
 type ComplexType struct {

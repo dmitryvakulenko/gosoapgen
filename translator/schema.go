@@ -31,22 +31,23 @@ func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 }
 
 func (t *SchemaTypes) GetTypes() []interface{} {
-	return t.typesList.getAllTypes()
+	return t.typesList
 }
 
 
 func (t *SchemaTypes) addType(newType Namespaceable) {
-	t.typesList.put(newType)
+	t.typesList = append(t.typesList, newType)
+	t.typesListCache.put(newType)
 }
 
 func (t *SchemaTypes) findAttributeGroup(fullTypeName string) (interface{}, bool) {
 	ns, name := t.parseFullName(fullTypeName)
-	return t.attributeGroup.find(ns, name)
+	return t.attributeGroupCache.find(ns, name)
 }
 
 func (t *SchemaTypes) findType(fullTypeName string) (interface{}, bool)  {
 	ns, name := t.parseFullName(fullTypeName)
-	return t.typesList.find(ns, name)
+	return t.typesListCache.find(ns, name)
 }
 
 func (t *SchemaTypes) parseFullName(fullTypeName string) (string, string) {
@@ -227,7 +228,7 @@ func (t *SchemaTypes) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	t.attributeGroup.put(curType)
+	t.attributeGroupCache.put(curType)
 }
 
 func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
