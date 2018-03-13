@@ -1,16 +1,15 @@
 package translator
 
-type SchemaTypes struct {
-	include             []string
-	targetNamespace     string
+type decoder struct {
+	curTargetNamespace  string
 	typesList           []interface{}
 	typesListCache      *namespacedTypes
 	attributeGroupCache *namespacedTypes
 	curXmlns            map[string]string
 }
 
-func newSchemaTypes() SchemaTypes {
-	return SchemaTypes{
+func newDecoder() decoder {
+	return decoder{
 		typesList:           make([]interface{}, 0),
 		typesListCache:      newTypesCollection(),
 		attributeGroupCache: newTypesCollection(),

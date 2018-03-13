@@ -5,61 +5,59 @@ import (
 	"strings"
 )
 
-func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
-	res := newSchemaTypes()
-	res.targetNamespace = targetNamespace
+func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
+	t.curTargetNamespace = targetNamespace
 
-	res.fillNamespaces(s)
+	t.fillNamespaces(s)
 
 	for _, attrGr := range s.AttributeGroup {
-		res.parseAttributeGroupTypes(attrGr)
+		t.parseAttributeGroupTypes(attrGr)
 	}
 
 	for _, elem := range s.SimpleType {
-		res.generateFromSimpleType(elem)
+		t.generateFromSimpleType(elem)
 	}
 
 	for _, elem := range s.Element {
-		res.generateFromComplexType(elem.ComplexType, elem.Name)
+		t.generateFromComplexType(elem.ComplexType, elem.Name)
 	}
 
 	for _, elem := range s.ComplexType {
-		res.generateFromComplexType(elem, "")
+		t.generateFromComplexType(elem, "")
 	}
-
-	return &res
 }
 
-func (t *SchemaTypes) GetTypes() []interface{} {
+
+func (t *decoder) GetTypes() []interface{} {
 	return t.typesList
 }
 
 
-func (t *SchemaTypes) addType(newType Namespaceable) {
+func (t *decoder) addType(newType Namespaceable) {
 	t.typesList = append(t.typesList, newType)
 	t.typesListCache.put(newType)
 }
 
-func (t *SchemaTypes) findAttributeGroup(fullTypeName string) (interface{}, bool) {
+func (t *decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
 	ns, name := t.parseFullName(fullTypeName)
 	return t.attributeGroupCache.find(ns, name)
 }
 
-func (t *SchemaTypes) findType(fullTypeName string) (interface{}, bool)  {
+func (t *decoder) findType(fullTypeName string) (interface{}, bool)  {
 	ns, name := t.parseFullName(fullTypeName)
 	return t.typesListCache.find(ns, name)
 }
 
-func (t *SchemaTypes) parseFullName(fullTypeName string) (string, string) {
+func (t *decoder) parseFullName(fullTypeName string) (string, string) {
 	parts := strings.Split(fullTypeName, ":")
 	if len(parts) == 2 {
 		return t.curXmlns[parts[0]], parts[1]
 	} else {
-		return t.targetNamespace, parts[0]
+		return t.curTargetNamespace, parts[0]
 	}
 }
 
-func (t *SchemaTypes) fillNamespaces(s *xsd.Schema) {
+func (t *decoder) fillNamespaces(s *xsd.Schema) {
 	t.curXmlns = make(map[string]string)
 	for _, v := range s.Attrs {
 		if v.Name.Space != "xmlns" {
@@ -70,7 +68,7 @@ func (t *SchemaTypes) fillNamespaces(s *xsd.Schema) {
 }
 
 
-func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
+func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 	if element == nil {
 		return nil
 	}
@@ -78,7 +76,7 @@ func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	field := &Field{}
 	field.Name = element.Name
 	field.XmlExpr = element.Name
-	field.Namespace = t.targetNamespace
+	field.Namespace = t.curTargetNamespace
 
 	t.generateFromComplexType(element.ComplexType, field.Name)
 
@@ -91,7 +89,7 @@ func (t *SchemaTypes) generateFromElement(element *xsd.Element) *Field {
 	return field
 }
 
-func (t *SchemaTypes) generateFromAttribute(attribute *xsd.Attribute) *Field {
+func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field := &Field{}
 	field.Name = attribute.Name
 	field.XmlExpr = attribute.Name + ",attr"
@@ -100,7 +98,7 @@ func (t *SchemaTypes) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	return field
 }
 
-func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name string) {
+func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, name string) {
 	if complexType == nil {
 		return
 	}
@@ -109,7 +107,7 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	if complexType.Name != "" {
 		curStruct.Name = complexType.Name
 	}
-	curStruct.Namespace = t.targetNamespace
+	curStruct.Namespace = t.curTargetNamespace
 
 	t.addType(curStruct)
 
@@ -129,7 +127,7 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	}
 }
 
-func (t *SchemaTypes) parseAttributes(attributes []*xsd.Attribute) []*Field {
+func (t *decoder) parseAttributes(attributes []*xsd.Attribute) []*Field {
 	var res []*Field
 	for _, childElem := range attributes {
 		res = append(res, t.generateFromAttribute(childElem))
@@ -139,7 +137,7 @@ func (t *SchemaTypes) parseAttributes(attributes []*xsd.Attribute) []*Field {
 }
 
 
-func (t *SchemaTypes) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup) []*Field {
+func (t *decoder) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup) []*Field {
 	var res []*Field
 	for _, curGroup := range attributeGroups {
 		groupType, _ := t.findAttributeGroup(curGroup.Ref)
@@ -149,7 +147,7 @@ func (t *SchemaTypes) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGr
 	return res
 }
 
-func (t *SchemaTypes) generateFromSequence(sequence *xsd.Sequence) []*Field {
+func (t *decoder) generateFromSequence(sequence *xsd.Sequence) []*Field {
 	var res []*Field
 	for _, childElem := range sequence.Element {
 		field := t.generateFromElement(childElem)
@@ -161,12 +159,12 @@ func (t *SchemaTypes) generateFromSequence(sequence *xsd.Sequence) []*Field {
 	return res
 }
 
-func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*Field {
+func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field {
 	var res []*Field
 
 	valField := &Field{
 		Name: "Value",
-		Namespace: t.targetNamespace,
+		Namespace: t.curTargetNamespace,
 		XmlExpr: ",chardata"}
 
 	res = append(res, valField)
@@ -194,7 +192,7 @@ func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*F
 	return res
 }
 
-func (t *SchemaTypes) generateFromComplexContent(complexContent *xsd.Content) []*Field {
+func (t *decoder) generateFromComplexContent(complexContent *xsd.Content) []*Field {
 	var res []*Field
 
 	if complexContent.Extension != nil {
@@ -220,8 +218,8 @@ func (t *SchemaTypes) generateFromComplexContent(complexContent *xsd.Content) []
 	return res
 }
 
-func (t *SchemaTypes) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
-	curType := &attributeGroup{Name: attrGr.Name, Namespace: t.targetNamespace}
+func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
+	curType := &attributeGroup{Name: attrGr.Name, Namespace: t.curTargetNamespace}
 
 	for _, attr := range attrGr.Attribute {
 		field := t.generateFromAttribute(attr)
@@ -231,11 +229,11 @@ func (t *SchemaTypes) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 	t.attributeGroupCache.put(curType)
 }
 
-func (t *SchemaTypes) generateFromSimpleType(simpleType *xsd.SimpleType) {
+func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType) {
 	curType := &SimpleType{
 		Name:      simpleType.Name,
 		Type:      parseType(simpleType.Restriction.Base),
-		Namespace: t.targetNamespace}
+		Namespace: t.curTargetNamespace}
 	t.addType(curType)
 }
 
