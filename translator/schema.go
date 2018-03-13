@@ -12,7 +12,7 @@ func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 	res.fillNamespaces(s)
 
 	for _, attrGr := range s.AttributeGroup {
-		res.parseAttributeGroup(attrGr)
+		res.parseAttributeGroupTypes(attrGr)
 	}
 
 	for _, elem := range s.SimpleType {
@@ -31,17 +31,7 @@ func Parse(s *xsd.Schema, targetNamespace string) *SchemaTypes {
 }
 
 func (t *SchemaTypes) GetTypes() []interface{} {
-	allTypes := t.typesList.getAllTypes()
-	res := make([]interface{}, 0)
-
-	for _, v := range allTypes {
-		if _, ok := v.(*xsd.AttributeGroup); ok {
-			continue
-		}
-		res = append(res, v)
-	}
-
-	return res
+	return t.typesList.getAllTypes()
 }
 
 
@@ -123,23 +113,11 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	t.addType(curStruct)
 
 	if complexType.Sequence != nil {
-		for _, childElem := range complexType.Sequence.Element {
-			field := t.generateFromElement(childElem)
-			if field != nil {
-				curStruct.Fields = append(curStruct.Fields, field)
-			}
-		}
+		curStruct.Fields = append(curStruct.Fields, t.generateFromSequence(complexType.Sequence)...)
 	}
 
-	for _, childElem := range complexType.Attribute {
-		field := t.generateFromAttribute(childElem)
-		curStruct.Fields = append(curStruct.Fields, field)
-	}
-
-	for _, gr := range complexType.AttributeGroup {
-		group, _ := t.findAttributeGroup(gr.Ref)
-		curStruct.Fields = append(curStruct.Fields, group.(*attributeGroup).Fields...)
-	}
+	curStruct.Fields = append(curStruct.Fields, t.parseAttributes(complexType.Attribute)...)
+	curStruct.Fields = append(curStruct.Fields, t.parseAttributeGroupsRef(complexType.AttributeGroup)...)
 
 	if complexType.SimpleContent != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromSimpleContent(complexType.SimpleContent)...)
@@ -148,6 +126,38 @@ func (t *SchemaTypes) generateFromComplexType(complexType *xsd.ComplexType, name
 	if complexType.ComplexContent != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromComplexContent(complexType.ComplexContent)...)
 	}
+}
+
+func (t *SchemaTypes) parseAttributes(attributes []*xsd.Attribute) []*Field {
+	var res []*Field
+	for _, childElem := range attributes {
+		res = append(res, t.generateFromAttribute(childElem))
+	}
+
+	return res
+}
+
+
+func (t *SchemaTypes) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup) []*Field {
+	var res []*Field
+	for _, curGroup := range attributeGroups {
+		groupType, _ := t.findAttributeGroup(curGroup.Ref)
+		res = append(res, groupType.(*attributeGroup).Fields...)
+	}
+
+	return res
+}
+
+func (t *SchemaTypes) generateFromSequence(sequence *xsd.Sequence) []*Field {
+	var res []*Field
+	for _, childElem := range sequence.Element {
+		field := t.generateFromElement(childElem)
+		if field != nil {
+			res = append(res, field)
+		}
+	}
+
+	return res
 }
 
 func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*Field {
@@ -169,7 +179,7 @@ func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*F
 		for _, v := range simpleContent.Extension.AttributeGroup {
 			groupI, ok := t.findAttributeGroup(v.Ref)
 			if !ok {
-				panic("No attribute group " + v.Ref + " found", )
+				panic("No attribute group " + v.Ref + " found")
 			}
 			res = append(res, groupI.(*attributeGroup).Fields...)
 		}
@@ -177,16 +187,39 @@ func (t *SchemaTypes) generateFromSimpleContent(simpleContent *xsd.Content) []*F
 
 	if simpleContent.Restriction != nil {
 		valField.Type = parseType(simpleContent.Restriction.Base)
+		// парсить ограничения смысла нет
 	}
 
 	return res
 }
 
-func (t *SchemaTypes) generateFromComplexContent(simpleContent *xsd.Content) []*Field {
+func (t *SchemaTypes) generateFromComplexContent(complexContent *xsd.Content) []*Field {
+	var res []*Field
 
+	if complexContent.Extension != nil {
+		baseType, ok := t.findType(complexContent.Extension.Base)
+		if !ok {
+			panic("No type " + complexContent.Extension.Base + " found")
+		}
+
+		res = append(res, baseType.(*ComplexType).Fields...)
+		if complexContent.Extension.Sequence != nil {
+			res = append(res, t.generateFromSequence(complexContent.Extension.Sequence)...)
+		}
+
+		for _, attr := range complexContent.Extension.Attribute {
+			res = append(res, t.generateFromAttribute(attr))
+		}
+	}
+
+	if complexContent.Restriction != nil {
+		// это обрабатывать смысла нет, т.к. там ограничиваются только значения полей, но не сами поля
+	}
+
+	return res
 }
 
-func (t *SchemaTypes) parseAttributeGroup(attrGr *xsd.AttributeGroup) {
+func (t *SchemaTypes) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 	curType := &attributeGroup{Name: attrGr.Name, Namespace: t.targetNamespace}
 
 	for _, attr := range attrGr.Attribute {

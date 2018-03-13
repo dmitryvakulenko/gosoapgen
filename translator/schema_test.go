@@ -288,13 +288,29 @@ func TestSimpleContent(t *testing.T) {
 }
 
 func TestComplexContent(t *testing.T) {
-	s := loadXsd("simpleContent.xsd")
+	s := loadXsd("complexContent.xsd")
 	ns := "namespace"
 	res := Parse(s, ns)
 	typesList := res.GetTypes()
 
 	if len(typesList) != 4 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[3].(*ComplexType)
+	typeName := "AddressWithModeType"
+	if cType.Name != typeName {
+		t.Fatalf("Type name should be %q, got %q instead", typeName, cType.Name)
+	}
+
+	if len(cType.Fields) != 3 {
+		t.Fatalf("Fields amount should be 3, got %q instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[2]
+	fieldName := "Mode"
+	if field.Name != fieldName {
+		t.Fatalf("Type name should be %q, got %q instead", fieldName, field.Name)
 	}
 }
 

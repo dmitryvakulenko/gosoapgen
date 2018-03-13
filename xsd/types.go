@@ -69,7 +69,8 @@ type Restriction struct {
 }
 
 type Extension struct {
-	Base string `xml:"base,attr"`
+	Base           string            `xml:"base,attr"`
+	Sequence       *Sequence         `xml:"sequence"`
 	Attribute      []*Attribute      `xml:"attribute"`
 	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
 }
