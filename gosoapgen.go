@@ -42,7 +42,7 @@ func main() {
 	structs := translator.GenerateTypes(schemas)
 	res := generating.Types(structs)
 
-	file, err := os.Open("./res.go")
+	file, err := os.Open("./result/res.go")
 	file.Write([]byte(res))
 	file.Close()
 }
