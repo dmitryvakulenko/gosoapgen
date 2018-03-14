@@ -22,6 +22,7 @@ type ComplexType struct {
 	Name      string
 	Namespace string
 	Fields    []*Field
+	BaseType  string
 }
 
 func (t ComplexType) GetNamespace() string {

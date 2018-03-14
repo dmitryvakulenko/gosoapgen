@@ -29,6 +29,8 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	for _, elem := range s.ComplexType {
 		t.generateFromComplexType(elem, "")
 	}
+
+	t.resolveBaseTypes()
 }
 
 
@@ -141,7 +143,11 @@ func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, name str
 	}
 
 	if complexType.ComplexContent != nil {
-		curStruct.Fields = append(curStruct.Fields, t.generateFromComplexContent(complexType.ComplexContent)...)
+		fields, baseType := t.generateFromComplexContent(complexType.ComplexContent)
+		curStruct.Fields = append(curStruct.Fields, fields...)
+		if baseType != "" {
+			curStruct.BaseType = baseType
+		}
 	}
 }
 
@@ -210,16 +216,20 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	return res
 }
 
-func (t *decoder) generateFromComplexContent(complexContent *xsd.Content) []*Field {
-	var res []*Field
+func (t *decoder) generateFromComplexContent(complexContent *xsd.Content) ([]*Field, string) {
+	var (
+		res []*Field
+		baseType string
+	)
 
 	if complexContent.Extension != nil {
 		baseType, ok := t.findType(complexContent.Extension.Base)
 		if !ok {
-			panic("No type " + complexContent.Extension.Base + " found")
+			baseType = complexContent.Extension.Base
+		} else {
+			res = append(res, baseType.(*ComplexType).Fields...)
 		}
 
-		res = append(res, baseType.(*ComplexType).Fields...)
 		if complexContent.Extension.Sequence != nil {
 			res = append(res, t.generateFromSequence(complexContent.Extension.Sequence)...)
 		}
@@ -233,7 +243,7 @@ func (t *decoder) generateFromComplexContent(complexContent *xsd.Content) []*Fie
 		// это обрабатывать смысла нет, т.к. там ограничиваются только значения полей, но не сами поля
 	}
 
-	return res
+	return res, baseType
 }
 
 func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
@@ -255,6 +265,30 @@ func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType) {
 	t.addType(curType)
 }
 
+
+func (t *decoder) resolveBaseTypes() {
+	for _, tp := range t.typesList {
+		cType, ok := tp.(*ComplexType)
+		if !ok || cType.BaseType == "" {
+			continue
+		}
+
+		t.resolveBaseTypesImpl(cType)
+	}
+}
+
+func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
+	bType, ok := t.findType(cType.BaseType)
+	if !ok {
+		panic("Type " + cType.BaseType + " not found")
+	}
+
+	baseType := bType.(*ComplexType)
+	if baseType.BaseType != "" {
+		t.resolveBaseTypesImpl(baseType)
+	}
+	cType.Fields = append(baseType.Fields, cType.Fields...)
+}
 
 func parseType(xmlType string) string {
 	parts := strings.Split(xmlType, ":")

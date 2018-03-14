@@ -311,6 +311,15 @@ func TestNoDuplicateTypes(t *testing.T) {
 	}
 }
 
+func TestWrongTypesOrder(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom("complexContentWrongOrder.xsd", ns)
+
+	if len(typesList) != 4 {
+		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+	}
+}
+
 
 func parseTypesFrom(name, namespace string) []interface{} {
 	s := loadSchemaFrom(name)
