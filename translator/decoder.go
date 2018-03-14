@@ -254,7 +254,9 @@ func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	t.attributeGroupCache.put(curType)
+	if !t.attributeGroupCache.has(curType) {
+		t.attributeGroupCache.put(curType)
+	}
 }
 
 func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType) {
