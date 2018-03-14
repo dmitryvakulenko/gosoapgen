@@ -7,8 +7,9 @@ import (
 
 func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	t.curTargetNamespace = targetNamespace
+	t.namespacesList = append(t.namespacesList, targetNamespace)
 
-	t.fillNamespaces(s)
+	t.parseNamespaces(s)
 
 	for _, attrGr := range s.AttributeGroup {
 		t.parseAttributeGroupTypes(attrGr)
@@ -57,7 +58,7 @@ func (t *decoder) parseFullName(fullTypeName string) (string, string) {
 	}
 }
 
-func (t *decoder) fillNamespaces(s *xsd.Schema) {
+func (t *decoder) parseNamespaces(s *xsd.Schema) {
 	t.curXmlns = make(map[string]string)
 	for _, v := range s.Attrs {
 		if v.Name.Space != "xmlns" {
@@ -65,6 +66,10 @@ func (t *decoder) fillNamespaces(s *xsd.Schema) {
 		}
 		t.curXmlns[v.Name.Local] = v.Value
 	}
+}
+
+func (t *decoder) GetNamespaces(s *xsd.Schema) []string {
+	return t.namespacesList
 }
 
 
