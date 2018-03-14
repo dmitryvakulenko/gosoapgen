@@ -29,6 +29,6 @@ func TestStoringType(t *testing.T) {
 
 	resType, ok := res.(*ComplexType)
 	if resType != addedType {
-		t.Errorf("Types addresses are not equal %p != %p", resType, addedType)
+		t.Errorf("Import addresses are not equal %p != %p", resType, addedType)
 	}
 }

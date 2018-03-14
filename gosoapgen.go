@@ -7,8 +7,6 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"path"
 	"github.com/dmitryvakulenko/gosoapgen/translator"
-	"github.com/dmitryvakulenko/gosoapgen/generating"
-	"github.com/dmitryvakulenko/gosoapgen/xsd"
 )
 
 func main() {
@@ -33,16 +31,10 @@ func main() {
 	xmlFile.Close()
 
 	basePath := path.Dir(wsdlName)
-	var schemas []*xsd.Schema
-	for _, attr := range def.Types {
-		s := xsd.ParseSchema(basePath + "/" + attr.SchemaLocation)
-		schemas = append(schemas, s...)
+	parser := translator.NewParser()
+	for _, attr := range def.Import {
+		parser.Parse(path.Clean(basePath + "/" + attr.SchemaLocation))
 	}
 
-	structs := translator.GenerateTypes(schemas)
-	res := generating.Types(structs)
-
-	file, err := os.Open("./result/res.go")
-	file.Write([]byte(res))
-	file.Close()
+	fmt.Printf("DONE")
 }
