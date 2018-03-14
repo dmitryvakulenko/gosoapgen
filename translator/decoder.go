@@ -113,7 +113,12 @@ func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field := &Field{}
 	field.Name = attribute.Name
 	field.XmlExpr = attribute.Name + ",attr"
-	field.Type = parseType(attribute.Type)
+
+	if attribute.Type != "" {
+		field.Type = parseType(attribute.Type)
+	} else if attribute.SimpleType != nil {
+		field.Type = parseType(attribute.SimpleType.Restriction.Base)
+	}
 
 	return field
 }
@@ -304,7 +309,7 @@ func parseType(xmlType string) string {
 	}
 
 	switch fieldType {
-	case "integer":
+	case "integer", "positiveInteger", "nonNegativeInteger":
 		return "int"
 	case "decimal":
 		return "float64"
@@ -312,6 +317,8 @@ func parseType(xmlType string) string {
 		return "bool"
 	case "date":
 		return "time.time"
+	case "string", "NMTOKEN", "anyURI":
+		return "string"
 	default:
 		return fieldType
 	}

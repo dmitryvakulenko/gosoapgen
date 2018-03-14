@@ -7,6 +7,7 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"path"
 	"github.com/dmitryvakulenko/gosoapgen/translator"
+	"github.com/dmitryvakulenko/gosoapgen/generator"
 )
 
 func main() {
@@ -36,5 +37,13 @@ func main() {
 		parser.Parse(path.Clean(basePath + "/" + attr.SchemaLocation))
 	}
 
-	fmt.Printf("DONE")
+	res := generator.All(parser.GetTypes())
+
+	file, err := os.Create("./result/res.go")
+	if err != nil {
+		fmt.Printf("Can't write result file")
+		return
+	}
+	file.Write([]byte(res))
+	file.Close()
 }

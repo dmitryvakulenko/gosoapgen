@@ -20,6 +20,10 @@ func (p *Parser) Parse(fileName string) {
 	p.parseImpl(fileName, "")
 }
 
+func (p *Parser) GetTypes() []interface{} {
+	return p.decoder.GetTypes()
+}
+
 func (p *Parser) parseImpl(fileName, ns string) {
 	s := loadSchema(fileName)
 

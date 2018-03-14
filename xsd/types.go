@@ -7,8 +7,9 @@ type Sequence struct {
 }
 
 type Attribute struct {
-	Name string `xml:"name,attr"`
-	Type string `xml:"type,attr"`
+	Name       string     `xml:"name,attr"`
+	Type       string     `xml:"type,attr"`
+	SimpleType *SimpleType `xml:"simpleType"`
 }
 
 type Element struct {
