@@ -290,6 +290,7 @@ func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
 		t.resolveBaseTypesImpl(baseType)
 	}
 	cType.Fields = append(baseType.Fields, cType.Fields...)
+	cType.BaseType = ""
 }
 
 func parseType(xmlType string) string {
