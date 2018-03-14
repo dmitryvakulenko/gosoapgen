@@ -7,7 +7,10 @@ import (
 
 func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	t.curTargetNamespace = targetNamespace
-	t.namespacesList = append(t.namespacesList, targetNamespace)
+
+	if _, ok := t.namespacesList[targetNamespace]; !ok {
+		t.namespacesList[targetNamespace] = true
+	}
 
 	t.parseNamespaces(s)
 
@@ -35,8 +38,10 @@ func (t *decoder) GetTypes() []interface{} {
 
 
 func (t *decoder) addType(newType Namespaceable) {
-	t.typesList = append(t.typesList, newType)
-	t.typesListCache.put(newType)
+	if !t.typesListCache.has(newType) {
+		t.typesList = append(t.typesList, newType)
+		t.typesListCache.put(newType)
+	}
 }
 
 func (t *decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
@@ -68,8 +73,16 @@ func (t *decoder) parseNamespaces(s *xsd.Schema) {
 	}
 }
 
-func (t *decoder) GetNamespaces(s *xsd.Schema) []string {
-	return t.namespacesList
+func (t *decoder) GetNamespaces() []string {
+	res := make([]string, len(t.namespacesList))
+
+	index := 0
+	for ns := range t.namespacesList {
+		res[index] = ns
+		index++
+	}
+
+	return res
 }
 
 

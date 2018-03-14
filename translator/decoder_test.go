@@ -8,14 +8,14 @@ import (
 )
 
 func TestGetNoTypes(t *testing.T) {
-	typesList := loadXsd("empty.xsd", "")
+	typesList := parseTypesFrom("empty.xsd", "")
 	if len(typesList) != 0 {
 		t.Errorf("Should be no types")
 	}
 }
 
 func TestGenerateSimpleTypes(t *testing.T) {
-	typesList := loadXsd("simpleType.xsd", "")
+	typesList := parseTypesFrom("simpleType.xsd", "")
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
@@ -39,7 +39,7 @@ func TestGenerateSimpleTypes(t *testing.T) {
 }
 
 func TestParseElementTypes(t *testing.T) {
-	typesList := loadXsd("element.xsd", "")
+	typesList := parseTypesFrom("element.xsd", "")
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -89,7 +89,7 @@ func TestParseElementTypes(t *testing.T) {
 }
 
 func TestGenerateSchemaComplexTypes(t *testing.T) {
-	typesList := loadXsd("complexType.xsd", "")
+	typesList := parseTypesFrom("complexType.xsd", "")
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -114,7 +114,7 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 }
 
 func TestComplexTypeWithAttributes(t *testing.T) {
-	typesList := loadXsd("attribute.xsd", "")
+	typesList := parseTypesFrom("attribute.xsd", "")
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -151,7 +151,7 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 }
 
 func TestInnerComplexTypes(t *testing.T) {
-	typesList := loadXsd("innerComplexType.xsd", "")
+	typesList := parseTypesFrom("innerComplexType.xsd", "")
 
 	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
@@ -210,7 +210,7 @@ func TestInnerComplexTypes(t *testing.T) {
 }
 
 func TestAttributeGroup(t *testing.T) {
-	typesList := loadXsd("attributeGroup.xsd", "")
+	typesList := parseTypesFrom("attributeGroup.xsd", "")
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -239,7 +239,7 @@ func TestAttributeGroup(t *testing.T) {
 
 func TestSimpleContent(t *testing.T) {
 	ns := "namespace"
-	typesList := loadXsd("simpleContent.xsd", ns)
+	typesList := parseTypesFrom("simpleContent.xsd", ns)
 
 	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
@@ -270,7 +270,7 @@ func TestSimpleContent(t *testing.T) {
 
 func TestComplexContent(t *testing.T) {
 	ns := "namespace"
-	typesList := loadXsd("complexContent.xsd", ns)
+	typesList := parseTypesFrom("complexContent.xsd", ns)
 
 	if len(typesList) != 4 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
@@ -293,7 +293,40 @@ func TestComplexContent(t *testing.T) {
 	}
 }
 
-func loadXsd(name, namespace string) []interface{} {
+func TestNoDuplicateTypes(t *testing.T) {
+	decoder := newDecoder()
+	s := loadSchemaFrom("complexType.xsd")
+	decoder.decode(&s, s.TargetNamespace)
+	s = loadSchemaFrom("complexType.xsd")
+	decoder.decode(&s, s.TargetNamespace)
+
+	typesList := decoder.GetTypes()
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	namespaces := decoder.GetNamespaces()
+	if len(namespaces) != 1 {
+		t.Fatalf("Wrong namespaces amount. 1 expected, %d got", len(namespaces))
+	}
+}
+
+
+func parseTypesFrom(name, namespace string) []interface{} {
+	s := loadSchemaFrom(name)
+	res := newDecoder()
+	if namespace != "" {
+		res.decode(&s, namespace)
+	} else {
+		res.decode(&s, s.TargetNamespace)
+	}
+
+
+	return res.GetTypes()
+}
+
+
+func loadSchemaFrom(name string) xsd.Schema {
 	reader, err := os.Open("./translator/schema_test/" + name)
 	defer reader.Close()
 
@@ -307,13 +340,5 @@ func loadXsd(name, namespace string) []interface{} {
 		panic(err)
 	}
 
-	res := newDecoder()
-	if namespace != "" {
-		res.decode(&s, namespace)
-	} else {
-		res.decode(&s, s.TargetNamespace)
-	}
-
-
-	return res.GetTypes()
+	return s
 }

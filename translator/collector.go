@@ -49,6 +49,23 @@ func (t *namespacedTypes) put(addedType Namespaceable) {
 	(*ns)[typeName] = addedType
 }
 
+func (t *namespacedTypes) has(addedType Namespaceable) bool {
+	var (
+		namespace = addedType.GetNamespace()
+		typeName = addedType.GetName()
+	)
+
+	if _, ok := (*t)[namespace]; !ok {
+		return false
+	}
+
+	ns := (*t)[namespace]
+	if _, ok := (*ns)[typeName]; !ok {
+		return false
+	}
+
+	return true
+}
 
 func (t *namespacedTypes) getAllTypes() []interface{} {
 	var res []interface{}
