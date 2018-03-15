@@ -7,8 +7,8 @@ type Sequence struct {
 }
 
 type Attribute struct {
-	Name       string     `xml:"name,attr"`
-	Type       string     `xml:"type,attr"`
+	Name       string      `xml:"name,attr"`
+	Type       string      `xml:"type,attr"`
 	SimpleType *SimpleType `xml:"simpleType"`
 }
 
@@ -23,6 +23,8 @@ type Element struct {
 type SimpleType struct {
 	Name        string      `xml:"name,attr"`
 	Restriction Restriction `xml:"restriction"`
+	Union       *Union      `xml:"union"`
+	List        *List       `xml:"list"`
 }
 
 type ComplexType struct {
@@ -74,4 +76,12 @@ type Extension struct {
 	Sequence       *Sequence         `xml:"sequence"`
 	Attribute      []*Attribute      `xml:"attribute"`
 	AttributeGroup []*AttributeGroup `xml:"attributeGroup"`
+}
+
+type Union struct {
+	MemberTypes string `xml:"memberTypes,attr"`
+}
+
+type List struct {
+	ItemType string `xml:"itemType,attr"`
 }
