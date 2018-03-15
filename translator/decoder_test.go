@@ -17,24 +17,8 @@ func TestGetNoTypes(t *testing.T) {
 func TestGenerateSimpleTypes(t *testing.T) {
 	typesList := parseTypesFrom("simpleType.xsd", "")
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
-	}
-
-	curType := typesList[0].(*SimpleType)
-
-	name := "AlphaString_Length1To2"
-	if curType.Name != name {
-		t.Errorf("Type name should be %q, got %q", name, curType.Name)
-	}
-
-	if curType.Type != "string" {
-		t.Errorf("Type should be 'string', %s getting", curType.Type)
-	}
-
-	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
-	if curType.Namespace != ns {
-		t.Errorf("Type should be %q, %q getting", ns, curType.Namespace)
+	if len(typesList) != 0 {
+		t.Fatalf("Wrong number of types. 0 expected, but got %d", len(typesList))
 	}
 }
 
@@ -141,8 +125,8 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
 	}
 
-	if field.Type != "NMTOKEN" {
-		t.Errorf("Field type should be 'NMTOKEN' %s instead", field.Type)
+	if field.Type != "string" {
+		t.Errorf("Field type should be 'string' %s instead", field.Type)
 	}
 
 	if field.XmlExpr != "TransactionStatusCode,attr" {
