@@ -305,6 +305,16 @@ func TestWrongTypesOrder(t *testing.T) {
 }
 
 
+func TestParseElementRef(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom("elementRef.xsd", ns)
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+}
+
+
 func parseTypesFrom(name, namespace string) []*ComplexType {
 	s := loadSchemaFrom(name)
 	res := newDecoder()

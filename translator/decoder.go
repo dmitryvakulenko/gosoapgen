@@ -106,7 +106,7 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 	if element.Type == "" {
 		field.Type = field.Name
 	} else {
-		field.Type = element.Type
+		field.TypeQName = element.Type
 	}
 
 	return field
@@ -118,9 +118,9 @@ func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field.XmlExpr = attribute.Name + ",attr"
 
 	if attribute.Type != "" {
-		field.Type = attribute.Type
+		field.TypeQName = attribute.Type
 	} else if attribute.SimpleType != nil {
-		field.Type = attribute.SimpleType.Restriction.Base
+		field.TypeQName = attribute.SimpleType.Restriction.Base
 	}
 
 	return field
@@ -329,7 +329,9 @@ func parseStandardType(xmlType string) string {
 func (t *decoder) resolveTypes() {
 	for _, curType := range t.typesList {
 		for _, curField := range curType.Fields {
-			curField.Type = t.resolveTypeImpl(curField.Type)
+			if curField.Type == "" {
+				curField.Type = t.resolveTypeImpl(curField.TypeQName)
+			}
 		}
 	}
 }

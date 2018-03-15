@@ -50,6 +50,7 @@ func (t SimpleType) GetName() string {
 type Field struct {
 	Name      string
 	Type      string
+	TypeQName string
 	XmlExpr   string
 	Comment   string
 	Namespace string
