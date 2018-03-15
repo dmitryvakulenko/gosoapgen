@@ -5,7 +5,7 @@ import (
 )
 
 func TestNoTypes(t *testing.T) {
-	builder := createAndDecode("empty.xsd")
+	builder := createAndDecode("empty.xsd", "")
 
 	typesList := builder.getTypes()
 	if len(typesList) != 0 {
@@ -14,7 +14,7 @@ func TestNoTypes(t *testing.T) {
 }
 
 func TestSimpleType(t *testing.T) {
-	builder := createAndDecode("simpleType.xsd")
+	builder := createAndDecode("simpleType.xsd", "")
 
 	typesList := builder.getTypes()
 	if len(typesList) != 0 {
@@ -22,8 +22,9 @@ func TestSimpleType(t *testing.T) {
 	}
 }
 
+
 func TestElementComplexType(t *testing.T) {
-	builder := createAndDecode("element.xsd")
+	builder := createAndDecode("element.xsd", "")
 
 	typesList := builder.getTypes()
 	if len(typesList) != 1 {
@@ -52,8 +53,31 @@ func TestElementComplexType(t *testing.T) {
 	}
 }
 
-func createAndDecode(fileName string) Builder {
-	b := NewBuilder()
+
+func TestSchemaComplexTypes(t *testing.T) {
+	builder := createAndDecode("complexType.xsd", "ns")
+
+	typesList := builder.getTypes()
+	if len(typesList) != 1 {
+		t.Fatalf("Types amount should be 1, got %d", len(typesList))
+	}
+
+	curType := typesList[0]
+	if len(curType.Fields) != 4 {
+		t.Fatalf("Fields amount should be 4, got %d", len(curType.Fields))
+	}
+
+	field := curType.Fields[2]
+	fieldName := "WorkstationID"
+	if field.Name != fieldName {
+		t.Errorf("Field name should be %q, got %q", fieldName, field.Name)
+	}
+
+
+}
+
+func createAndDecode(fileName, namespace string) Builder {
+	b := NewBuilder(namespace)
 	b.Build("./testdata/" + fileName)
 
 	return b

@@ -3,6 +3,7 @@ package tree
 type ComplexType struct {
 	Name      string
 	Namespace string
+	Attributes []*Attribute
 	Fields    []*Field
 	Parent    string
 }
@@ -16,14 +17,19 @@ func NewComplexType(name, ns string) *ComplexType {
 type Field struct {
 	Name      string
 	Type      string
+	TypeName  string
 	Namespace string
-	XmlExpr   string
 	Comment   string
+}
+
+type Field struct {
+	Name      string
+	Type      string
 }
 
 func NewField(name, fieldType, expr string) *Field {
 	return &Field{
-		Name:    name,
-		Type:    fieldType,
-		XmlExpr: expr}
+		Name:     name,
+		TypeName: fieldType,
+		XmlExpr:  expr}
 }

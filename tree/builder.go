@@ -14,8 +14,9 @@ type Builder struct {
 	curNamespace string
 }
 
-func NewBuilder() Builder {
-	return Builder{}
+func NewBuilder(namespace string) Builder {
+	return Builder{
+		curNamespace: namespace}
 }
 
 func (b *Builder) getTypes() []*ComplexType {
@@ -48,7 +49,9 @@ func (b *Builder) parseToken(token xml.Token) {
 func (b *Builder) startElement(element xml.StartElement) {
 	switch element.Name.Local {
 	case "schema":
-		b.curNamespace = findAttributeValue(element.Attr, "targetNamespace")
+		if b.curNamespace == "" {
+			b.curNamespace = findAttributeValue(element.Attr, "targetNamespace")
+		}
 	case "element":
 		if b.curType == nil {
 			b.curType = NewComplexType(findAttributeValue(element.Attr, "name"), b.curNamespace)

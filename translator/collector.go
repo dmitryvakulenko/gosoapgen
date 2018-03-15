@@ -78,3 +78,17 @@ func (t *namespacedTypes) getAllTypes() []interface{} {
 
 	return res
 }
+
+func (t *namespacedTypes) Merge(newTypes namespacedTypes) {
+	for ns, nsList := range newTypes {
+		if _, ok := (*t)[ns]; !ok {
+			newCollection := make(typesCollection)
+			(*t)[ns] = &newCollection
+		}
+
+		curCollection := (*t)[ns]
+		for typeName, value := range *nsList {
+			(*curCollection)[typeName] = value
+		}
+	}
+}
