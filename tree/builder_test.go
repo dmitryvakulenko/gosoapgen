@@ -44,6 +44,12 @@ func TestElementComplexType(t *testing.T) {
 	if len(curType.Fields) != 4 {
 		t.Fatalf("Fields amount should be 4, got %d", len(curType.Fields))
 	}
+
+	field := curType.Fields[3]
+	fieldName := "TransactionStatusCode"
+	if field.Name != fieldName {
+		t.Errorf("Field name should be %q, got %q", fieldName, field.Name)
+	}
 }
 
 func createAndDecode(fileName string) Builder {
