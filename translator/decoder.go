@@ -23,7 +23,11 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.Element {
-		t.generateFromComplexType(elem.ComplexType, elem.Name)
+		if elem.ComplexType != nil {
+			t.generateFromComplexType(elem.ComplexType, elem.Name)
+		} else {
+			t.generateFromElement(elem, true)
+		}
 	}
 
 	for _, elem := range s.ComplexType {
@@ -91,8 +95,17 @@ func (t *decoder) GetNamespaces() []string {
 }
 
 
-func (t *decoder) generateFromElement(element *xsd.Element) *Field {
+func (t *decoder) generateFromElement(element *xsd.Element, isSchemaParent bool) *Field {
 	if element == nil {
+		return nil
+	}
+
+	if isSchemaParent {
+		newType := &SimpleType{
+			Name: element.Name,
+			Type: element.Type,
+			Namespace: t.curTargetNamespace}
+		t.addType(newType)
 		return nil
 	}
 
@@ -103,10 +116,12 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 
 	t.generateFromComplexType(element.ComplexType, field.Name)
 
-	if element.Type == "" {
-		field.Type = field.Name
-	} else {
+	if element.Type != "" {
 		field.TypeQName = element.Type
+	} else if element.Ref != "" {
+		field.TypeQName = element.Ref
+	} else {
+		field.Type = field.Name
 	}
 
 	return field
@@ -182,7 +197,7 @@ func (t *decoder) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup)
 func (t *decoder) generateFromSequence(sequence *xsd.Sequence) []*Field {
 	var res []*Field
 	for _, childElem := range sequence.Element {
-		field := t.generateFromElement(childElem)
+		field := t.generateFromElement(childElem, false)
 		if field != nil {
 			res = append(res, field)
 		}
@@ -202,7 +217,7 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	res = append(res, valField)
 
 	if simpleContent.Extension != nil {
-		valField.Type = simpleContent.Extension.Base
+		valField.TypeQName = simpleContent.Extension.Base
 		for _, v := range simpleContent.Extension.Attribute {
 			res = append(res, t.generateFromAttribute(v))
 		}
@@ -217,7 +232,7 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	}
 
 	if simpleContent.Restriction != nil {
-		valField.Type = simpleContent.Restriction.Base
+		valField.TypeQName = simpleContent.Restriction.Base
 		// парсить ограничения смысла нет
 	}
 
@@ -331,6 +346,11 @@ func (t *decoder) resolveTypes() {
 		for _, curField := range curType.Fields {
 			if curField.Type == "" {
 				curField.Type = t.resolveTypeImpl(curField.TypeQName)
+			}
+			// обработка <element ref="">
+			if curField.Name == "" {
+				typeI, _ := t.findType(curField.TypeQName)
+				curField.Name = typeI.(*SimpleType).Name
 			}
 		}
 	}
