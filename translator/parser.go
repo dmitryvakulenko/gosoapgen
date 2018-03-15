@@ -20,7 +20,7 @@ func (p *Parser) Parse(fileName string) {
 	p.parseImpl(fileName, "")
 }
 
-func (p *Parser) GetTypes() []interface{} {
+func (p *Parser) GetTypes() []*ComplexType {
 	return p.decoder.GetTypes()
 }
 

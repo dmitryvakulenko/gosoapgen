@@ -30,19 +30,22 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 		t.generateFromComplexType(elem, "")
 	}
 
+	t.resolveTypes()
 	t.resolveBaseTypes()
 }
 
 
-func (t *decoder) GetTypes() []interface{} {
+func (t *decoder) GetTypes() []*ComplexType {
 	return t.typesList
 }
 
 
 func (t *decoder) addType(newType Namespaceable) {
 	if !t.typesListCache.has(newType) {
-		t.typesList = append(t.typesList, newType)
 		t.typesListCache.put(newType)
+		if v, ok := newType.(*ComplexType); ok {
+			t.typesList = append(t.typesList, v)
+		}
 	}
 }
 
@@ -103,7 +106,7 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 	if element.Type == "" {
 		field.Type = field.Name
 	} else {
-		field.Type = parseType(element.Type)
+		field.Type = element.Type
 	}
 
 	return field
@@ -115,9 +118,9 @@ func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field.XmlExpr = attribute.Name + ",attr"
 
 	if attribute.Type != "" {
-		field.Type = parseType(attribute.Type)
+		field.Type = attribute.Type
 	} else if attribute.SimpleType != nil {
-		field.Type = parseType(attribute.SimpleType.Restriction.Base)
+		field.Type = attribute.SimpleType.Restriction.Base
 	}
 
 	return field
@@ -199,7 +202,7 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	res = append(res, valField)
 
 	if simpleContent.Extension != nil {
-		valField.Type = parseType(simpleContent.Extension.Base)
+		valField.Type = simpleContent.Extension.Base
 		for _, v := range simpleContent.Extension.Attribute {
 			res = append(res, t.generateFromAttribute(v))
 		}
@@ -214,7 +217,7 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	}
 
 	if simpleContent.Restriction != nil {
-		valField.Type = parseType(simpleContent.Restriction.Base)
+		valField.Type = simpleContent.Restriction.Base
 		// парсить ограничения смысла нет
 	}
 
@@ -267,20 +270,17 @@ func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType) {
 	curType := &SimpleType{
 		Name:      simpleType.Name,
-		Type:      parseType(simpleType.Restriction.Base),
+		Type:      simpleType.Restriction.Base,
 		Namespace: t.curTargetNamespace}
 	t.addType(curType)
 }
 
 
 func (t *decoder) resolveBaseTypes() {
-	for _, tp := range t.typesList {
-		cType, ok := tp.(*ComplexType)
-		if !ok || cType.BaseType == "" {
-			continue
+	for _, cType := range t.typesList {
+		if cType.BaseType != "" {
+			t.resolveBaseTypesImpl(cType)
 		}
-
-		t.resolveBaseTypesImpl(cType)
 	}
 }
 
@@ -298,7 +298,8 @@ func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
 	cType.BaseType = ""
 }
 
-func parseType(xmlType string) string {
+
+func parseStandardType(xmlType string) string {
 	parts := strings.Split(xmlType, ":")
 
 	var fieldType string
@@ -320,6 +321,36 @@ func parseType(xmlType string) string {
 	case "string", "NMTOKEN", "anyURI":
 		return "string"
 	default:
-		return fieldType
+		return ""
 	}
+}
+
+
+func (t *decoder) resolveTypes() {
+	for _, curType := range t.typesList {
+		for _, curField := range curType.Fields {
+			curField.Type = t.resolveTypeImpl(curField.Type)
+		}
+	}
+}
+
+
+func (t *decoder) resolveTypeImpl(typeName string) string {
+	tmpType := parseStandardType(typeName)
+	if tmpType != "" {
+		return tmpType
+	} else {
+		curType, ok := t.findType(typeName)
+		if !ok {
+			panic("Type " + typeName + " not found")
+		}
+		switch v := curType.(type) {
+		case *SimpleType:
+			return t.resolveTypeImpl(v.Type)
+		case *ComplexType:
+			return v.Name
+		}
+	}
+
+	return ""
 }

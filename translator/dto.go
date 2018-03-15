@@ -1,7 +1,7 @@
 package translator
 
 type decoder struct {
-	typesList           []interface{}
+	typesList           []*ComplexType
 	namespacesList      map[string]bool
 	curTargetNamespace  string
 	typesListCache      *namespacedTypes
@@ -11,7 +11,7 @@ type decoder struct {
 
 func newDecoder() decoder {
 	return decoder{
-		typesList:           make([]interface{}, 0),
+		typesList:           make([]*ComplexType, 0),
 		namespacesList:      make(map[string]bool),
 		typesListCache:      newTypesCollection(),
 		attributeGroupCache: newTypesCollection(),

@@ -23,5 +23,23 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+
+    <xs:complexType name="ElementManagementSegmentType">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">To specify the PNR segments/elements references and action to apply.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="reference" minOccurs="0" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">segments/elements references - type and number</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="segmentName" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">PNR segment or element name</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
 </xs:schema>
 

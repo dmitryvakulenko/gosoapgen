@@ -12,18 +12,28 @@
                         <xs:documentation>Specifies a user identifier</xs:documentation>
                     </xs:annotation>
                 </xs:element>
-                <xs:element name="FullLocation" type="ama_appmdw_v3:LocationType" minOccurs="0">
+                <xs:element name="FullLocation" type="xs:string" minOccurs="0">
                     <xs:annotation>
                         <xs:documentation>Full Location of the workstation</xs:documentation>
                     </xs:annotation>
                 </xs:element>
-                <xs:element name="WorkstationID" type="ota:StringLength1to64" minOccurs="0">
+                <xs:element name="WorkstationID" type="StringLength1to64" minOccurs="0">
                     <xs:annotation>
                         <xs:documentation>Contains a workstation Identifier. It is used to retrieve the physical origin of the request (mainly for printing purposes).</xs:documentation>
                     </xs:annotation>
                 </xs:element>
-                <xs:element name="Application" type="ama_appmdw_v3:ApplicationType" minOccurs="0"/>
+                <xs:element name="Application" type="xs:string" minOccurs="0"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+
+    <xs:simpleType name="StringLength1to64">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Used for Character Strings, length 1 to 64.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="64"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>

@@ -29,7 +29,7 @@ func TestParseElementTypes(t *testing.T) {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 
-	cType := typesList[0].(*ComplexType)
+	cType := typesList[0]
 
 	typeName := "Session"
 	if cType.Name != typeName {
@@ -79,7 +79,7 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 
-	cType := typesList[0].(*ComplexType)
+	cType := typesList[0]
 
 	typeName := "AMA_SecurityHostedUser"
 	if cType.Name != typeName {
@@ -104,7 +104,7 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 
-	cType := typesList[0].(*ComplexType)
+	cType := typesList[0]
 
 	typeName := "Session"
 	if cType.Name != typeName {
@@ -137,12 +137,12 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 func TestInnerComplexTypes(t *testing.T) {
 	typesList := parseTypesFrom("innerComplexType.xsd", "")
 
-	if len(typesList) != 2 {
-		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
 	}
 
-	firstType := typesList[0].(*ComplexType)
-	secType := typesList[1].(*ComplexType)
+	firstType := typesList[0]
+	secType := typesList[1]
 
 	typeName := "PNR_AddMultiElements"
 	if firstType.Name != typeName {
@@ -200,7 +200,7 @@ func TestAttributeGroup(t *testing.T) {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 
-	cType := typesList[0].(*ComplexType)
+	cType := typesList[0]
 
 	name := "CodeType"
 	if cType.Name != "CodeType" {
@@ -225,11 +225,11 @@ func TestSimpleContent(t *testing.T) {
 	ns := "namespace"
 	typesList := parseTypesFrom("simpleContent.xsd", ns)
 
-	if len(typesList) != 2 {
+	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
 	}
 
-	cType := typesList[1].(*ComplexType)
+	cType := typesList[0]
 	name := "CompanyNameType"
 	if cType.Name != name {
 		t.Fatalf("Type name should be %q, got %q instead", name, cType.Name)
@@ -246,7 +246,7 @@ func TestSimpleContent(t *testing.T) {
 		t.Fatalf("Field name should be %q, got %q instead", name, field.Name)
 	}
 
-	fType := "StringLength0to128"
+	fType := "string"
 	if field.Type != fType {
 		t.Fatalf("Field type should be %q, got %q instead", fType, field.Type)
 	}
@@ -256,11 +256,11 @@ func TestComplexContent(t *testing.T) {
 	ns := "namespace"
 	typesList := parseTypesFrom("complexContent.xsd", ns)
 
-	if len(typesList) != 4 {
+	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
 	}
 
-	cType := typesList[3].(*ComplexType)
+	cType := typesList[1]
 	typeName := "AddressWithModeType"
 	if cType.Name != typeName {
 		t.Fatalf("Type name should be %q, got %q instead", typeName, cType.Name)
@@ -299,13 +299,13 @@ func TestWrongTypesOrder(t *testing.T) {
 	ns := "namespace"
 	typesList := parseTypesFrom("complexContentWrongOrder.xsd", ns)
 
-	if len(typesList) != 4 {
+	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
 	}
 }
 
 
-func parseTypesFrom(name, namespace string) []interface{} {
+func parseTypesFrom(name, namespace string) []*ComplexType {
 	s := loadSchemaFrom(name)
 	res := newDecoder()
 	if namespace != "" {
@@ -313,7 +313,6 @@ func parseTypesFrom(name, namespace string) []interface{} {
 	} else {
 		res.decode(&s, s.TargetNamespace)
 	}
-
 
 	return res.GetTypes()
 }
