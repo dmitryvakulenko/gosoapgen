@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xml.amadeus.com/PNRADD_10_1_1A" xmlns="http://xml.amadeus.com/PNRADD_10_1_1A" elementFormDefault="qualified">
+    <xs:simpleType name="AlphaString_Length1To2">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Format limitations: a..2</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1" />
+            <xs:maxLength value="2" />
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
