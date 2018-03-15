@@ -13,6 +13,14 @@ func TestNoTypes(t *testing.T) {
 	}
 }
 
+func TestSimpleType(t *testing.T) {
+	builder := createAndDecode("simpleType.xsd")
+
+	typesList := builder.getTypes()
+	if len(typesList) != 0 {
+		t.Fatalf("Types amount should be 0, got %d", len(typesList))
+	}
+}
 
 func createAndDecode(fileName string) Builder {
 	b := NewBuilder()
