@@ -314,6 +314,20 @@ func TestParseElementRef(t *testing.T) {
 	}
 }
 
+func TestParseComplexElement(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom("complexElement.xsd", ns)
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	field := typesList[2].Fields[0]
+	if field.Type != "string" {
+		t.Errorf("Field type should be string, %q got", field.Type)
+	}
+}
+
 
 func parseTypesFrom(name, namespace string) []*ComplexType {
 	s := loadSchemaFrom(name)

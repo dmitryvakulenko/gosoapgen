@@ -13,8 +13,13 @@ var innerTypes = []string{
 	"string"}
 
 func All(typesList []*translator.ComplexType) string {
+	var processedTypes = make(map[string]bool)
 	res := ""
 	for _, curType := range typesList {
+		if _, ok := processedTypes[curType.Name]; ok {
+			continue
+		}
+		processedTypes[curType.Name] = true
 		res += "type " + firstUp(curType.Name) + " struct {\n"
 		for _, f := range curType.Fields {
 			res += firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + f.XmlExpr + "\"`\n"

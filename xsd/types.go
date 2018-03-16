@@ -18,6 +18,8 @@ type Element struct {
 	Ref         string       `xml:"ref,attr"`
 	SimpleType  *SimpleType  `xml:"simpleType"`
 	ComplexType *ComplexType `xml:"complexType"`
+	MinOccurs   string       `xml:"minOccurs,attr"`
+	MaxOccurs   string       `xml:"maxOccurs,attr"`
 }
 
 type SimpleType struct {
