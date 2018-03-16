@@ -19,15 +19,15 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.SimpleType {
-		t.generateFromSimpleType(elem)
+		t.generateFromSimpleType(elem, "")
 	}
 
 	for _, elem := range s.Element {
-		if elem.ComplexType != nil {
-			t.generateFromComplexType(elem.ComplexType, elem.Name)
-		} else {
-			t.generateFromElement(elem, true)
-		}
+		//if elem.ComplexType != nil {
+		//	t.generateFromComplexType(elem.ComplexType, elem.Name)
+		//} else {
+			t.generateFromElement(elem, false)
+		//}
 	}
 
 	for _, elem := range s.ComplexType {
@@ -39,7 +39,18 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 }
 
 func (t *decoder) GetTypes() []*ComplexType {
-	return t.typesList
+	var res []*ComplexType
+	for _, ns := range *(t.typesListCache) {
+		for _, v := range *ns {
+			resType, ok := v.(*ComplexType)
+			if !ok {
+				continue
+			}
+			res = append(res, resType)
+		}
+	}
+
+	return res
 }
 
 func (t *decoder) addType(newType Namespaceable) {
@@ -92,17 +103,21 @@ func (t *decoder) GetNamespaces() []string {
 	return res
 }
 
-func (t *decoder) generateFromElement(element *xsd.Element, isSchemaParent bool) *Field {
+func (t *decoder) generateFromElement(element *xsd.Element, isField bool) *Field {
 	if element == nil {
 		return nil
 	}
 
-	if isSchemaParent {
-		newType := &SimpleType{
+	t.generateFromSimpleType(element.SimpleType, element.Name)
+	t.generateFromComplexType(element.ComplexType, element.Name)
+
+	if !isField && element.Type != "" {
+		curType := &SimpleType{
 			Name:      element.Name,
 			Type:      element.Type,
 			Namespace: t.curTargetNamespace}
-		t.addType(newType)
+		t.addType(curType)
+
 		return nil
 	}
 
@@ -110,8 +125,6 @@ func (t *decoder) generateFromElement(element *xsd.Element, isSchemaParent bool)
 	field.Name = element.Name
 	field.XmlExpr = element.Name
 	field.Namespace = t.curTargetNamespace
-
-	t.generateFromComplexType(element.ComplexType, field.Name)
 
 	if element.Type != "" {
 		field.TypeQName = element.Type
@@ -194,7 +207,7 @@ func (t *decoder) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup)
 func (t *decoder) generateFromSequence(sequence *xsd.Sequence) []*Field {
 	var res []*Field
 	for _, childElem := range sequence.Element {
-		field := t.generateFromElement(childElem, false)
+		field := t.generateFromElement(childElem, true)
 		if field != nil {
 			res = append(res, field)
 		}
@@ -279,15 +292,24 @@ func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 	}
 }
 
-func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType) {
+func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType, name string) {
+	if simpleType == nil {
+		return
+	}
+
 	typeType := simpleType.Restriction.Base
 	if typeType == "" && (simpleType.Union != nil || simpleType.List != nil) {
 		typeType = "string"
 	}
+
 	curType := &SimpleType{
-		Name:      simpleType.Name,
 		Type:      typeType,
 		Namespace: t.curTargetNamespace}
+	if simpleType.Name != "" {
+		curType.Name = simpleType.Name
+	} else {
+		curType.Name = name
+	}
 	t.addType(curType)
 }
 

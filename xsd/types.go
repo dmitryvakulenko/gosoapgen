@@ -13,11 +13,11 @@ type Attribute struct {
 }
 
 type Element struct {
-	Name        string        `xml:"name,attr"`
-	Type        string        `xml:"type,attr"`
-	Ref         string        `xml:"ref,attr"`
-	SimpleType  []*SimpleType `xml:"simpleType"`
-	ComplexType *ComplexType  `xml:"complexType"`
+	Name        string       `xml:"name,attr"`
+	Type        string       `xml:"type,attr"`
+	Ref         string       `xml:"ref,attr"`
+	SimpleType  *SimpleType  `xml:"simpleType"`
+	ComplexType *ComplexType `xml:"complexType"`
 }
 
 type SimpleType struct {
