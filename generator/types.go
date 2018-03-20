@@ -3,6 +3,7 @@ package generator
 import (
 	"github.com/dmitryvakulenko/gosoapgen/translator"
 	"strings"
+	"strconv"
 )
 
 var innerTypes = []string{
@@ -12,17 +13,31 @@ var innerTypes = []string{
 	"time.Time",
 	"string"}
 
-func All(typesList []*translator.ComplexType) string {
-	var processedTypes = make(map[string]bool)
-	res := ""
-	for _, curType := range typesList {
+func All(parser translator.Parser) string {
+	var (
+		processedTypes = make(map[string]bool)
+		res = ""
+		nsAliases = make(map[string]string)
+	)
+
+	res = "var namespaceMap = map[string]string{"
+	for idx, ns := range parser.GetNamespaces() {
+		alias := "ns" + strconv.Itoa(idx)
+		res += "\n\"" + alias + "\": \"" + ns + "\","
+		nsAliases[ns] = alias
+	}
+	res += "}\n\n"
+
+	for _, curType := range parser.GetTypes() {
 		if _, ok := processedTypes[curType.Name]; ok {
 			continue
 		}
+
 		processedTypes[curType.Name] = true
 		res += "type " + firstUp(curType.Name) + " struct {\n"
 		for _, f := range curType.Fields {
-			res += firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + f.XmlExpr + "\"`\n"
+			alias := nsAliases[f.Namespace]
+			res += firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"
 		}
 		res += "}\n\n"
 

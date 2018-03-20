@@ -37,7 +37,7 @@ func main() {
 		parser.Parse(path.Clean(basePath + "/" + attr.SchemaLocation))
 	}
 
-	res := generator.All(parser.GetTypes())
+	res := generator.All(parser)
 
 	file, err := os.Create("./result/res.go")
 	if err != nil {

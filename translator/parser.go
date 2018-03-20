@@ -24,6 +24,10 @@ func (p *Parser) GetTypes() []*ComplexType {
 	return p.decoder.GetTypes()
 }
 
+func (p *Parser) GetNamespaces() []string {
+	return p.decoder.GetNamespaces()
+}
+
 func (p *Parser) parseImpl(fileName, ns string) {
 	s := loadSchema(fileName)
 
