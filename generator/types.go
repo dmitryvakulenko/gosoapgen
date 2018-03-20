@@ -18,6 +18,7 @@ func All(parser translator.Parser) string {
 		processedTypes = make(map[string]bool)
 		res = ""
 		nsAliases = make(map[string]string)
+		typeNamespace = make(map[string]string)
 	)
 
 	res = "var namespaceMap = map[string]string{"
@@ -28,22 +29,31 @@ func All(parser translator.Parser) string {
 	}
 	res += "}\n\n"
 
+	typesDef := ""
 	for _, curType := range parser.GetTypes() {
 		if _, ok := processedTypes[curType.Name]; ok {
 			continue
 		}
 
+		goTypeName := firstUp(curType.Name)
+		typeNamespace[goTypeName] = curType.Namespace
 		processedTypes[curType.Name] = true
-		res += "type " + firstUp(curType.Name) + " struct {\n"
+		typesDef += "type " + goTypeName + " struct {\n"
 		for _, f := range curType.Fields {
 			alias := nsAliases[f.Namespace]
-			res += firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"
+			typesDef += firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"
 		}
-		res += "}\n\n"
+		typesDef += "}\n\n"
 
 	}
 
-	return res
+	res = "var typeNamespace = map[string]string{"
+	for typeName, ns := range typeNamespace {
+		res += "\n\"" + typeName + "\": \"" + ns + "\","
+	}
+	res += "}\n\n"
+
+	return res + typesDef
 }
 
 func firstUp(text string) string {
