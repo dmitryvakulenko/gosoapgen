@@ -19,7 +19,7 @@ type SoapOperation struct {
 }
 
 type Operation struct {
-	Name xml.Attr `xml:"name,attr"`
+	Name string `xml:"name,attr"`
 	Input Param `xml:"input"`
 	Output Param `xml:"output"`
 	SoapOperation SoapOperation `xml:"operation"`

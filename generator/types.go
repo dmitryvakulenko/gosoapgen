@@ -5,6 +5,8 @@ import (
 	"strings"
 	"strconv"
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
+	"text/template"
+	"io"
 )
 
 var innerTypes = []string{
@@ -15,65 +17,57 @@ var innerTypes = []string{
 	"string"}
 
 const funcTemplate = `
-func (*NewClient) {{.Name}}
+func (*NewClient) {{.Name}}() {
+}
 `
 
-func All(parser translator.Parser, operations []*wsdl.Operation) string {
+func All(parser translator.Parser, operations []*wsdl.Operation, writer io.Writer) {
 	var (
 		processedTypes = make(map[string]bool)
-		res = ""
 		nsAliases = make(map[string]string)
 		typeNamespace = make(map[string]string)
 	)
 
-	res = "var namespaceMap = map[string]string{"
+	writer.Write([]byte("var namespaceMap = map[string]string{"))
 	for idx, ns := range parser.GetNamespaces() {
 		alias := "ns" + strconv.Itoa(idx)
-		res += "\n\"" + alias + "\": \"" + ns + "\","
+		writer.Write([]byte("\n\"" + alias + "\": \"" + ns + "\","))
 		nsAliases[ns] = alias
 	}
-	res += "}\n\n"
-
-	typesDef := ""
+	writer.Write([]byte("}\n\n"))
+	
 	for _, curType := range parser.GetTypes() {
 		if _, ok := processedTypes[curType.Name]; ok {
 			continue
 		}
 
-		goTypeName := firstUp(curType.Name)
+		goTypeName := strings.Title(curType.Name)
 		typeNamespace[goTypeName] = curType.Namespace
 		processedTypes[curType.Name] = true
-		typesDef += "type " + goTypeName + " struct {\n"
+		writer.Write([]byte("type " + goTypeName + " struct {\n"))
 		for _, f := range curType.Fields {
 			alias := nsAliases[f.Namespace]
-			typesDef += firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"
+			writer.Write([]byte(strings.Title(f.Name) + " " + strings.Title(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"))
 		}
-		typesDef += "}\n\n"
-
+		writer.Write([]byte("}\n\n"))
 	}
 
-	res = "var typeNamespace = map[string]string{"
+	writer.Write([]byte("var typeNamespace = map[string]string{"))
 	for typeName, ns := range typeNamespace {
-		res += "\n\"" + typeName + "\": \"" + ns + "\","
+		writer.Write([]byte("\n\"" + typeName + "\": \"" + ns + "\","))
 	}
-	res += "}\n\n"
+	writer.Write([]byte("}\n\n"))
 
-	return res + typesDef
+	writeOperations(operations, writer)
 }
 
-func buildOperations(operations []*wsdl.Operation) string {
-	res := ""
-	for _, v := range operations {
-		res +=
+func writeOperations(operations []*wsdl.Operation, writer io.Writer) {
+	tmpl, err := template.New("function").Parse(funcTemplate)
+	if err != nil {
+		panic(err)
 	}
-	return res
-}
 
-func firstUp(text string) string {
-	for _, v := range innerTypes {
-		if v == text {
-			return text
-		}
+	for _, op := range operations {
+		tmpl.Execute(writer, op)
 	}
-	return strings.ToUpper(text[0:1]) + text[1:]
 }

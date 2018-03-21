@@ -37,13 +37,11 @@ func main() {
 		parser.Parse(path.Clean(basePath + "/" + attr.SchemaLocation))
 	}
 
-	res := generator.All(parser, def.Binding.Operation)
-
 	file, err := os.Create("./result/res.go")
 	if err != nil {
 		fmt.Printf("Can't write result file")
 		return
 	}
-	file.Write([]byte(res))
+	generator.All(parser, def.Binding.Operation, file)
 	file.Close()
 }
