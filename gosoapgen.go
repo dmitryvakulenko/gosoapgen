@@ -42,6 +42,6 @@ func main() {
 		fmt.Printf("Can't write result file")
 		return
 	}
-	generate.Client(parser, def.Binding.Operation, file)
+	generate.Client(parser, &def, file)
 	file.Close()
 }

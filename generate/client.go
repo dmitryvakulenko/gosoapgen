@@ -17,11 +17,16 @@ var innerTypes = []string{
 	"string"}
 
 const funcTemplate = `
-func (*NewClient) {{.Name}}() {
+func (c *Client) {{.Name}}(in *{{.Input}}) *{{.Output}} {
+	header := c.createHeader("{{.Action}}")
+	response := c.call("{{.Name}}", header, in)
+	res := {{.Output}}{}
+	xml.Unmarshal(response, &res)
+	return &res
 }
 `
 
-func Client(parser translator.Parser, wsdl wsdl.Definitions, writer io.Writer) {
+func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) {
 	var (
 		processedTypes = make(map[string]bool)
 		nsAliases = make(map[string]string)
@@ -41,13 +46,13 @@ func Client(parser translator.Parser, wsdl wsdl.Definitions, writer io.Writer) {
 			continue
 		}
 
-		goTypeName := strings.Title(curType.Name)
+		goTypeName := firstUp(curType.Name)
 		typeNamespace[goTypeName] = curType.Namespace
 		processedTypes[curType.Name] = true
 		writer.Write([]byte("type " + goTypeName + " struct {\n"))
 		for _, f := range curType.Fields {
 			alias := nsAliases[f.Namespace]
-			writer.Write([]byte(strings.Title(f.Name) + " " + strings.Title(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"))
+			writer.Write([]byte(firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"))
 		}
 		writer.Write([]byte("}\n\n"))
 	}
@@ -58,16 +63,49 @@ func Client(parser translator.Parser, wsdl wsdl.Definitions, writer io.Writer) {
 	}
 	writer.Write([]byte("}\n\n"))
 
-	writeOperations(operations, writer)
+	writeOperations(wsdl, writer)
 }
 
-func writeOperations(operations []*wsdl.Operation, writer io.Writer) {
+func writeOperations(wsdl *wsdl.Definitions, writer io.Writer) {
+	messages := make(map[string]string)
+	for _, msg := range wsdl.Message {
+		messages[msg.Name] = extractName(msg.Part.Element.Value)
+	}
+
+	soapActions := make(map[string]string)
+	for _, op := range wsdl.Binding.Operation {
+		soapActions[op.Name] = op.SoapOperation.SoapAction
+	}
+
 	tmpl, err := template.New("function").Parse(funcTemplate)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, op := range operations {
-		tmpl.Execute(writer, op)
+	for _, op := range wsdl.PortType.Operation {
+		input := messages[extractName(op.Input.Message)]
+		output := messages[extractName(op.Output.Message)]
+		action := soapActions[op.Name]
+		tmpl.Execute(writer, struct {
+				Name, Input, Output, Action string
+			}{op.Name, input, output, action})
 	}
+}
+
+func extractName(in string) string {
+	parts := strings.Split(in, ":")
+	if len(parts) == 2 {
+		return parts[1]
+	} else {
+		return parts[0]
+	}
+}
+
+func firstUp(text string) string {
+	for _, v := range innerTypes {
+		if v == text {
+			return text
+		}
+	}
+	return strings.Title(text)
 }

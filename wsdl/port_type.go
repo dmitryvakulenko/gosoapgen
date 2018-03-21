@@ -4,5 +4,5 @@ import "encoding/xml"
 
 type PortType struct {
 	Name xml.Attr `xml:"name,attr"`
-	Operation []Operation `xml:"operation"`
+	Operation []*Operation `xml:"operation"`
 }

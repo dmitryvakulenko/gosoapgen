@@ -15,7 +15,7 @@ type Param struct {
 }
 
 type SoapOperation struct {
-	SoapAction xml.Attr `xml:"soapAction,attr"`
+	SoapAction string `xml:"soapAction,attr"`
 }
 
 type Operation struct {

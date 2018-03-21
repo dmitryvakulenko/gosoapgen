@@ -12,7 +12,7 @@ type Definitions struct {
 	Namespace       []*xml.Attr  `xml:",any,attr"`
 	Import          []*Type      `xml:"types>schema>import"`
 	Message         []*Message   `xml:"message"`
-	PortType        []*PortType  `xml:"portType"`
+	PortType        *PortType  `xml:"portType"`
 	Binding         *Binding   `xml:"binding"`
 	SoapAddress     SoapAddress `xml:"service>port>address"`
 }
