@@ -1,4 +1,4 @@
-package generator
+package generate
 
 import (
 	"github.com/dmitryvakulenko/gosoapgen/translator"
@@ -21,7 +21,7 @@ func (*NewClient) {{.Name}}() {
 }
 `
 
-func All(parser translator.Parser, operations []*wsdl.Operation, writer io.Writer) {
+func Client(parser translator.Parser, wsdl wsdl.Definitions, writer io.Writer) {
 	var (
 		processedTypes = make(map[string]bool)
 		nsAliases = make(map[string]string)

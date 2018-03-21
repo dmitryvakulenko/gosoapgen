@@ -7,7 +7,7 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"path"
 	"github.com/dmitryvakulenko/gosoapgen/translator"
-	"github.com/dmitryvakulenko/gosoapgen/generator"
+	"github.com/dmitryvakulenko/gosoapgen/generate"
 )
 
 func main() {
@@ -42,6 +42,6 @@ func main() {
 		fmt.Printf("Can't write result file")
 		return
 	}
-	generator.All(parser, def.Binding.Operation, file)
+	generate.Client(parser, def.Binding.Operation, file)
 	file.Close()
 }
