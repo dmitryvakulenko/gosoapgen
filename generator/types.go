@@ -4,6 +4,7 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/translator"
 	"strings"
 	"strconv"
+	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 )
 
 var innerTypes = []string{
@@ -13,7 +14,11 @@ var innerTypes = []string{
 	"time.Time",
 	"string"}
 
-func All(parser translator.Parser) string {
+const funcTemplate = `
+func (*NewClient) {{.Name}}
+`
+
+func All(parser translator.Parser, operations []*wsdl.Operation) string {
 	var (
 		processedTypes = make(map[string]bool)
 		res = ""
@@ -54,6 +59,14 @@ func All(parser translator.Parser) string {
 	res += "}\n\n"
 
 	return res + typesDef
+}
+
+func buildOperations(operations []*wsdl.Operation) string {
+	res := ""
+	for _, v := range operations {
+		res +=
+	}
+	return res
 }
 
 func firstUp(text string) string {
