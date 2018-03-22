@@ -54,10 +54,6 @@ func TestParseElementTypes(t *testing.T) {
 		t.Errorf("Field type should be 'string' %s instead", field.Type)
 	}
 
-	if field.XmlExpr != "sequenceNumber" {
-		t.Errorf("Field xml expression should be 'sequenceNumber', %q instead", field.XmlExpr)
-	}
-
 	if field.Namespace != ns {
 		t.Errorf("Type should be %q, %q getting", ns, cType.Namespace)
 	}
@@ -67,8 +63,8 @@ func TestParseElementTypes(t *testing.T) {
 		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
 	}
 
-	if field.XmlExpr != "TransactionStatusCode,attr" {
-		t.Errorf("Field xml expr should be 'TransactionStatusCode,attr' %s instead", field.XmlExpr)
+	if !field.IsAttr {
+		t.Errorf("TransactionStatusCode should be attribute")
 	}
 }
 
@@ -129,8 +125,8 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 		t.Errorf("Field type should be 'string' %s instead", field.Type)
 	}
 
-	if field.XmlExpr != "TransactionStatusCode,attr" {
-		t.Errorf("Field xml name should be 'sequenceNumber' %s instead", field.XmlExpr)
+	if !field.IsAttr {
+		t.Errorf("TransactionStatusCode should be attribute")
 	}
 }
 
@@ -176,20 +172,12 @@ func TestInnerComplexTypes(t *testing.T) {
 		t.Errorf("Field type should be 'travellerInfo', %q instead", field.Type)
 	}
 
-	if field.XmlExpr != "travellerInfo" {
-		t.Errorf("Field xml name should be 'travellerInfo' %s instead", field.XmlExpr)
-	}
-
 	if len(secType.Fields) != 1 {
 		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
 	}
 
 	if secType.Fields[0].Name != "elementManagementPassenger" {
 		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
-	}
-
-	if secType.Fields[0].XmlExpr != "elementManagementPassenger" {
-		t.Errorf("Second type xml expression shoud be 'elementManagementPassenger', %q instead", secType.Fields[0].XmlExpr)
 	}
 }
 
@@ -216,8 +204,8 @@ func TestAttributeGroup(t *testing.T) {
 		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
 	}
 
-	if field.XmlExpr != "Owner,attr" {
-		t.Fatalf("Field xml expression should be 'Owner,attr', %q instead", field.XmlExpr)
+	if !field.IsAttr {
+		t.Fatalf("Owner should be attribute")
 	}
 }
 

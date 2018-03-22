@@ -51,7 +51,9 @@ type Field struct {
 	Name      string
 	Type      string
 	TypeQName QName
-	XmlExpr   string
+	MinOccurs int
+	MaxOccurs int
+	IsAttr    bool
 	Comment   string
 	Namespace string
 }

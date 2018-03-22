@@ -3,6 +3,7 @@ package translator
 import (
 	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"strings"
+	"strconv"
 )
 
 func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
@@ -112,7 +113,21 @@ func (t *decoder) generateFromElement(element *xsd.Element, isField bool) *Field
 
 	field := &Field{}
 	field.Name = element.Name
-	field.XmlExpr = element.Name
+	if element.MinOccurs == "0" {
+		field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
+	}
+
+	if element.MaxOccurs == "" {
+		field.MaxOccurs = 0
+	} else {
+		maxOccurs, err := strconv.Atoi(element.MaxOccurs)
+		if err != nil {
+			field.MaxOccurs = 100
+		} else {
+			field.MaxOccurs = maxOccurs
+		}
+	}
+
 	field.Namespace = t.curTargetNamespace
 
 	if element.Type != "" {
@@ -129,7 +144,7 @@ func (t *decoder) generateFromElement(element *xsd.Element, isField bool) *Field
 func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field := &Field{
 		Name:      attribute.Name,
-		XmlExpr:   attribute.Name + ",attr",
+		IsAttr:    true,
 		Namespace: t.curTargetNamespace}
 
 	if attribute.Type != "" {
@@ -210,8 +225,7 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 
 	valField := &Field{
 		Name:      "Value",
-		Namespace: t.curTargetNamespace,
-		XmlExpr:   ",chardata"}
+		Namespace: t.curTargetNamespace}
 
 	res = append(res, valField)
 

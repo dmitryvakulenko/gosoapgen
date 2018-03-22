@@ -51,8 +51,20 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 		processedTypes[curType.Name] = true
 		writer.Write([]byte("type " + goTypeName + " struct {\n"))
 		for _, f := range curType.Fields {
+			writer.Write([]byte(firstUp(f.Name) + " "))
+			if f.MaxOccurs != 0 {
+				writer.Write([]byte("[]"))
+			}
 			alias := nsAliases[f.Namespace]
-			writer.Write([]byte(firstUp(f.Name) + " " + firstUp(f.Type) + " `xml:\"" + alias + " " + f.XmlExpr + "\"`\n"))
+			writer.Write([]byte("*" + firstUp(f.Type) + " `xml:\"" + alias + " " + f.Name))
+			if f.IsAttr {
+				writer.Write([]byte(",attr"))
+
+			}
+			if f.MinOccurs == 0 {
+				writer.Write([]byte(",omitempty"))
+			}
+			writer.Write([]byte("\"`\n"))
 		}
 		writer.Write([]byte("}\n\n"))
 	}
