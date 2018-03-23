@@ -50,13 +50,18 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 		typeNamespace[goTypeName] = curType.Namespace
 		processedTypes[curType.Name] = true
 		writer.Write([]byte("type " + goTypeName + " struct {\n"))
+		//alias := nsAliases[curType.Namespace]
+		//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.Name + "\"`\n"))
 		for _, f := range curType.Fields {
 			writer.Write([]byte(firstUp(f.Name) + " "))
 			if f.MaxOccurs != 0 {
 				writer.Write([]byte("[]"))
 			}
+			if !isInnerType(f.Type) {
+				writer.Write([]byte("*"))
+			}
 			alias := nsAliases[f.Namespace]
-			writer.Write([]byte("*" + firstUp(f.Type) + " `xml:\"" + alias + " " + f.Name))
+			writer.Write([]byte(firstUp(f.Type) + " `xml:\"" + alias + ":" + f.Name))
 			if f.IsAttr {
 				writer.Write([]byte(",attr"))
 
@@ -114,10 +119,17 @@ func extractName(in string) string {
 }
 
 func firstUp(text string) string {
-	for _, v := range innerTypes {
-		if v == text {
-			return text
-		}
+	if isInnerType(text) {
+		return text
 	}
 	return strings.Title(text)
+}
+
+func isInnerType(t string) bool {
+	for _, v := range innerTypes {
+		if v == t {
+			return true
+		}
+	}
+	return false
 }
