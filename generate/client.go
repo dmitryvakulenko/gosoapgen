@@ -17,9 +17,9 @@ var innerTypes = []string{
 	"string"}
 
 const funcTemplate = `
-func (c *Client) {{.Name}}(in *{{.Input}}) *{{.Output}} {
-	header := c.createHeader("{{.Action}}")
-	response := c.call("{{.Name}}", header, in)
+func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
+	header := c.transporter.CreateHeader("{{.Action}}")
+	response := c.transporter.Send(header, body)
 	res := {{.Output}}{}
 	xml.Unmarshal(response, &res)
 	return &res
@@ -42,13 +42,13 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 	writer.Write([]byte("}\n\n"))
 	
 	for _, curType := range parser.GetTypes() {
-		if _, ok := processedTypes[curType.Name]; ok {
-			continue
-		}
-
 		goTypeName := firstUp(curType.Name)
 		typeNamespace[goTypeName] = curType.Namespace
-		processedTypes[curType.Name] = true
+		if _, ok := processedTypes[goTypeName]; ok {
+			goTypeName += "_" + nsAliases[curType.Namespace]
+		}
+
+		processedTypes[goTypeName] = true
 		writer.Write([]byte("type " + goTypeName + " struct {\n"))
 		//alias := nsAliases[curType.Namespace]
 		//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.Name + "\"`\n"))
@@ -60,8 +60,12 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 			if !isInnerType(f.Type) {
 				writer.Write([]byte("*"))
 			}
-			alias := nsAliases[f.Namespace]
-			writer.Write([]byte(firstUp(f.Type) + " `xml:\"" + alias + ":" + f.Name))
+
+			alias := nsAliases[f.Namespace] + ":"
+			if f.IsAttr {
+				alias = ""
+			}
+			writer.Write([]byte(firstUp(f.Type) + " `xml:\"" + alias + f.Name))
 			if f.IsAttr {
 				writer.Write([]byte(",attr"))
 
@@ -84,6 +88,22 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 }
 
 func writeOperations(wsdl *wsdl.Definitions, writer io.Writer) {
+	writer.Write([]byte(`
+
+type Transporter interface {
+	Send(interface{}, interface{}) []byte
+	CreateHeader(string) interface{}
+}
+
+type SoapClient struct {
+	transporter Transporter
+}
+
+func NewSoapClient(t Transporter) SoapClient {
+	return SoapClient{transporter: t}
+}
+`))
+
 	messages := make(map[string]string)
 	for _, msg := range wsdl.Message {
 		messages[msg.Name] = extractName(msg.Part.Element.Value)
