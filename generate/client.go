@@ -36,7 +36,7 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 	writer.Write([]byte("var namespaceMap = map[string]string{"))
 	for idx, ns := range parser.GetNamespaces() {
 		alias := "ns" + strconv.Itoa(idx)
-		writer.Write([]byte("\n\"" + alias + "\": \"" + ns + "\","))
+		writer.Write([]byte("\n\"" + ns + "\": \"" + alias + "\","))
 		nsAliases[ns] = alias
 	}
 	writer.Write([]byte("}\n\n"))
