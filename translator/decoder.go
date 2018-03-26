@@ -24,7 +24,7 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.Element {
-		t.generateFromElement(elem)
+		t.generateFromElement(elem, "")
 	}
 
 	for _, elem := range s.ComplexType {
@@ -93,44 +93,44 @@ func (t *decoder) GetNamespaces() []string {
 	return res
 }
 
-func (t *decoder) generateFromElement(element *xsd.Element) *Field {
+// Если передали fieldName - это означает, что этот элемент - поле
+func (t *decoder) generateFromElement(element *xsd.Element, fieldName string) *Field {
 	if element == nil || element.MaxOccurs == "0" {
 		return nil
 	}
 
 	if element.SimpleType != nil {
 		t.generateFromNamedSimpleType(element.SimpleType)
-		return nil
 	} else if element.ComplexType != nil {
-		cType := t.parseComplexType(element.ComplexType, "")
+		cType := t.parseComplexType(element.ComplexType, fieldName)
 		cType.Name = element.Name
 		t.addType(cType)
 		return nil
-	} else {
-		field := &Field{}
-		field.Name = element.Name
-		if element.MinOccurs == "0" {
-			field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
-		}
-
-		if element.MaxOccurs == "" {
-			field.MaxOccurs = 0
-		} else {
-			maxOccurs, err := strconv.Atoi(element.MaxOccurs)
-			if err != nil {
-				field.MaxOccurs = 100
-			} else {
-				field.MaxOccurs = maxOccurs
-			}
-		}
-
-		if element.Type != "" {
-			field.TypeName = t.parseFullName(element.Type)
-		} else if element.Ref != "" {
-			field.TypeName = t.parseFullName(element.Ref)
-		}
-		return field
 	}
+
+	field := &Field{}
+	field.Name = element.Name
+	if element.MinOccurs == "0" {
+		field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
+	}
+
+	if element.MaxOccurs == "" {
+		field.MaxOccurs = 0
+	} else {
+		maxOccurs, err := strconv.Atoi(element.MaxOccurs)
+		if err != nil {
+			field.MaxOccurs = 100
+		} else {
+			field.MaxOccurs = maxOccurs
+		}
+	}
+
+	if element.Type != "" {
+		field.TypeName = t.parseFullName(element.Type)
+	} else if element.Ref != "" {
+		field.TypeName = t.parseFullName(element.Ref)
+	}
+	return field
 }
 
 func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
@@ -147,7 +147,7 @@ func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	return field
 }
 
-func (t *decoder) parseComplexType(complexType *xsd.ComplexType, baseTypeName string) *ComplexType {
+func (t *decoder) parseComplexType(complexType *xsd.ComplexType, fieldName string) *ComplexType {
 	if complexType == nil {
 		return nil
 	}
