@@ -100,50 +100,37 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 
 	if element.SimpleType != nil {
 		t.generateFromNamedSimpleType(element.SimpleType)
+		return nil
 	} else if element.ComplexType != nil {
 		cType := t.parseComplexType(element.ComplexType, "")
 		cType.Name = element.Name
 		t.addType(cType)
-	} else if element.Type != "" {
-		qTypeName := t.parseFullName(element.Type)
-		if mapStandardType(qTypeName.Name) == "" {
-			curType := &SimpleType{
-				Name:         element.Type,
-				BaseTypeName: qTypeName}
-			t.addType(curType)
-
-			return nil
-		}
-	}
-
-
-
-	field := &Field{}
-	field.Name = element.Name
-	if element.MinOccurs == "0" {
-		field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
-	}
-
-	if element.MaxOccurs == "" {
-		field.MaxOccurs = 0
+		return nil
 	} else {
-		maxOccurs, err := strconv.Atoi(element.MaxOccurs)
-		if err != nil {
-			field.MaxOccurs = 100
+		field := &Field{}
+		field.Name = element.Name
+		if element.MinOccurs == "0" {
+			field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
+		}
+
+		if element.MaxOccurs == "" {
+			field.MaxOccurs = 0
 		} else {
-			field.MaxOccurs = maxOccurs
+			maxOccurs, err := strconv.Atoi(element.MaxOccurs)
+			if err != nil {
+				field.MaxOccurs = 100
+			} else {
+				field.MaxOccurs = maxOccurs
+			}
 		}
-	}
 
-	if element.Type != "" {
-		field.TypeName = t.parseFullName(element.Type)
-	} else if element.Ref != "" {
-		field.TypeName = t.parseFullName(element.Ref)
-	} else {
-		field.TypeName = t.parseFullName(field.Name)
+		if element.Type != "" {
+			field.TypeName = t.parseFullName(element.Type)
+		} else if element.Ref != "" {
+			field.TypeName = t.parseFullName(element.Ref)
+		}
+		return field
 	}
-
-	return field
 }
 
 func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
