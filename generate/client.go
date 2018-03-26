@@ -17,7 +17,7 @@ var innerTypes = []string{
 	"string"}
 
 const funcTemplate = `
-func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
+func (c *SoapClient) {{.GoName}}(body *{{.Input}}) *{{.Output}} {
 	header := c.transporter.CreateHeader("{{.Action}}")
 	response := c.transporter.Send(header, body)
 	res := {{.Output}}{}
@@ -28,7 +28,6 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 
 func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) {
 	var (
-		processedTypes = make(map[string]bool)
 		nsAliases = make(map[string]string)
 		typeNamespace = make(map[string]string)
 	)
@@ -41,41 +40,40 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 	}
 	writer.Write([]byte("}\n\n"))
 	
-	for _, curType := range parser.GetTypes() {
-		goTypeName := firstUp(curType.Name)
-		typeNamespace[goTypeName] = curType.Namespace
-		if _, ok := processedTypes[goTypeName]; ok {
-			goTypeName += "_" + nsAliases[curType.Namespace]
+	for _, t := range parser.GetTypes() {
+		switch curType := t.(type) {
+		case *translator.ComplexType:
+			writer.Write([]byte("type " + curType.GoName + " struct {\n"))
+			//alias := nsAliases[curType.Namespace]
+			//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.GoName + "\"`\n"))
+			for _, f := range curType.Fields {
+				writer.Write([]byte(firstUp(f.Name) + " "))
+				if f.MaxOccurs != 0 {
+					writer.Write([]byte("[]"))
+				}
+
+				if !isInnerType(f.Type.GetName()) {
+					writer.Write([]byte("*"))
+				}
+
+				alias := ""
+				if !f.IsAttr {
+					alias = nsAliases[curType.Namespace] + ":"
+				}
+				writer.Write([]byte(firstUp(f.Type.GetName()) + " `xml:\"" + alias + f.Name))
+				if f.IsAttr {
+					writer.Write([]byte(",attr"))
+
+				}
+				if f.MinOccurs == 0 {
+					writer.Write([]byte(",omitempty"))
+				}
+				writer.Write([]byte("\"`\n"))
+			}
+			writer.Write([]byte("}\n\n"))
+		case *translator.SimpleType:
+			writer.Write([]byte("type " + curType.GoName + " " + curType.BaseType.GetName() + "\n\n"))
 		}
-
-		processedTypes[goTypeName] = true
-		writer.Write([]byte("type " + goTypeName + " struct {\n"))
-		//alias := nsAliases[curType.Namespace]
-		//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.Name + "\"`\n"))
-		for _, f := range curType.Fields {
-			writer.Write([]byte(firstUp(f.Name) + " "))
-			if f.MaxOccurs != 0 {
-				writer.Write([]byte("[]"))
-			}
-			if !isInnerType(f.Type) {
-				writer.Write([]byte("*"))
-			}
-
-			alias := nsAliases[f.Namespace] + ":"
-			if f.IsAttr {
-				alias = ""
-			}
-			writer.Write([]byte(firstUp(f.Type) + " `xml:\"" + alias + f.Name))
-			if f.IsAttr {
-				writer.Write([]byte(",attr"))
-
-			}
-			if f.MinOccurs == 0 {
-				writer.Write([]byte(",omitempty"))
-			}
-			writer.Write([]byte("\"`\n"))
-		}
-		writer.Write([]byte("}\n\n"))
 	}
 
 	writer.Write([]byte("var typeNamespace = map[string]string{"))

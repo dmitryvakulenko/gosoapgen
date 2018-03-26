@@ -8,11 +8,13 @@ import (
 )
 
 type Parser struct {
+	alreadyParsed map[string]bool
 	decoder decoder
 }
 
 func NewParser() Parser {
 	return Parser{
+		alreadyParsed: make(map[string]bool),
 		decoder: newDecoder()}
 }
 
@@ -20,7 +22,7 @@ func (p *Parser) Parse(fileName string) {
 	p.parseImpl(fileName, "")
 }
 
-func (p *Parser) GetTypes() []*ComplexType {
+func (p *Parser) GetTypes() []NamedType {
 	return p.decoder.GetTypes()
 }
 
@@ -33,11 +35,19 @@ func (p *Parser) parseImpl(fileName, ns string) {
 
 	baseDir := path.Dir(fileName) + "/"
 	for _, imp := range s.Import {
-		p.parseImpl(path.Clean(baseDir + imp.SchemaLocation), "")
+		fullName := path.Clean(baseDir + imp.SchemaLocation)
+		if _, parsed := p.alreadyParsed[fullName]; !parsed {
+			p.parseImpl(fullName, "")
+			p.alreadyParsed[fullName] = true
+		}
 	}
 
 	for _, imp := range s.Include {
-		p.parseImpl(path.Clean(baseDir + imp.SchemaLocation), s.TargetNamespace)
+		fullName := path.Clean(baseDir + imp.SchemaLocation)
+		if _, parsed := p.alreadyParsed[fullName]; !parsed {
+			p.parseImpl(fullName, s.TargetNamespace)
+			p.alreadyParsed[fullName] = true
+		}
 	}
 
 	if ns != "" {

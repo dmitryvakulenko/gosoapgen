@@ -20,11 +20,11 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.SimpleType {
-		t.generateFromSimpleType(elem, "")
+		t.generateFromNamedSimpleType(elem)
 	}
 
 	for _, elem := range s.Element {
-		t.generateFromElement(elem, false)
+		t.generateFromElement(elem)
 	}
 
 	for _, elem := range s.ComplexType {
@@ -33,19 +33,16 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 
 	t.resolveTypes()
 	t.resolveBaseTypes()
+	t.prepareGoNames()
 }
 
-func (t *decoder) GetTypes() []*ComplexType {
+func (t *decoder) GetTypes() []NamedType {
 	return t.typesList
 }
 
-func (t *decoder) addType(newType Namespaceable) {
-	if !t.typesListCache.has(newType) {
-		t.typesListCache.put(newType)
-		if v, ok := newType.(*ComplexType); ok {
-			t.typesList = append(t.typesList, v)
-		}
-	}
+func (t *decoder) addType(name string, newType NamedType) {
+	t.typesListCache.put(t.curTargetNamespace, newType)
+	t.typesList = append(t.typesList, newType)
 }
 
 func (t *decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
@@ -58,14 +55,14 @@ func (t *decoder) findType(fullTypeName string) (interface{}, bool) {
 	return t.typesListCache.find(qName.Namespace, qName.Name)
 }
 
-func (t *decoder) parseFullName(fullTypeName string) QName {
+func (t *decoder) parseFullName(fullTypeName string) *QName {
 	parts := strings.Split(fullTypeName, ":")
 	if len(parts) == 2 {
-		return QName{
+		return &QName{
 			parts[1],
 			t.curXmlns[parts[0]]}
 	} else {
-		return QName{
+		return &QName{
 			parts[0],
 			t.curTargetNamespace}
 	}
@@ -93,20 +90,19 @@ func (t *decoder) GetNamespaces() []string {
 	return res
 }
 
-func (t *decoder) generateFromElement(element *xsd.Element, isField bool) *Field {
+func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 	if element == nil || element.MaxOccurs == "0" {
 		return nil
 	}
 
-	t.generateFromSimpleType(element.SimpleType, element.Name)
-	t.generateFromComplexType(element.ComplexType, element.Name)
+	t.generateFromNamedSimpleType(element.SimpleType)
+	t.generateFromComplexType(element.ComplexType, "")
 
-	if !isField && element.Type != "" {
+	if element.Type != "" {
 		curType := &SimpleType{
-			Name:      element.Name,
-			Type:      element.Type,
-			Namespace: t.curTargetNamespace}
-		t.addType(curType)
+			Name:         element.Type,
+			BaseTypeName: t.parseFullName(element.Type)}
+		t.addType(element.Name, curType)
 
 		return nil
 	}
@@ -128,14 +124,12 @@ func (t *decoder) generateFromElement(element *xsd.Element, isField bool) *Field
 		}
 	}
 
-	field.Namespace = t.curTargetNamespace
-
 	if element.Type != "" {
-		field.TypeQName = t.parseFullName(element.Type)
+		field.TypeName = t.parseFullName(element.Type)
 	} else if element.Ref != "" {
-		field.TypeQName = t.parseFullName(element.Ref)
+		field.TypeName = t.parseFullName(element.Ref)
 	} else {
-		field.TypeQName = t.parseFullName(field.Name)
+		field.TypeName = t.parseFullName(field.Name)
 	}
 
 	return field
@@ -143,31 +137,33 @@ func (t *decoder) generateFromElement(element *xsd.Element, isField bool) *Field
 
 func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	field := &Field{
-		Name:      attribute.Name,
-		IsAttr:    true,
-		Namespace: t.curTargetNamespace}
+		Name:   attribute.Name,
+		IsAttr: true}
 
 	if attribute.Type != "" {
-		field.TypeQName = t.parseFullName(attribute.Type)
+		field.TypeName = t.parseFullName(attribute.Type)
 	} else if attribute.SimpleType != nil {
-		field.TypeQName = t.parseFullName(attribute.SimpleType.Restriction.Base)
+		field.TypeName = t.parseFullName(attribute.SimpleType.Restriction.Base)
 	}
 
 	return field
 }
 
-func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, name string) {
+func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, baseTypeName string) {
 	if complexType == nil {
 		return
 	}
 
-	var curStruct = &ComplexType{Name: name}
+	var typeName string
 	if complexType.Name != "" {
-		curStruct.Name = complexType.Name
+		typeName = complexType.Name
+	} else {
+		typeName = baseTypeName
 	}
-	curStruct.Namespace = t.curTargetNamespace
 
-	t.addType(curStruct)
+	var curStruct = &ComplexType{Name: typeName, Namespace: t.curTargetNamespace}
+
+	t.addType(curStruct.Name, curStruct)
 
 	if complexType.Sequence != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromSequence(complexType.Sequence)...)
@@ -181,10 +177,10 @@ func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, name str
 	}
 
 	if complexType.ComplexContent != nil {
-		fields, baseType := t.generateFromComplexContent(complexType.ComplexContent)
+		fields, baseType := t.generateFromComplexContent(complexType.ComplexContent, curStruct.Name)
 		curStruct.Fields = append(curStruct.Fields, fields...)
 		if baseType != "" {
-			curStruct.BaseType = baseType
+			curStruct.BaseTypeName = t.parseFullName(baseType)
 		}
 	}
 }
@@ -211,7 +207,7 @@ func (t *decoder) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup)
 func (t *decoder) generateFromSequence(sequence *xsd.Sequence) []*Field {
 	var res []*Field
 	for _, childElem := range sequence.Element {
-		field := t.generateFromElement(childElem, true)
+		field := t.generateFromElement(childElem)
 		if field != nil {
 			res = append(res, field)
 		}
@@ -224,13 +220,12 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	var res []*Field
 
 	valField := &Field{
-		Name:      "Value",
-		Namespace: t.curTargetNamespace}
+		Name: "Value"}
 
 	res = append(res, valField)
 
 	if simpleContent.Extension != nil {
-		valField.TypeQName = t.parseFullName(simpleContent.Extension.Base)
+		valField.TypeName = t.parseFullName(simpleContent.Extension.Base)
 		for _, v := range simpleContent.Extension.Attribute {
 			res = append(res, t.generateFromAttribute(v))
 		}
@@ -245,14 +240,14 @@ func (t *decoder) generateFromSimpleContent(simpleContent *xsd.Content) []*Field
 	}
 
 	if simpleContent.Restriction != nil {
-		valField.TypeQName = t.parseFullName(simpleContent.Restriction.Base)
+		valField.TypeName = t.parseFullName(simpleContent.Restriction.Base)
 		// парсить ограничения смысла нет
 	}
 
 	return res
 }
 
-func (t *decoder) generateFromComplexContent(complexContent *xsd.Content) ([]*Field, string) {
+func (t *decoder) generateFromComplexContent(complexContent *xsd.Content, baseTypeName string) ([]*Field, string) {
 	var (
 		res      []*Field
 		baseType string
@@ -290,14 +285,16 @@ func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	if !t.attributeGroupCache.has(curType) {
-		t.attributeGroupCache.put(curType)
-	}
+	t.attributeGroupCache.put(t.curTargetNamespace, curType)
 }
 
-func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType, name string) {
+func (t *decoder) generateFromNamedSimpleType(simpleType *xsd.SimpleType) {
 	if simpleType == nil {
 		return
+	}
+
+	if simpleType.Name == "" {
+		panic("No name for simple type")
 	}
 
 	typeType := simpleType.Restriction.Base
@@ -306,93 +303,124 @@ func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType, name string
 	}
 
 	curType := &SimpleType{
-		Type:      typeType,
-		Namespace: t.curTargetNamespace}
-	if simpleType.Name != "" {
-		curType.Name = simpleType.Name
-	} else {
-		curType.Name = name
-	}
-	t.addType(curType)
-}
+		BaseTypeName: t.parseFullName(typeType)}
 
-func (t *decoder) resolveBaseTypes() {
-	for _, cType := range t.typesList {
-		if cType.BaseType != "" {
-			t.resolveBaseTypesImpl(cType)
-		}
-	}
-}
-
-func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
-	bType, ok := t.findType(cType.BaseType)
-	if !ok {
-		panic("Type " + cType.BaseType + " not found")
-	}
-
-	baseType := bType.(*ComplexType)
-	if baseType.BaseType != "" {
-		t.resolveBaseTypesImpl(baseType)
-	}
-	cType.Fields = append(baseType.Fields, cType.Fields...)
-	cType.BaseType = ""
-}
-
-func parseStandardType(xmlType string) string {
-	parts := strings.Split(xmlType, ":")
-
-	var fieldType string
-	if len(parts) == 2 {
-		fieldType = parts[1]
-	} else {
-		fieldType = parts[0]
-	}
-
-	switch fieldType {
-	case "integer", "positiveInteger", "nonNegativeInteger":
-		return "int"
-	case "decimal":
-		return "float64"
-	case "boolean":
-		return "bool"
-	case "date", "dateTime":
-		return "time.Time"
-	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration":
-		return "string"
-	default:
-		return ""
-	}
+	curType.Name = simpleType.Name
+	t.addType(curType.Name, curType)
 }
 
 func (t *decoder) resolveTypes() {
 	for _, curType := range t.typesList {
-		for _, curField := range curType.Fields {
-			curField.Type = t.resolveTypeImpl(curField.TypeQName)
-			// обработка <element ref="">
-			if curField.Name == "" {
-				typeI, _ := t.typesListCache.find(curField.TypeQName.Namespace, curField.TypeQName.Name)
-				curField.Name = typeI.(*SimpleType).Name
-			}
-		}
-	}
-}
-
-func (t *decoder) resolveTypeImpl(qName QName) string {
-	tmpType := parseStandardType(qName.Name)
-	if tmpType != "" {
-		return tmpType
-	} else {
-		curType, ok := t.typesListCache.find(qName.Namespace, qName.Name)
-		if !ok {
-			panic("Type " + qName.Name + " not found")
-		}
-		switch v := curType.(type) {
-		case *SimpleType:
-			return t.resolveTypeImpl(QName{v.Type, v.Namespace})
+		switch realType := curType.(type) {
 		case *ComplexType:
-			return v.Name
+			if realType.BaseTypeName != nil {
+				realType.BaseType = t.resolve(realType.BaseTypeName)
+			}
+			for _, curField := range realType.Fields {
+				curField.Type = t.resolve(curField.TypeName)
+			}
+		case *SimpleType:
+			realType.BaseType = t.resolve(realType.BaseTypeName)
 		}
+
+	}
+}
+
+func (t *decoder) resolve(typeName *QName) NamedType {
+	stdType := parseStandardType(typeName.Name)
+	if stdType != nil {
+		return stdType
 	}
 
-	return ""
+	curType, ok := t.typesListCache.find(typeName.Namespace, typeName.Name)
+	if !ok {
+		panic("Type " + typeName.Name + " not found")
+	}
+
+	return curType
 }
+
+func parseStandardType(xmlType string) *SimpleType {
+	switch xmlType {
+	case "integer", "positiveInteger", "nonNegativeInteger":
+		return &SimpleType{Name: "int"}
+	case "decimal":
+		return &SimpleType{Name: "float64"}
+	case "boolean":
+		return &SimpleType{Name: "bool"}
+	case "date", "dateTime":
+		return &SimpleType{Name: "time.Time"}
+	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration":
+		return &SimpleType{Name: "string"}
+	default:
+		return nil
+	}
+}
+
+func (t *decoder) resolveBaseTypes() {
+	for _, cType := range t.typesList {
+		realType, ok := cType.(*ComplexType)
+		if !ok {
+			continue
+		}
+
+		t.resolveBaseTypesImpl(realType)
+	}
+}
+
+func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
+	if cType.BaseType == nil {
+		return
+	}
+
+	baseType := cType.BaseType.(*ComplexType)
+	t.resolveBaseTypesImpl(baseType)
+	cType.BaseType = nil
+
+	cType.Fields = append(baseType.Fields, cType.Fields...)
+}
+
+func (t *decoder) prepareGoNames() {
+	usedNames := make(map[string]bool)
+	for _, cType := range t.typesList {
+		switch realType := cType.(type) {
+		case *SimpleType:
+			baseName := realType.Name
+			realName := baseName
+			index := 1
+			for _, ok := usedNames[realName]; ok; index++ {
+				realName += "_" + strconv.Itoa(index)
+			}
+			realType.GoName = strings.Title(realName)
+		case *ComplexType:
+			baseName := realType.Name
+			realName := baseName
+			index := 1
+			for _, ok := usedNames[realName]; ok; index++ {
+				realName += "_" + strconv.Itoa(index)
+			}
+			realType.GoName = strings.Title(realName)
+		}
+	}
+}
+
+//func (t *decoder) resolveTypeImpl(qName QName) string {
+//	tmpType := parseStandardType(qName.Name)
+//	if tmpType != "" {
+//		return tmpType
+//	}
+//
+//	curType, ok := t.typesListCache.find(qName.Namespace, qName.Name)
+//	if !ok {
+//		panic("TypeName " + qName.Name + " not found")
+//	}
+//
+//	switch v := curType.(type) {
+//	case *SimpleType:
+//		return v.GoName
+//	case *ComplexType:
+//		return v.GoName
+//	default:
+//		return ""
+//	}
+//}

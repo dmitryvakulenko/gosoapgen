@@ -2,23 +2,20 @@ package translator
 
 import "log"
 
-type typesCollection map[string]interface{}
+type typesCollection map[string]NamedType
 type namespacedTypes map[string]*typesCollection
-
-type Namespaceable interface {
-	GetNamespace() string
-	GetName() string
-}
 
 func newTypesCollection() *namespacedTypes {
 	res := make(namespacedTypes)
 	return &res
 }
 
-func (t *namespacedTypes) find(namespace, typeName string) (interface{}, bool) {
-	var ns *typesCollection
-	var ok bool
-	var curType interface{}
+func (t *namespacedTypes) find(namespace, typeName string) (NamedType, bool) {
+	var (
+		ns *typesCollection
+		ok bool
+		curType NamedType
+	)
 	if ns, ok = (*t)[namespace]; !ok {
 		return nil, false
 	}
@@ -30,17 +27,13 @@ func (t *namespacedTypes) find(namespace, typeName string) (interface{}, bool) {
 	return curType, true
 }
 
-func (t *namespacedTypes) put(addedType Namespaceable) {
-	var (
-		namespace = addedType.GetNamespace()
-		typeName = addedType.GetName()
-	)
-
+func (t *namespacedTypes) put(namespace string, addedType NamedType) {
 	if _, ok := (*t)[namespace]; !ok {
 		newCollection := make(typesCollection)
 		(*t)[namespace] = &newCollection
 	}
 
+	typeName := addedType.GetName()
 	ns := (*t)[namespace]
 	if _, ok := (*ns)[typeName]; ok {
 		log.Panicf("Namespace %q already contain type %q", namespace, typeName)
@@ -49,12 +42,7 @@ func (t *namespacedTypes) put(addedType Namespaceable) {
 	(*ns)[typeName] = addedType
 }
 
-func (t *namespacedTypes) has(addedType Namespaceable) bool {
-	var (
-		namespace = addedType.GetNamespace()
-		typeName = addedType.GetName()
-	)
-
+func (t *namespacedTypes) has(namespace, typeName string) bool {
 	if _, ok := (*t)[namespace]; !ok {
 		return false
 	}
@@ -67,8 +55,8 @@ func (t *namespacedTypes) has(addedType Namespaceable) bool {
 	return true
 }
 
-func (t *namespacedTypes) getAllTypes() []interface{} {
-	var res []interface{}
+func (t *namespacedTypes) getAllTypes() []NamedType {
+	var res []NamedType
 
 	for _, nsList := range *t {
 		for _, curType := range *nsList {

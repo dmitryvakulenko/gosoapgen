@@ -12,7 +12,7 @@ func TestSingleElementParsing(t *testing.T) {
 	}
 
 	if s.Element[0].Name != "Session" {
-		t.Errorf("Type name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
+		t.Errorf("TypeName name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
 	}
 
 	if len(s.Element[0].ComplexType.Sequence.Element) != 0 {
@@ -28,7 +28,7 @@ func TestParsingComplexTypeWithAttributes(t *testing.T) {
 	}
 
 	if s.Element[0].Name != "Session" {
-		t.Errorf("Type name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
+		t.Errorf("TypeName name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
 	}
 
 	if len(s.Element[0].ComplexType.Sequence.Element) != 3 {

@@ -32,13 +32,13 @@ func TestParseElementTypes(t *testing.T) {
 	cType := typesList[0]
 
 	typeName := "Session"
-	if cType.Name != typeName {
-		t.Errorf("Type name should be %q, got %q", typeName, cType.Name)
+	if cType.GoName != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
 	}
 
 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
 	if cType.Namespace != ns {
-		t.Errorf("Type namespace should be %q, got %q", ns, cType.Namespace)
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
 	}
 
 	if len(cType.Fields) != 4 {
@@ -46,8 +46,8 @@ func TestParseElementTypes(t *testing.T) {
 	}
 
 	field := cType.Fields[1]
-	if field.Name != "sequenceNumber" {
-		t.Errorf("Field name should be 'sequenceNumber', %q instead", field.Name)
+	if field.GoName != "sequenceNumber" {
+		t.Errorf("Field name should be 'sequenceNumber', %q instead", field.GoName)
 	}
 
 	if field.Type != "string" {
@@ -55,12 +55,12 @@ func TestParseElementTypes(t *testing.T) {
 	}
 
 	if field.Namespace != ns {
-		t.Errorf("Type should be %q, %q getting", ns, cType.Namespace)
+		t.Errorf("TypeName should be %q, %q getting", ns, cType.Namespace)
 	}
 
 	field = cType.Fields[3]
-	if field.Name != "TransactionStatusCode" {
-		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
+	if field.GoName != "TransactionStatusCode" {
+		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.GoName)
 	}
 
 	if !field.IsAttr {
@@ -78,17 +78,17 @@ func TestGenerateSchemaComplexTypes(t *testing.T) {
 	cType := typesList[0]
 
 	typeName := "AMA_SecurityHostedUser"
-	if cType.Name != typeName {
-		t.Errorf("Type name should be %q, got %q", typeName, cType.Name)
+	if cType.GoName != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
 	}
 
 	ns := "http://xml.amadeus.com/2010/06/Security_v1"
 	if cType.Namespace != ns {
-		t.Errorf("Type namespace should be %q, got %q", ns, cType.Namespace)
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
 	}
 
 	if len(cType.Fields) != 4 {
-		t.Fatalf("Type should has 4 fields, %d getting", len(cType.Fields))
+		t.Fatalf("TypeName should has 4 fields, %d getting", len(cType.Fields))
 	}
 
 }
@@ -103,13 +103,13 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	cType := typesList[0]
 
 	typeName := "Session"
-	if cType.Name != typeName {
-		t.Errorf("Type name should be %q, got %q", typeName, cType.Name)
+	if cType.GoName != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
 	}
 
 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
 	if cType.Namespace != ns {
-		t.Errorf("Type namespace should be %q, got %q", ns, cType.Namespace)
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
 	}
 
 	if len(cType.Fields) != 1 {
@@ -117,8 +117,8 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 
 	field := cType.Fields[0]
-	if field.Name != "TransactionStatusCode" {
-		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
+	if field.GoName != "TransactionStatusCode" {
+		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.GoName)
 	}
 
 	if field.Type != "string" {
@@ -141,22 +141,22 @@ func TestInnerComplexTypes(t *testing.T) {
 	secType := typesList[1]
 
 	typeName := "PNR_AddMultiElements"
-	if firstType.Name != typeName {
-		t.Errorf("Type name should be %q, got %q", typeName, firstType.Name)
+	if firstType.GoName != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, firstType.GoName)
 	}
 
 	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
 	if firstType.Namespace != ns {
-		t.Errorf("Type namespace should be %q, got %q", ns, firstType.Namespace)
+		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Namespace)
 	}
 
 	typeName = "travellerInfo"
-	if secType.Name != typeName {
-		t.Errorf("Type name should be %q, got %q", typeName, secType.Name)
+	if secType.GoName != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, secType.GoName)
 	}
 
 	if secType.Namespace != ns {
-		t.Errorf("Type namespace should be %q, got %q", ns, secType.Namespace)
+		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Namespace)
 	}
 
 	if len(firstType.Fields) != 1 {
@@ -164,8 +164,8 @@ func TestInnerComplexTypes(t *testing.T) {
 	}
 
 	field := firstType.Fields[0]
-	if field.Name != "travellerInfo" {
-		t.Errorf("Field name should be 'travellerInfo', %q instead", field.Name)
+	if field.GoName != "travellerInfo" {
+		t.Errorf("Field name should be 'travellerInfo', %q instead", field.GoName)
 	}
 
 	if field.Type != "travellerInfo" {
@@ -176,8 +176,8 @@ func TestInnerComplexTypes(t *testing.T) {
 		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
 	}
 
-	if secType.Fields[0].Name != "elementManagementPassenger" {
-		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
+	if secType.Fields[0].GoName != "elementManagementPassenger" {
+		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].GoName)
 	}
 }
 
@@ -191,8 +191,8 @@ func TestAttributeGroup(t *testing.T) {
 	cType := typesList[0]
 
 	name := "CodeType"
-	if cType.Name != "CodeType" {
-		t.Fatalf("Type name should be %q, got %q instead", name, cType.Name)
+	if cType.GoName != "CodeType" {
+		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
 	}
 
 	if len(cType.Fields) != 5 {
@@ -200,8 +200,8 @@ func TestAttributeGroup(t *testing.T) {
 	}
 
 	field := cType.Fields[1]
-	if field.Name != "Owner" {
-		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
+	if field.GoName != "Owner" {
+		t.Fatalf("Field name should be 'Owner', %q instead", field.GoName)
 	}
 
 	if !field.IsAttr {
@@ -219,8 +219,8 @@ func TestSimpleContent(t *testing.T) {
 
 	cType := typesList[0]
 	name := "CompanyNameType"
-	if cType.Name != name {
-		t.Fatalf("Type name should be %q, got %q instead", name, cType.Name)
+	if cType.GoName != name {
+		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
 	}
 
 	if len(cType.Fields) != 3 {
@@ -230,8 +230,8 @@ func TestSimpleContent(t *testing.T) {
 	field := cType.Fields[0]
 
 	name = "Value"
-	if field.Name != name {
-		t.Fatalf("Field name should be %q, got %q instead", name, field.Name)
+	if field.GoName != name {
+		t.Fatalf("Field name should be %q, got %q instead", name, field.GoName)
 	}
 
 	fType := "string"
@@ -250,8 +250,8 @@ func TestComplexContent(t *testing.T) {
 
 	cType := typesList[1]
 	typeName := "AddressWithModeType"
-	if cType.Name != typeName {
-		t.Fatalf("Type name should be %q, got %q instead", typeName, cType.Name)
+	if cType.GoName != typeName {
+		t.Fatalf("TypeName name should be %q, got %q instead", typeName, cType.GoName)
 	}
 
 	if len(cType.Fields) != 3 {
@@ -260,8 +260,8 @@ func TestComplexContent(t *testing.T) {
 
 	field := cType.Fields[2]
 	fieldName := "Mode"
-	if field.Name != fieldName {
-		t.Fatalf("Type name should be %q, got %q instead", fieldName, field.Name)
+	if field.GoName != fieldName {
+		t.Fatalf("TypeName name should be %q, got %q instead", fieldName, field.GoName)
 	}
 }
 

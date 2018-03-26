@@ -1,7 +1,7 @@
 package translator
 
 type decoder struct {
-	typesList           []*ComplexType
+	typesList           []NamedType
 	namespacesList      map[string]bool
 	curTargetNamespace  string
 	typesListCache      *namespacedTypes
@@ -11,51 +11,49 @@ type decoder struct {
 
 func newDecoder() decoder {
 	return decoder{
-		typesList:           make([]*ComplexType, 0),
+		typesList:           make([]NamedType, 0),
 		namespacesList:      make(map[string]bool),
 		typesListCache:      newTypesCollection(),
 		attributeGroupCache: newTypesCollection(),
 		curXmlns:            make(map[string]string)}
 }
 
+type NamedType interface {
+	GetName() string
+}
+
 type ComplexType struct {
-	Name      string
-	Namespace string
-	Fields    []*Field
-	BaseType  string
+	Name         string
+	Namespace    string
+	GoName       string
+	Fields       []*Field
+	BaseType     NamedType
+	BaseTypeName *QName
 }
 
-func (t ComplexType) GetNamespace() string {
-	return t.Namespace
-}
-
-func (t ComplexType) GetName() string {
+func (t *ComplexType) GetName() string {
 	return t.Name
 }
 
 type SimpleType struct {
-	Name      string
-	Type      string
-	Namespace string
+	Name         string
+	GoName       string
+	BaseType     NamedType
+	BaseTypeName *QName
 }
 
-func (t SimpleType) GetNamespace() string {
-	return t.Namespace
-}
-
-func (t SimpleType) GetName() string {
+func (t *SimpleType) GetName() string {
 	return t.Name
 }
 
 type Field struct {
 	Name      string
-	Type      string
-	TypeQName QName
+	Type      NamedType
+	TypeName  *QName
 	MinOccurs int
 	MaxOccurs int
 	IsAttr    bool
 	Comment   string
-	Namespace string
 }
 
 type attributeGroup struct {
@@ -64,11 +62,7 @@ type attributeGroup struct {
 	Fields    []*Field
 }
 
-func (t attributeGroup) GetNamespace() string {
-	return t.Namespace
-}
-
-func (t attributeGroup) GetName() string {
+func (t *attributeGroup) GetName() string {
 	return t.Name
 }
 

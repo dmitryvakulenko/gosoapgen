@@ -11,7 +11,7 @@ func TestGetTypeFromEmptyCollection(t *testing.T) {
 	}
 
 	if curType != nil {
-		t.Errorf("Type should be nil")
+		t.Errorf("TypeName should be nil")
 	}
 }
 
@@ -20,11 +20,11 @@ func TestStoringType(t *testing.T) {
 
 	ns := "namespace"
 	typeName := "ComplexType"
-	addedType := &ComplexType{Name: typeName, Namespace: ns}
+	addedType := &ComplexType{GoName: typeName, Namespace: ns}
 	collector.put(addedType)
 	res, ok := collector.find(ns, typeName)
 	if !ok {
-		t.Errorf("Type should exists!")
+		t.Errorf("TypeName should exists!")
 	}
 
 	resType, ok := res.(*ComplexType)
