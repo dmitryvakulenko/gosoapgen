@@ -14,14 +14,26 @@ func TestEmptySchema(t *testing.T) {
 	}
 }
 
-//func TestGenerateSimpleTypes(t *testing.T) {
-//	typesList := parseTypesFrom("simpleType.xsd", "")
-//
-//	if len(typesList) != 0 {
-//		t.Fatalf("Wrong number of types. 0 expected, but got %d", len(typesList))
-//	}
-//}
-//
+func TestSimpleTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name(), "")
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
+	}
+
+	tp, ok := typesList[0].(*SimpleType)
+	if !ok {
+		t.Fatalf("Type should be *SimpleType")
+	}
+
+
+	name := "AlphaString_Length1To2"
+	if name != tp.Name {
+		t.Fatalf("Type name should be %q, got %q instead", name, tp.Name)
+	}
+
+}
+
 //func TestParseElementTypes(t *testing.T) {
 //	typesList := parseTypesFrom("element.xsd", "")
 //
