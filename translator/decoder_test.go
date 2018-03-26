@@ -34,52 +34,51 @@ func TestSimpleTypes(t *testing.T) {
 
 }
 
-//func TestParseElementTypes(t *testing.T) {
-//	typesList := parseTypesFrom("element.xsd", "")
-//
-//	if len(typesList) != 1 {
-//		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-//	}
-//
-//	cType := typesList[0]
-//
-//	typeName := "Session"
-//	if cType.GoName != typeName {
-//		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
-//	}
-//
-//	ns := "http://xml.amadeus.com/2010/06/Session_v3"
-//	if cType.Namespace != ns {
-//		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
-//	}
-//
-//	if len(cType.Fields) != 4 {
-//		t.Fatalf("Should be 4 fields, %d getting", len(cType.Fields))
-//	}
-//
-//	field := cType.Fields[1]
-//	if field.GoName != "sequenceNumber" {
-//		t.Errorf("Field name should be 'sequenceNumber', %q instead", field.GoName)
-//	}
-//
-//	if field.Type != "string" {
-//		t.Errorf("Field type should be 'string' %s instead", field.Type)
-//	}
-//
-//	if field.Namespace != ns {
-//		t.Errorf("TypeName should be %q, %q getting", ns, cType.Namespace)
-//	}
-//
-//	field = cType.Fields[3]
-//	if field.GoName != "TransactionStatusCode" {
-//		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.GoName)
-//	}
-//
-//	if !field.IsAttr {
-//		t.Errorf("TransactionStatusCode should be attribute")
-//	}
-//}
-//
+func TestParseElements(t *testing.T) {
+	typesList := parseTypesFrom(t.Name(), "")
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType, ok := typesList[0].(*ComplexType)
+	if !ok {
+		t.Fatalf("Type should be complex type")
+	}
+
+	typeName := "Session"
+	if cType.GoName != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Session_v3"
+	if cType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
+	}
+
+	if len(cType.Fields) != 4 {
+		t.Fatalf("Should be 4 fields, %d getting", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "sequenceNumber" {
+		t.Errorf("Field name should be 'sequenceNumber', %q instead", field.Name)
+	}
+
+	if field.Type.GetName() != "string" {
+		t.Errorf("Field type should be 'string' %q instead", field.Type.GetName())
+	}
+
+	field = cType.Fields[3]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field name should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if !field.IsAttr {
+		t.Errorf("TransactionStatusCode should be attribute")
+	}
+}
+
 //func TestGenerateSchemaComplexTypes(t *testing.T) {
 //	typesList := parseTypesFrom("complexType.xsd", "")
 //

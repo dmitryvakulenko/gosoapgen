@@ -28,7 +28,8 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.ComplexType {
-		t.generateFromComplexType(elem, "")
+		newType := t.parseComplexType(elem, "")
+		t.addType(newType)
 	}
 
 	t.resolveTypes()
@@ -97,18 +98,25 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 		return nil
 	}
 
-	t.generateFromNamedSimpleType(element.SimpleType)
-	t.generateFromComplexType(element.ComplexType, "")
+	if element.SimpleType != nil {
+		t.generateFromNamedSimpleType(element.SimpleType)
+	} else if element.ComplexType != nil {
+		cType := t.parseComplexType(element.ComplexType, "")
+		cType.Name = element.Name
+		t.addType(cType)
+	} else if element.Type != "" {
+		qTypeName := t.parseFullName(element.Type)
+		if mapStandardType(qTypeName.Name) == "" {
+			curType := &SimpleType{
+				Name:         element.Type,
+				BaseTypeName: qTypeName}
+			t.addType(curType)
 
-	qTypeName := t.parseFullName(element.Type)
-	if mapStandardType(qTypeName.Name) == "" {
-		curType := &SimpleType{
-			Name:         element.Type,
-			BaseTypeName: qTypeName}
-		t.addType(curType)
-
-		return nil
+			return nil
+		}
 	}
+
+
 
 	field := &Field{}
 	field.Name = element.Name
@@ -152,21 +160,12 @@ func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	return field
 }
 
-func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, baseTypeName string) {
+func (t *decoder) parseComplexType(complexType *xsd.ComplexType, baseTypeName string) *ComplexType {
 	if complexType == nil {
-		return
+		return nil
 	}
 
-	var typeName string
-	if complexType.Name != "" {
-		typeName = complexType.Name
-	} else {
-		typeName = baseTypeName
-	}
-
-	var curStruct = &ComplexType{Name: typeName, Namespace: t.curTargetNamespace}
-
-	t.addType(curStruct)
+	var curStruct = &ComplexType{Name: complexType.Name, Namespace: t.curTargetNamespace}
 
 	if complexType.Sequence != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromSequence(complexType.Sequence)...)
@@ -186,6 +185,8 @@ func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, baseType
 			curStruct.BaseTypeName = t.parseFullName(baseType)
 		}
 	}
+
+	return curStruct
 }
 
 func (t *decoder) parseAttributes(attributes []*xsd.Attribute) []*Field {
