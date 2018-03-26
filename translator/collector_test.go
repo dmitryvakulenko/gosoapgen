@@ -21,7 +21,7 @@ func TestStoringType(t *testing.T) {
 	ns := "namespace"
 	typeName := "ComplexType"
 	addedType := &ComplexType{GoName: typeName, Namespace: ns}
-	collector.put(addedType)
+	collector.put(ns, addedType)
 	res, ok := collector.find(ns, typeName)
 	if !ok {
 		t.Errorf("TypeName should exists!")

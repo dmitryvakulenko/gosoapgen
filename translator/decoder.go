@@ -40,9 +40,11 @@ func (t *decoder) GetTypes() []NamedType {
 	return t.typesList
 }
 
-func (t *decoder) addType(name string, newType NamedType) {
-	t.typesListCache.put(t.curTargetNamespace, newType)
-	t.typesList = append(t.typesList, newType)
+func (t *decoder) addType(newType NamedType) {
+	if !t.typesListCache.has(t.curTargetNamespace, newType.GetName()) {
+		t.typesListCache.put(t.curTargetNamespace, newType)
+		t.typesList = append(t.typesList, newType)
+	}
 }
 
 func (t *decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
@@ -98,11 +100,12 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 	t.generateFromNamedSimpleType(element.SimpleType)
 	t.generateFromComplexType(element.ComplexType, "")
 
-	if element.Type != "" {
+	qTypeName := t.parseFullName(element.Type)
+	if mapStandardType(qTypeName.Name) == "" {
 		curType := &SimpleType{
 			Name:         element.Type,
-			BaseTypeName: t.parseFullName(element.Type)}
-		t.addType(element.Name, curType)
+			BaseTypeName: qTypeName}
+		t.addType(curType)
 
 		return nil
 	}
@@ -163,7 +166,7 @@ func (t *decoder) generateFromComplexType(complexType *xsd.ComplexType, baseType
 
 	var curStruct = &ComplexType{Name: typeName, Namespace: t.curTargetNamespace}
 
-	t.addType(curStruct.Name, curStruct)
+	t.addType(curStruct)
 
 	if complexType.Sequence != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromSequence(complexType.Sequence)...)
@@ -258,7 +261,12 @@ func (t *decoder) generateFromComplexContent(complexContent *xsd.Content, baseTy
 		if !ok {
 			baseType = complexContent.Extension.Base
 		} else {
-			res = append(res, baseType.(*ComplexType).Fields...)
+			switch tp := baseType.(type) {
+			case *SimpleType:
+				res = append(res, &Field{Type: tp})
+			case *ComplexType:
+				res = append(res, tp.Fields...)
+			}
 		}
 
 		if complexContent.Extension.Sequence != nil {
@@ -306,7 +314,7 @@ func (t *decoder) generateFromNamedSimpleType(simpleType *xsd.SimpleType) {
 		BaseTypeName: t.parseFullName(typeType)}
 
 	curType.Name = simpleType.Name
-	t.addType(curType.Name, curType)
+	t.addType(curType)
 }
 
 func (t *decoder) resolveTypes() {
@@ -327,9 +335,9 @@ func (t *decoder) resolveTypes() {
 }
 
 func (t *decoder) resolve(typeName *QName) NamedType {
-	stdType := parseStandardType(typeName.Name)
-	if stdType != nil {
-		return stdType
+	stdType := mapStandardType(typeName.Name)
+	if stdType != "" {
+		return &SimpleType{Name: stdType}
 	}
 
 	curType, ok := t.typesListCache.find(typeName.Namespace, typeName.Name)
@@ -340,20 +348,20 @@ func (t *decoder) resolve(typeName *QName) NamedType {
 	return curType
 }
 
-func parseStandardType(xmlType string) *SimpleType {
+func mapStandardType(xmlType string) string {
 	switch xmlType {
 	case "integer", "positiveInteger", "nonNegativeInteger":
-		return &SimpleType{Name: "int"}
+		return "int"
 	case "decimal":
-		return &SimpleType{Name: "float64"}
+		return "float64"
 	case "boolean":
-		return &SimpleType{Name: "bool"}
+		return "bool"
 	case "date", "dateTime":
-		return &SimpleType{Name: "time.Time"}
+		return "time.Time"
 	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration":
-		return &SimpleType{Name: "string"}
+		return "string"
 	default:
-		return nil
+		return ""
 	}
 }
 
@@ -405,7 +413,7 @@ func (t *decoder) prepareGoNames() {
 }
 
 //func (t *decoder) resolveTypeImpl(qName QName) string {
-//	tmpType := parseStandardType(qName.Name)
+//	tmpType := mapStandardType(qName.Name)
 //	if tmpType != "" {
 //		return tmpType
 //	}
