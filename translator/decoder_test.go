@@ -211,34 +211,37 @@ func TestInnerComplexTypes(t *testing.T) {
 	}
 }
 
-//func TestAttributeGroup(t *testing.T) {
-//	typesList := parseTypesFrom("attributeGroup.xsd", "")
-//
-//	if len(typesList) != 1 {
-//		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-//	}
-//
-//	cType := typesList[0]
-//
-//	name := "CodeType"
-//	if cType.GoName != "CodeType" {
-//		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
-//	}
-//
-//	if len(cType.Fields) != 5 {
-//		t.Fatalf("Fields amount should be 5, %d instead", len(cType.Fields))
-//	}
-//
-//	field := cType.Fields[1]
-//	if field.GoName != "Owner" {
-//		t.Fatalf("Field name should be 'Owner', %q instead", field.GoName)
-//	}
-//
-//	if !field.IsAttr {
-//		t.Fatalf("Owner should be attribute")
-//	}
-//}
-//
+func TestAttributeGroup(t *testing.T) {
+	typesList := parseTypesFrom(t.Name(), "")
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType, ok := typesList[0].(*ComplexType)
+	if !ok {
+		t.Fatalf("Type should be complex type")
+	}
+
+	name := "CodeType"
+	if cType.GoName != "CodeType" {
+		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
+	}
+
+	if len(cType.Fields) != 5 {
+		t.Fatalf("Fields amount should be 5, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "Owner" {
+		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
+	}
+
+	if !field.IsAttr {
+		t.Fatalf("Owner should be attribute")
+	}
+}
+
 //func TestSimpleContent(t *testing.T) {
 //	ns := "namespace"
 //	typesList := parseTypesFrom("simpleContent.xsd", ns)
