@@ -17,7 +17,7 @@ var innerTypes = []string{
 	"string"}
 
 const funcTemplate = `
-func (c *SoapClient) {{.GoName}}(body *{{.Input}}) *{{.Output}} {
+func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 	header := c.transporter.CreateHeader("{{.Action}}")
 	response := c.transporter.Send(header, body)
 	res := {{.Output}}{}
@@ -44,6 +44,7 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 		switch curType := t.(type) {
 		case *translator.ComplexType:
 			writer.Write([]byte("type " + curType.GoName + " struct {\n"))
+			typeNamespace[curType.GoName] = curType.Namespace
 			//alias := nsAliases[curType.Namespace]
 			//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.GoName + "\"`\n"))
 			for _, f := range curType.Fields {
