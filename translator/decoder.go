@@ -24,7 +24,7 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.Element {
-		t.generateFromElement(elem)
+		t.generateFromElement(elem, true)
 	}
 
 	for _, elem := range s.ComplexType {
@@ -93,7 +93,7 @@ func (t *decoder) GetNamespaces() []string {
 }
 
 // Если передали fieldName - это означает, что этот элемент - поле
-func (t *decoder) generateFromElement(element *xsd.Element) *Field {
+func (t *decoder) generateFromElement(element *xsd.Element, isParentSchema bool) *Field {
 	if element == nil || element.MaxOccurs == "0" {
 		return nil
 	}
@@ -130,7 +130,13 @@ func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 		field.TypeName = &QName{Name: typeName, Namespace: t.curTargetNamespace}
 	}
 
-	return field
+	if isParentSchema {
+		newType := &SimpleType{Name: field.Name, BaseTypeName: field.TypeName}
+		t.addType(newType)
+		return nil
+	} else {
+		return field
+	}
 }
 
 func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
@@ -204,7 +210,7 @@ func (t *decoder) parseAttributeGroupsRef(attributeGroups []*xsd.AttributeGroup)
 func (t *decoder) generateFromSequence(sequence *xsd.Sequence) []*Field {
 	var res []*Field
 	for _, childElem := range sequence.Element {
-		field := t.generateFromElement(childElem)
+		field := t.generateFromElement(childElem, false)
 		if field != nil {
 			res = append(res, field)
 		}

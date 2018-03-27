@@ -334,15 +334,15 @@ func TestComplexContent(t *testing.T) {
 //}
 //
 //
-//func TestParseElementRef(t *testing.T) {
-//	ns := "namespace"
-//	typesList := parseTypesFrom("elementRef.xsd", ns)
-//
-//	if len(typesList) != 1 {
-//		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-//	}
-//}
-//
+func TestParseElementRef(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom(t.Name(), ns)
+
+	if len(typesList) != 2 {
+		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+	}
+}
+
 //func TestParseComplexElement(t *testing.T) {
 //	ns := "namespace"
 //	typesList := parseTypesFrom("complexElement.xsd", ns)
