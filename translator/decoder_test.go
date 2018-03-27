@@ -246,16 +246,16 @@ func TestSimpleContent(t *testing.T) {
 	ns := "namespace"
 	typesList := parseTypesFrom(t.Name(), ns)
 
-	if len(typesList) != 4 {
+	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
 	}
 
-	cType, ok := typesList[3].(*ComplexType)
+	cType, ok := typesList[1].(*ComplexType)
 	if !ok {
 		t.Fatalf("Type should be complex type")
 	}
 
-	name := "AddressWithModeType"
+	name := "CompanyNameType"
 	if cType.GoName != name {
 		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
 	}
@@ -266,42 +266,46 @@ func TestSimpleContent(t *testing.T) {
 
 	field := cType.Fields[0]
 
-	name = "Format"
+	name = "Value"
 	if field.Name != name {
 		t.Fatalf("Field name should be %q, got %q instead", name, field.Name)
 	}
 
-	fType := "String_Length1To3"
+	fType := "StringLength0to128"
 	if field.Type.GetName() != fType {
 		t.Fatalf("Field type should be %q, got %q instead", fType, field.Type.GetName())
 	}
 }
 
-//func TestComplexContent(t *testing.T) {
-//	ns := "namespace"
-//	typesList := parseTypesFrom("complexContent.xsd", ns)
-//
-//	if len(typesList) != 2 {
-//		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
-//	}
-//
-//	cType := typesList[1]
-//	typeName := "AddressWithModeType"
-//	if cType.GoName != typeName {
-//		t.Fatalf("TypeName name should be %q, got %q instead", typeName, cType.GoName)
-//	}
-//
-//	if len(cType.Fields) != 3 {
-//		t.Fatalf("Fields amount should be 3, got %q instead", len(cType.Fields))
-//	}
-//
-//	field := cType.Fields[2]
-//	fieldName := "Mode"
-//	if field.GoName != fieldName {
-//		t.Fatalf("TypeName name should be %q, got %q instead", fieldName, field.GoName)
-//	}
-//}
-//
+func TestComplexContent(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom(t.Name(), ns)
+
+	if len(typesList) != 4 {
+		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+	}
+
+	cType, ok := typesList[3].(*ComplexType)
+	if !ok {
+		t.Fatalf("Type should be complex type")
+	}
+
+	typeName := "AddressWithModeType"
+	if cType.GoName != typeName {
+		t.Fatalf("TypeName name should be %q, got %q instead", typeName, cType.GoName)
+	}
+
+	if len(cType.Fields) != 3 {
+		t.Fatalf("Fields amount should be 3, got %q instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[2]
+	fieldName := "Mode"
+	if field.Name != fieldName {
+		t.Fatalf("TypeName name should be %q, got %q instead", fieldName, field.Name)
+	}
+}
+
 //func TestNoDuplicateTypes(t *testing.T) {
 //	decoder := newDecoder()
 //	s := loadSchemaFrom("complexType.xsd")

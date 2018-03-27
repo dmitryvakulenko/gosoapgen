@@ -1,42 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ama_ct="http://xml.amadeus.com/2010/06/Types_v1" xmlns:ota="http://www.opentravel.org/OTA/2003/05/OTA2010B" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" elementFormDefault="qualified" version="3.000" id="AMA2012B">
-    <xs:simpleType name="String_Length1To3">
-        <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:maxLength value="3"/>
-        </xs:restriction>
-    </xs:simpleType>
-    <xs:simpleType name="String_Length1To500">
-        <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:maxLength value="500"/>
-        </xs:restriction>
-    </xs:simpleType>
-    <xs:complexType name="AddressType">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="2.00" id="IATA2010.1">
+
+    <xs:simpleType name="StringLength0to128">
         <xs:annotation>
-            <xs:documentation>Address is a generic type to convey a phone number,
-                an email address...
-            </xs:documentation>
+            <xs:documentation xml:lang="en">Used for Character Strings, length 0 to 128</xs:documentation>
         </xs:annotation>
-        <xs:attribute name="Format" type="String_Length1To3" use="required">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="0" />
+            <xs:maxLength value="128" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="CompanyNameType">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Identifies a company by name.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="StringLength0to128">
+                <xs:attribute name="country" type="xs:string" />
+                <xs:attributeGroup ref="CompanyID_AttributesGroup" />
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:attributeGroup name="CompanyID_AttributesGroup">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">Provides meaning to a company code.</xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="CompanyShortName" type="xs:string" use="optional">
             <xs:annotation>
-                <xs:documentation>format of the recipient address
-                </xs:documentation>
+                <xs:documentation xml:lang="en">Used to provide the company common name.</xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="Value" type="String_Length1To500" use="required"/>
-    </xs:complexType>
-    <xs:complexType name="AddressWithModeType">
-        <xs:complexContent>
-            <xs:extension base="AddressType">
-                <xs:attribute name="Mode" type="String_Length1To3" use="optional">
-                    <xs:annotation>
-                        <xs:documentation>CRT or PNT when a TID is used. TO, CC, or BCC
-                            when an EML address is used.
-                        </xs:documentation>
-                    </xs:annotation>
-                </xs:attribute>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
+    </xs:attributeGroup>
+
 </xs:schema>
+
