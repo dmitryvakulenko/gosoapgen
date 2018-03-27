@@ -242,37 +242,41 @@ func TestAttributeGroup(t *testing.T) {
 	}
 }
 
-//func TestSimpleContent(t *testing.T) {
-//	ns := "namespace"
-//	typesList := parseTypesFrom("simpleContent.xsd", ns)
-//
-//	if len(typesList) != 1 {
-//		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
-//	}
-//
-//	cType := typesList[0]
-//	name := "CompanyNameType"
-//	if cType.GoName != name {
-//		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
-//	}
-//
-//	if len(cType.Fields) != 3 {
-//		t.Errorf("CompanyNameType should has 3 field, %d instead", len(cType.Fields))
-//	}
-//
-//	field := cType.Fields[0]
-//
-//	name = "Value"
-//	if field.GoName != name {
-//		t.Fatalf("Field name should be %q, got %q instead", name, field.GoName)
-//	}
-//
-//	fType := "string"
-//	if field.Type != fType {
-//		t.Fatalf("Field type should be %q, got %q instead", fType, field.Type)
-//	}
-//}
-//
+func TestSimpleContent(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom(t.Name(), ns)
+
+	if len(typesList) != 4 {
+		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+	}
+
+	cType, ok := typesList[3].(*ComplexType)
+	if !ok {
+		t.Fatalf("Type should be complex type")
+	}
+
+	name := "AddressWithModeType"
+	if cType.GoName != name {
+		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.GoName)
+	}
+
+	if len(cType.Fields) != 3 {
+		t.Errorf("CompanyNameType should has 3 field, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[0]
+
+	name = "Format"
+	if field.Name != name {
+		t.Fatalf("Field name should be %q, got %q instead", name, field.Name)
+	}
+
+	fType := "String_Length1To3"
+	if field.Type.GetName() != fType {
+		t.Fatalf("Field type should be %q, got %q instead", fType, field.Type.GetName())
+	}
+}
+
 //func TestComplexContent(t *testing.T) {
 //	ns := "namespace"
 //	typesList := parseTypesFrom("complexContent.xsd", ns)
@@ -315,7 +319,7 @@ func TestAttributeGroup(t *testing.T) {
 //		t.Fatalf("Wrong namespaces amount. 1 expected, %d got", len(namespaces))
 //	}
 //}
-//
+
 //func TestWrongTypesOrder(t *testing.T) {
 //	ns := "namespace"
 //	typesList := parseTypesFrom("complexContentWrongOrder.xsd", ns)
