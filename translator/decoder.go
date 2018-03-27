@@ -24,12 +24,11 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.Element {
-		t.generateFromElement(elem, "")
+		t.generateFromElement(elem)
 	}
 
 	for _, elem := range s.ComplexType {
-		newType := t.parseComplexType(elem, "")
-		t.addType(newType)
+		t.parseComplexType(elem, "")
 	}
 
 	t.resolveTypes()
@@ -94,22 +93,20 @@ func (t *decoder) GetNamespaces() []string {
 }
 
 // Если передали fieldName - это означает, что этот элемент - поле
-func (t *decoder) generateFromElement(element *xsd.Element, fieldName string) *Field {
+func (t *decoder) generateFromElement(element *xsd.Element) *Field {
 	if element == nil || element.MaxOccurs == "0" {
 		return nil
 	}
 
+	var typeName string
 	if element.SimpleType != nil {
 		t.generateFromNamedSimpleType(element.SimpleType)
 	} else if element.ComplexType != nil {
-		cType := t.parseComplexType(element.ComplexType, fieldName)
-		cType.Name = element.Name
-		t.addType(cType)
-		return nil
+		typeName = strings.Title(element.Name)
+		t.parseComplexType(element.ComplexType, typeName)
 	}
 
-	field := &Field{}
-	field.Name = element.Name
+	field := &Field{Name: element.Name}
 	if element.MinOccurs == "0" {
 		field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
 	}
@@ -129,7 +126,10 @@ func (t *decoder) generateFromElement(element *xsd.Element, fieldName string) *F
 		field.TypeName = t.parseFullName(element.Type)
 	} else if element.Ref != "" {
 		field.TypeName = t.parseFullName(element.Ref)
+	} else {
+		field.TypeName = &QName{Name: typeName, Namespace: t.curTargetNamespace}
 	}
+
 	return field
 }
 
@@ -147,12 +147,18 @@ func (t *decoder) generateFromAttribute(attribute *xsd.Attribute) *Field {
 	return field
 }
 
-func (t *decoder) parseComplexType(complexType *xsd.ComplexType, fieldName string) *ComplexType {
+func (t *decoder) parseComplexType(complexType *xsd.ComplexType, fieldName string) {
 	if complexType == nil {
-		return nil
+		return
 	}
 
-	var curStruct = &ComplexType{Name: complexType.Name, Namespace: t.curTargetNamespace}
+	var name string
+	if complexType.Name != "" {
+		name = complexType.Name
+	} else {
+		name = fieldName
+	}
+	var curStruct = &ComplexType{Name: name, Namespace: t.curTargetNamespace}
 
 	if complexType.Sequence != nil {
 		curStruct.Fields = append(curStruct.Fields, t.generateFromSequence(complexType.Sequence)...)
@@ -173,7 +179,7 @@ func (t *decoder) parseComplexType(complexType *xsd.ComplexType, fieldName strin
 		}
 	}
 
-	return curStruct
+	t.addType(curStruct)
 }
 
 func (t *decoder) parseAttributes(attributes []*xsd.Attribute) []*Field {

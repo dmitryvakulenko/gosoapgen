@@ -180,7 +180,7 @@ func TestInnerComplexTypes(t *testing.T) {
 		t.Errorf("TypeName name should be %q, got %q", typeName, secType.GoName)
 	}
 
-	typeName = "travellerInfo"
+	typeName = "TravellerInfo"
 	if secType.Name != typeName {
 		t.Errorf("TypeName name should be %q, got %q", typeName, secType.Name)
 	}
