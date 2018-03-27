@@ -20,7 +20,7 @@ func (t *decoder) decode(s *xsd.Schema, targetNamespace string) {
 	}
 
 	for _, elem := range s.SimpleType {
-		t.generateFromNamedSimpleType(elem)
+		t.generateFromSimpleType(elem, "")
 	}
 
 	for _, elem := range s.Element {
@@ -98,11 +98,10 @@ func (t *decoder) generateFromElement(element *xsd.Element, isParentSchema bool)
 		return nil
 	}
 
-	var typeName string
+	typeName := strings.Title(element.Name)
 	if element.SimpleType != nil {
-		t.generateFromNamedSimpleType(element.SimpleType)
+		t.generateFromSimpleType(element.SimpleType, typeName)
 	} else if element.ComplexType != nil {
-		typeName = strings.Title(element.Name)
 		t.parseComplexType(element.ComplexType, typeName)
 	}
 
@@ -296,13 +295,9 @@ func (t *decoder) parseAttributeGroupTypes(attrGr *xsd.AttributeGroup) {
 	t.attributeGroupCache.put(t.curTargetNamespace, curType)
 }
 
-func (t *decoder) generateFromNamedSimpleType(simpleType *xsd.SimpleType) {
+func (t *decoder) generateFromSimpleType(simpleType *xsd.SimpleType, fieldName string) {
 	if simpleType == nil {
 		return
-	}
-
-	if simpleType.Name == "" {
-		panic("No name for simple type")
 	}
 
 	typeType := simpleType.Restriction.Base
@@ -314,6 +309,9 @@ func (t *decoder) generateFromNamedSimpleType(simpleType *xsd.SimpleType) {
 		BaseTypeName: t.parseFullName(typeType)}
 
 	curType.Name = simpleType.Name
+	if curType.Name == "" {
+		curType.Name = fieldName
+	}
 	t.addType(curType)
 }
 

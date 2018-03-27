@@ -343,19 +343,24 @@ func TestParseElementRef(t *testing.T) {
 	}
 }
 
-//func TestParseComplexElement(t *testing.T) {
-//	ns := "namespace"
-//	typesList := parseTypesFrom("complexElement.xsd", ns)
-//
-//	if len(typesList) != 3 {
-//		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-//	}
-//
-//	field := typesList[2].Fields[0]
-//	if field.Type != "string" {
-//		t.Errorf("Field type should be string, %q got", field.Type)
-//	}
-//}
+func TestParseComplexElement(t *testing.T) {
+	ns := "namespace"
+	typesList := parseTypesFrom(t.Name(), ns)
+
+	if len(typesList) != 6 {
+		t.Fatalf("Wrong types amount. 6 expected, %d got", len(typesList))
+	}
+
+	cType, ok := typesList[3].(*ComplexType)
+	if !ok {
+		t.Fatalf("Type should be complex type")
+	}
+
+	field := cType.Fields[0]
+	if field.Type.GetName() != "TravelSector" {
+		t.Errorf("Field type should be string, %q got", field.Type.GetName())
+	}
+}
 
 
 func parseTypesFrom(name, namespace string) []NamedType {
