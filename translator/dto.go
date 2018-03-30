@@ -20,7 +20,10 @@ func newDecoder() decoder {
 
 type NamedType interface {
 	GetName() string
+	GetGoName() string
 }
+
+
 
 type ComplexType struct {
 	Name         string
@@ -35,6 +38,14 @@ func (t *ComplexType) GetName() string {
 	return t.Name
 }
 
+func (t *ComplexType) GetGoName() string {
+	if t.GoName != "" {
+		return t.GoName
+	} else {
+		return t.Name
+	}
+}
+
 type SimpleType struct {
 	Name         string
 	GoName       string
@@ -44,6 +55,14 @@ type SimpleType struct {
 
 func (t *SimpleType) GetName() string {
 	return t.Name
+}
+
+func (t *SimpleType) GetGoName() string {
+	if t.GoName != "" {
+		return t.GoName
+	} else {
+		return t.Name
+	}
 }
 
 type Field struct {
@@ -63,6 +82,10 @@ type attributeGroup struct {
 }
 
 func (t *attributeGroup) GetName() string {
+	return t.Name
+}
+
+func (t *attributeGroup) GetGoName() string {
 	return t.Name
 }
 

@@ -395,17 +395,21 @@ func (t *decoder) prepareGoNames() {
 			realName := baseName
 			index := 1
 			for _, ok := usedNames[realName]; ok; index++ {
-				realName += "_" + strconv.Itoa(index)
+				realName = baseName + "_" + strconv.Itoa(index)
+				ok = usedNames[realName]
 			}
 			realType.GoName = strings.Title(realName)
+			usedNames[realName] = true
 		case *ComplexType:
 			baseName := realType.Name
 			realName := baseName
 			index := 1
 			for _, ok := usedNames[realName]; ok; index++ {
-				realName += "_" + strconv.Itoa(index)
+				realName = baseName + "_" + strconv.Itoa(index)
+				ok = usedNames[realName]
 			}
 			realType.GoName = strings.Title(realName)
+			usedNames[realName] = true
 		}
 	}
 }

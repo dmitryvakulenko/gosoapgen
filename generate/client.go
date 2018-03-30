@@ -3,7 +3,6 @@ package generate
 import (
 	"github.com/dmitryvakulenko/gosoapgen/translator"
 	"strings"
-	"strconv"
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"text/template"
 	"io"
@@ -19,7 +18,7 @@ var innerTypes = []string{
 const funcTemplate = `
 func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 	header := c.transporter.CreateHeader("{{.Action}}")
-	response := c.transporter.Send(header, body)
+	response := c.transporter.Send("{{.Action}}", header, body)
 	res := {{.Output}}{}
 	xml.Unmarshal(response, &res)
 	return &res
@@ -27,24 +26,24 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 `
 
 func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) {
-	var (
-		nsAliases = make(map[string]string)
-		typeNamespace = make(map[string]string)
-	)
+	//var (
+	//	nsAliases = make(map[string]string)
+	//	typeNamespace = make(map[string]string)
+	//)
 
-	writer.Write([]byte("var namespaceMap = map[string]string{"))
-	for idx, ns := range parser.GetNamespaces() {
-		alias := "ns" + strconv.Itoa(idx)
-		writer.Write([]byte("\n\"" + ns + "\": \"" + alias + "\","))
-		nsAliases[ns] = alias
-	}
-	writer.Write([]byte("}\n\n"))
+	//writer.Write([]byte("var namespaceMap = map[string]string{"))
+	//for idx, ns := range parser.GetNamespaces() {
+	//	alias := "ns" + strconv.Itoa(idx)
+	//	writer.Write([]byte("\n\"" + ns + "\": \"" + alias + "\","))
+	//	nsAliases[ns] = alias
+	//}
+	//writer.Write([]byte("}\n\n"))
 	
 	for _, t := range parser.GetTypes() {
 		switch curType := t.(type) {
 		case *translator.ComplexType:
 			writer.Write([]byte("type " + curType.GoName + " struct {\n"))
-			typeNamespace[curType.GoName] = curType.Namespace
+			//typeNamespace[curType.GoName] = curType.Namespace
 			//alias := nsAliases[curType.Namespace]
 			//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.GoName + "\"`\n"))
 			for _, f := range curType.Fields {
@@ -53,15 +52,16 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 					writer.Write([]byte("[]"))
 				}
 
-				if !isInnerType(f.Type.GetName()) {
+				_, isSimpleType := f.Type.(*translator.SimpleType)
+				if !isInnerType(f.Type.GetName()) && !isSimpleType {
 					writer.Write([]byte("*"))
 				}
 
-				alias := ""
-				if !f.IsAttr {
-					alias = nsAliases[curType.Namespace] + ":"
-				}
-				writer.Write([]byte(firstUp(f.Type.GetName()) + " `xml:\"" + alias + f.Name))
+				//alias := ""
+				//if !f.IsAttr {
+				//	alias = nsAliases[curType.Namespace] + ":"
+				//}
+				writer.Write([]byte(firstUp(f.Type.GetGoName()) + " `xml:\"" + curType.Namespace + " " + f.Name))
 				if f.IsAttr {
 					writer.Write([]byte(",attr"))
 
@@ -77,11 +77,11 @@ func Client(parser translator.Parser, wsdl *wsdl.Definitions, writer io.Writer) 
 		}
 	}
 
-	writer.Write([]byte("var typeNamespace = map[string]string{"))
-	for typeName, ns := range typeNamespace {
-		writer.Write([]byte("\n\"" + typeName + "\": \"" + ns + "\","))
-	}
-	writer.Write([]byte("}\n\n"))
+	//writer.Write([]byte("var typeNamespace = map[string]string{"))
+	//for typeName, ns := range typeNamespace {
+	//	writer.Write([]byte("\n\"" + typeName + "\": \"" + ns + "\","))
+	//}
+	//writer.Write([]byte("}\n\n"))
 
 	writeOperations(wsdl, writer)
 }
@@ -90,7 +90,7 @@ func writeOperations(wsdl *wsdl.Definitions, writer io.Writer) {
 	writer.Write([]byte(`
 
 type Transporter interface {
-	Send(interface{}, interface{}) []byte
+	Send(string, interface{}, interface{}) []byte
 	CreateHeader(string) interface{}
 }
 
