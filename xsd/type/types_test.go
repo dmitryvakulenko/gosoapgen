@@ -2,10 +2,11 @@ package _type
 
 import (
 	"testing"
+	"io/ioutil"
 )
 
 func TestSingleElementParsing(t *testing.T) {
-	s := parseSchema("./types_test/1.xsd")
+	s := parseSchema("1.xsd")
 
 	if len(s.Element) != 1 {
 		t.Fatalf("Should be 1 type, %d instead", len(s.Element))
@@ -15,13 +16,13 @@ func TestSingleElementParsing(t *testing.T) {
 		t.Errorf("TypeName name should be '%s', got '%s' instead", "Session", s.Element[0].Name)
 	}
 
-	if len(s.Element[0].ComplexType.Sequence.Element) != 0 {
+	if s.Element[0].ComplexType.Sequence != nil && len(s.Element[0].ComplexType.Sequence.Element) != 0 {
 		t.Errorf("Fields sould be empty")
 	}
 }
 
 func TestParsingComplexTypeWithAttributes(t *testing.T) {
-	s := parseSchema("./types_test/2.xsd")
+	s := parseSchema("2.xsd")
 
 	if len(s.Element) != 1 {
 		t.Fatalf("Should be 1 type, %d instead", len(s.Element))
@@ -50,7 +51,7 @@ func TestParsingComplexTypeWithAttributes(t *testing.T) {
 
 
 func TestParsingAdditionTypes(t *testing.T) {
-	s := parseSchema("./types_test/3.xsd")
+	s := parseSchema("3.xsd")
 
 	if len(s.ComplexType) != 2 {
 		t.Fatalf("Comples types amount sould be 2, %d instead", len(s.ComplexType))
@@ -66,13 +67,24 @@ func TestParsingAdditionTypes(t *testing.T) {
 }
 
 func TestImportInclude(t *testing.T) {
-	s := ParseSchema("./types_test/4.xsd")
+	parser := NewParser(&Ld{})
+	s := parser.Parse("4.xsd", "")
 
 	if len(s) != 3 {
 		t.Fatalf("Should be imported 3 schemas, %d instead", len(s))
 	}
 }
 
+
 func parseSchema(fileName string) *Schema {
-	return ParseSchema(fileName)[0]
+	parser := NewParser(&Ld{})
+	return parser.Parse(fileName, "")[0]
+}
+
+
+type Ld struct {}
+
+func (l *Ld) Load(path string) ([]byte, bool) {
+	data, _ := ioutil.ReadFile("./types_test/" + path)
+	return data, false
 }

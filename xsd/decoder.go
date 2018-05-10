@@ -6,58 +6,64 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/xsd/type"
 )
 
-func (t *decoder) decode(s *_type.Schema, targetNamespace string) {
+func (t *Decoder) Decode(schemaFileName string, targetNamespace string) {
 	t.curTargetNamespace = targetNamespace
-
 	if _, ok := t.namespacesList[targetNamespace]; !ok {
 		t.namespacesList[targetNamespace] = true
 	}
 
-	t.parseNamespaces(s)
+	schemas := t.schemaParser.Parse(schemaFileName, targetNamespace)
 
-	for _, attrGr := range s.AttributeGroup {
-		t.parseAttributeGroupTypes(attrGr)
+	for s := range schemas {
+		t.parseNamespaces(s)
+
+		for _, attrGr := range s.AttributeGroup {
+			t.parseAttributeGroupTypes(attrGr)
+		}
+
+		for _, elem := range s.SimpleType {
+			t.generateFromSimpleType(elem, "")
+		}
+
+		for _, elem := range s.Element {
+			t.generateFromElement(elem, true)
+		}
+
+		for _, elem := range s.ComplexType {
+			t.parseComplexType(elem, "")
+		}
+
+		t.resolveTypes()
+		t.resolveBaseTypes()
+		t.prepareGoNames()
 	}
-
-	for _, elem := range s.SimpleType {
-		t.generateFromSimpleType(elem, "")
-	}
-
-	for _, elem := range s.Element {
-		t.generateFromElement(elem, true)
-	}
-
-	for _, elem := range s.ComplexType {
-		t.parseComplexType(elem, "")
-	}
-
-	t.resolveTypes()
-	t.resolveBaseTypes()
-	t.prepareGoNames()
 }
 
-func (t *decoder) GetTypes() []NamedType {
+
+
+
+func (t *Decoder) GetTypes() []NamedType {
 	return t.typesList
 }
 
-func (t *decoder) addType(newType NamedType) {
+func (t *Decoder) addType(newType NamedType) {
 	if !t.typesListCache.has(t.curTargetNamespace, newType.GetName()) {
 		t.typesListCache.put(t.curTargetNamespace, newType)
 		t.typesList = append(t.typesList, newType)
 	}
 }
 
-func (t *decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
+func (t *Decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
 	qName := t.parseFullName(fullTypeName)
 	return t.attributeGroupCache.find(qName.Namespace, qName.Name)
 }
 
-func (t *decoder) findType(fullTypeName string) (interface{}, bool) {
+func (t *Decoder) findType(fullTypeName string) (interface{}, bool) {
 	qName := t.parseFullName(fullTypeName)
 	return t.typesListCache.find(qName.Namespace, qName.Name)
 }
 
-func (t *decoder) parseFullName(fullTypeName string) *QName {
+func (t *Decoder) parseFullName(fullTypeName string) *QName {
 	parts := strings.Split(fullTypeName, ":")
 	if len(parts) == 2 {
 		return &QName{
@@ -70,7 +76,7 @@ func (t *decoder) parseFullName(fullTypeName string) *QName {
 	}
 }
 
-func (t *decoder) parseNamespaces(s *_type.Schema) {
+func (t *Decoder) parseNamespaces(s *_type.Schema) {
 	t.curXmlns = make(map[string]string)
 	for _, v := range s.Attrs {
 		if v.Name.Space != "xmlns" {
@@ -80,7 +86,7 @@ func (t *decoder) parseNamespaces(s *_type.Schema) {
 	}
 }
 
-func (t *decoder) GetNamespaces() []string {
+func (t *Decoder) GetNamespaces() []string {
 	res := make([]string, len(t.namespacesList))
 
 	index := 0
@@ -93,7 +99,7 @@ func (t *decoder) GetNamespaces() []string {
 }
 
 // Если передали fieldName - это означает, что этот элемент - поле
-func (t *decoder) generateFromElement(element *_type.Element, isParentSchema bool) *Field {
+func (t *Decoder) generateFromElement(element *_type.Element, isParentSchema bool) *Field {
 	if element == nil || element.MaxOccurs == "0" {
 		return nil
 	}
@@ -138,7 +144,7 @@ func (t *decoder) generateFromElement(element *_type.Element, isParentSchema boo
 	}
 }
 
-func (t *decoder) generateFromAttribute(attribute *_type.Attribute) *Field {
+func (t *Decoder) generateFromAttribute(attribute *_type.Attribute) *Field {
 	field := &Field{
 		Name:   attribute.Name,
 		IsAttr: true}
@@ -152,7 +158,7 @@ func (t *decoder) generateFromAttribute(attribute *_type.Attribute) *Field {
 	return field
 }
 
-func (t *decoder) parseComplexType(complexType *_type.ComplexType, fieldName string) {
+func (t *Decoder) parseComplexType(complexType *_type.ComplexType, fieldName string) {
 	if complexType == nil {
 		return
 	}
@@ -187,7 +193,7 @@ func (t *decoder) parseComplexType(complexType *_type.ComplexType, fieldName str
 	t.addType(curStruct)
 }
 
-func (t *decoder) parseAttributes(attributes []*_type.Attribute) []*Field {
+func (t *Decoder) parseAttributes(attributes []*_type.Attribute) []*Field {
 	var res []*Field
 	for _, childElem := range attributes {
 		res = append(res, t.generateFromAttribute(childElem))
@@ -196,7 +202,7 @@ func (t *decoder) parseAttributes(attributes []*_type.Attribute) []*Field {
 	return res
 }
 
-func (t *decoder) parseAttributeGroupsRef(attributeGroups []*_type.AttributeGroup) []*Field {
+func (t *Decoder) parseAttributeGroupsRef(attributeGroups []*_type.AttributeGroup) []*Field {
 	var res []*Field
 	for _, curGroup := range attributeGroups {
 		groupType, _ := t.findAttributeGroup(curGroup.Ref)
@@ -206,7 +212,7 @@ func (t *decoder) parseAttributeGroupsRef(attributeGroups []*_type.AttributeGrou
 	return res
 }
 
-func (t *decoder) generateFromSequence(sequence *_type.Sequence) []*Field {
+func (t *Decoder) generateFromSequence(sequence *_type.Sequence) []*Field {
 	var res []*Field
 	for _, childElem := range sequence.Element {
 		field := t.generateFromElement(childElem, false)
@@ -218,7 +224,7 @@ func (t *decoder) generateFromSequence(sequence *_type.Sequence) []*Field {
 	return res
 }
 
-func (t *decoder) generateFromSimpleContent(simpleContent *_type.Content) []*Field {
+func (t *Decoder) generateFromSimpleContent(simpleContent *_type.Content) []*Field {
 	var res []*Field
 
 	valField := &Field{
@@ -249,7 +255,7 @@ func (t *decoder) generateFromSimpleContent(simpleContent *_type.Content) []*Fie
 	return res
 }
 
-func (t *decoder) generateFromComplexContent(complexContent *_type.Content, baseTypeName string) ([]*Field, string) {
+func (t *Decoder) generateFromComplexContent(complexContent *_type.Content, baseTypeName string) ([]*Field, string) {
 	var (
 		res      []*Field
 		baseType string
@@ -284,7 +290,7 @@ func (t *decoder) generateFromComplexContent(complexContent *_type.Content, base
 	return res, baseType
 }
 
-func (t *decoder) parseAttributeGroupTypes(attrGr *_type.AttributeGroup) {
+func (t *Decoder) parseAttributeGroupTypes(attrGr *_type.AttributeGroup) {
 	curType := &attributeGroup{Name: attrGr.Name, Namespace: t.curTargetNamespace}
 
 	for _, attr := range attrGr.Attribute {
@@ -295,7 +301,7 @@ func (t *decoder) parseAttributeGroupTypes(attrGr *_type.AttributeGroup) {
 	t.attributeGroupCache.put(t.curTargetNamespace, curType)
 }
 
-func (t *decoder) generateFromSimpleType(simpleType *_type.SimpleType, fieldName string) {
+func (t *Decoder) generateFromSimpleType(simpleType *_type.SimpleType, fieldName string) {
 	if simpleType == nil {
 		return
 	}
@@ -315,7 +321,7 @@ func (t *decoder) generateFromSimpleType(simpleType *_type.SimpleType, fieldName
 	t.addType(curType)
 }
 
-func (t *decoder) resolveTypes() {
+func (t *Decoder) resolveTypes() {
 	for _, curType := range t.typesList {
 		switch realType := curType.(type) {
 		case *ComplexType:
@@ -332,7 +338,7 @@ func (t *decoder) resolveTypes() {
 	}
 }
 
-func (t *decoder) resolve(typeName *QName) NamedType {
+func (t *Decoder) resolve(typeName *QName) NamedType {
 	stdType := mapStandardType(typeName.Name)
 	if stdType != "" {
 		return &SimpleType{Name: stdType}
@@ -363,7 +369,7 @@ func mapStandardType(xmlType string) string {
 	}
 }
 
-func (t *decoder) resolveBaseTypes() {
+func (t *Decoder) resolveBaseTypes() {
 	for _, cType := range t.typesList {
 		realType, ok := cType.(*ComplexType)
 		if !ok {
@@ -374,7 +380,7 @@ func (t *decoder) resolveBaseTypes() {
 	}
 }
 
-func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
+func (t *Decoder) resolveBaseTypesImpl(cType *ComplexType) {
 	if cType.BaseType == nil {
 		return
 	}
@@ -386,7 +392,7 @@ func (t *decoder) resolveBaseTypesImpl(cType *ComplexType) {
 	cType.Fields = append(baseType.Fields, cType.Fields...)
 }
 
-func (t *decoder) prepareGoNames() {
+func (t *Decoder) prepareGoNames() {
 	usedNames := make(map[string]bool)
 	for _, cType := range t.typesList {
 		switch realType := cType.(type) {
@@ -414,7 +420,7 @@ func (t *decoder) prepareGoNames() {
 	}
 }
 
-//func (t *decoder) resolveTypeImpl(qName QName) string {
+//func (t *Decoder) resolveTypeImpl(qName QName) string {
 //	tmpType := mapStandardType(qName.Name)
 //	if tmpType != "" {
 //		return tmpType

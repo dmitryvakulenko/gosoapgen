@@ -1,6 +1,11 @@
 package xsd
 
-type decoder struct {
+import "github.com/dmitryvakulenko/gosoapgen/xsd/type"
+
+// Декодер xsd
+// Использует Loader для загрузки included и import схем
+type Decoder struct {
+	schemaParser        *_type.Parser
 	typesList           []NamedType
 	namespacesList      map[string]bool
 	curTargetNamespace  string
@@ -9,8 +14,9 @@ type decoder struct {
 	curXmlns            map[string]string
 }
 
-func newDecoder() decoder {
-	return decoder{
+func NewDecoder(l _type.Loader) Decoder {
+	return Decoder{
+		schemaParser:        _type.NewParser(l),
 		typesList:           make([]NamedType, 0),
 		namespacesList:      make(map[string]bool),
 		typesListCache:      newTypesCollection(),
@@ -22,8 +28,6 @@ type NamedType interface {
 	GetName() string
 	GetGoName() string
 }
-
-
 
 type ComplexType struct {
 	Name         string

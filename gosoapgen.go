@@ -32,9 +32,9 @@ func main() {
 	xmlFile.Close()
 
 	basePath := path.Dir(wsdlName)
-	parser := xsd.NewLoader()
+	parser := xsd.NewDecoder(newXsdLoader(basePath))
 	for _, attr := range def.Import {
-		parser.Parse(path.Clean(basePath + "/" + attr.SchemaLocation))
+		parser.Decode(attr.SchemaLocation, "")
 	}
 
 	file, err := os.Create("./result/res.go")
@@ -42,6 +42,7 @@ func main() {
 		fmt.Printf("Can't write result file")
 		return
 	}
+
 	generate.Client(parser, &def, file)
 	file.Close()
 }

@@ -25,7 +25,7 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 }
 `
 
-func Client(parser xsd.Parser, wsdl *wsdl.Definitions, writer io.Writer) {
+func Client(parser xsd.Decoder, wsdl *wsdl.Definitions, writer io.Writer) {
 	//var (
 	//	nsAliases = make(map[string]string)
 	//	typeNamespace = make(map[string]string)
