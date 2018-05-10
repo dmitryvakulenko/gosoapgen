@@ -1,4 +1,4 @@
-package translator
+package xsd
 
 import (
 	"encoding/xml"

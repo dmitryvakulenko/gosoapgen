@@ -6,8 +6,8 @@ import (
 	"encoding/xml"
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"path"
-	"github.com/dmitryvakulenko/gosoapgen/translator"
 	"github.com/dmitryvakulenko/gosoapgen/generate"
+	"github.com/dmitryvakulenko/gosoapgen/xsd"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	xmlFile.Close()
 
 	basePath := path.Dir(wsdlName)
-	parser := translator.NewParser()
+	parser := xsd.NewLoader()
 	for _, attr := range def.Import {
 		parser.Parse(path.Clean(basePath + "/" + attr.SchemaLocation))
 	}

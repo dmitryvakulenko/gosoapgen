@@ -1,4 +1,4 @@
-package xsd
+package _type
 
 import "encoding/xml"
 

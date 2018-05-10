@@ -1,10 +1,10 @@
-package translator
+package xsd
 
 import (
 	"os"
-	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"encoding/xml"
 	"path"
+	"github.com/dmitryvakulenko/gosoapgen/xsd/type"
 )
 
 type Parser struct {
@@ -12,7 +12,7 @@ type Parser struct {
 	decoder decoder
 }
 
-func NewParser() Parser {
+func NewLoader() Parser {
 	return Parser{
 		alreadyParsed: make(map[string]bool),
 		decoder: newDecoder()}
@@ -57,7 +57,7 @@ func (p *Parser) parseImpl(fileName, ns string) {
 	}
 }
 
-func loadSchema(fileName string) *xsd.Schema {
+func loadSchema(fileName string) *_type.Schema {
 	reader, err := os.Open(fileName)
 	defer reader.Close()
 
@@ -65,7 +65,7 @@ func loadSchema(fileName string) *xsd.Schema {
 		panic(err)
 	}
 
-	s := xsd.Schema{}
+	s := _type.Schema{}
 	err = xml.NewDecoder(reader).Decode(&s)
 	if err != nil {
 		panic(err)

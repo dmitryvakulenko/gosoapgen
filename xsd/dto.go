@@ -1,4 +1,4 @@
-package translator
+package xsd
 
 type decoder struct {
 	typesList           []NamedType
