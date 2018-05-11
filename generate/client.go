@@ -25,20 +25,7 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 }
 `
 
-func Client(parser xsd.Decoder, wsdl *wsdl.Definitions, writer io.Writer) {
-	//var (
-	//	nsAliases = make(map[string]string)
-	//	typeNamespace = make(map[string]string)
-	//)
-
-	//writer.Write([]byte("var namespaceMap = map[string]string{"))
-	//for idx, ns := range parser.GetNamespaces() {
-	//	alias := "ns" + strconv.Itoa(idx)
-	//	writer.Write([]byte("\n\"" + ns + "\": \"" + alias + "\","))
-	//	nsAliases[ns] = alias
-	//}
-	//writer.Write([]byte("}\n\n"))
-	
+func Types(parser xsd.Decoder, writer io.Writer) {
 	for _, t := range parser.GetTypes() {
 		switch curType := t.(type) {
 		case *xsd.ComplexType:
@@ -76,6 +63,23 @@ func Client(parser xsd.Decoder, wsdl *wsdl.Definitions, writer io.Writer) {
 			writer.Write([]byte("type " + curType.GoName + " " + curType.BaseType.GetName() + "\n\n"))
 		}
 	}
+}
+
+//func Client(wsdl *wsdl.Definitions, writer io.Writer) {
+	//var (
+	//	nsAliases = make(map[string]string)
+	//	typeNamespace = make(map[string]string)
+	//)
+
+	//writer.Write([]byte("var namespaceMap = map[string]string{"))
+	//for idx, ns := range parser.GetNamespaces() {
+	//	alias := "ns" + strconv.Itoa(idx)
+	//	writer.Write([]byte("\n\"" + ns + "\": \"" + alias + "\","))
+	//	nsAliases[ns] = alias
+	//}
+	//writer.Write([]byte("}\n\n"))
+	
+
 
 	//writer.Write([]byte("var typeNamespace = map[string]string{"))
 	//for typeName, ns := range typeNamespace {
@@ -83,10 +87,10 @@ func Client(parser xsd.Decoder, wsdl *wsdl.Definitions, writer io.Writer) {
 	//}
 	//writer.Write([]byte("}\n\n"))
 
-	writeOperations(wsdl, writer)
-}
+	//writeOperations(wsdl, writer)
+//}
 
-func writeOperations(wsdl *wsdl.Definitions, writer io.Writer) {
+func Client(wsdl *wsdl.Definitions, writer io.Writer) {
 	writer.Write([]byte(`
 
 type Transporter interface {
