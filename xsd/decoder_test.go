@@ -367,7 +367,11 @@ func parseTypesFrom(name string) []NamedType {
 
 type Ld struct {}
 
-func (l *Ld) Load(path string) ([]byte, bool) {
+func (l *Ld) Load(path string) ([]byte, error) {
 	data, _ := ioutil.ReadFile("./schema_test/" + path)
-	return data, false
+	return data, nil
+}
+
+func (l *Ld) IsAlreadyLoadedError(e error) bool {
+	return false
 }

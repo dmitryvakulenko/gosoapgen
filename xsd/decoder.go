@@ -95,7 +95,7 @@ func (t *Decoder) GetNamespaces() []string {
 	return res
 }
 
-// Если передали fieldName - это означает, что этот элемент - поле
+// Сгенерировать тип, либо поле из <element>
 func (t *Decoder) generateFromElement(element *_type.Element, isParentSchema bool) *Field {
 	if element == nil || element.MaxOccurs == "0" {
 		return nil
@@ -106,6 +106,8 @@ func (t *Decoder) generateFromElement(element *_type.Element, isParentSchema boo
 		t.generateFromSimpleType(element.SimpleType, typeName)
 	} else if element.ComplexType != nil {
 		t.parseComplexType(element.ComplexType, typeName)
+	} else {
+		typeName = "string"
 	}
 
 	field := &Field{Name: element.Name}
@@ -351,7 +353,7 @@ func (t *Decoder) resolve(typeName *QName) NamedType {
 
 func mapStandardType(xmlType string) string {
 	switch xmlType {
-	case "integer", "positiveInteger", "nonNegativeInteger":
+	case "integer", "positiveInteger", "nonNegativeInteger", "ID":
 		return "int"
 	case "decimal":
 		return "float64"
@@ -359,7 +361,7 @@ func mapStandardType(xmlType string) string {
 		return "bool"
 	case "date", "dateTime":
 		return "time.Time"
-	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration":
+	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration", "IDREF", "IDREFS", "gYear", "gMonth", "gDay", "gYearMonth":
 		return "string"
 	default:
 		return ""
