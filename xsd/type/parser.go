@@ -30,7 +30,10 @@ func (p *Parser) Parse(schemaFileName string, ns string) []*Schema {
 	if parsed {
 		return res
 	}
-	res = append(res, p.unmarshalXsd(xsdData))
+	res = []*Schema{p.unmarshalXsd(xsdData)}
+	if ns != "" {
+		res[0].TargetNamespace = ns
+	}
 	res = append(res, p.parseImports(res[0], ns)...)
 
 	return res
@@ -49,13 +52,22 @@ func (p *Parser) unmarshalXsd(data []byte) *Schema {
 
 // Parsing imports and includes
 func (p *Parser) parseImports(s *Schema, ns string) []*Schema {
+	targetNamespace := ns
+	if targetNamespace == "" {
+		targetNamespace = s.TargetNamespace
+	}
+
 	res := make([]*Schema, 0)
 	for _, imp := range s.Import {
-		res = append(res, p.Parse(imp.SchemaLocation, "")...)
+		curNs := targetNamespace
+		if imp.Namespace != "" {
+			curNs = imp.Namespace
+		}
+		res = append(res, p.Parse(imp.SchemaLocation, curNs)...)
 	}
 
 	for _, imp := range s.Include {
-		res = append(res, p.Parse(imp.SchemaLocation, s.TargetNamespace)...)
+		res = append(res, p.Parse(imp.SchemaLocation, targetNamespace)...)
 	}
 
 	return res

@@ -1,21 +1,19 @@
 package xsd
 
 import (
-	"encoding/xml"
-	"github.com/dmitryvakulenko/gosoapgen/xsd"
-	"os"
 	"testing"
+	"io/ioutil"
 )
 
 func TestEmptySchema(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 	if len(typesList) != 0 {
 		t.Errorf("Should be no types")
 	}
 }
 
 func TestSimpleTypes(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
@@ -35,7 +33,7 @@ func TestSimpleTypes(t *testing.T) {
 }
 
 func TestParseElements(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -80,7 +78,7 @@ func TestParseElements(t *testing.T) {
 }
 
 func TestSchemaComplexTypes(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
@@ -108,7 +106,7 @@ func TestSchemaComplexTypes(t *testing.T) {
 }
 
 func TestComplexTypeWithAttributes(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -148,7 +146,7 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 }
 
 func TestInnerComplexTypes(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 3 {
 		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
@@ -212,7 +210,7 @@ func TestInnerComplexTypes(t *testing.T) {
 }
 
 func TestAttributeGroup(t *testing.T) {
-	typesList := parseTypesFrom(t.Name(), "")
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
@@ -243,8 +241,7 @@ func TestAttributeGroup(t *testing.T) {
 }
 
 func TestSimpleContent(t *testing.T) {
-	ns := "namespace"
-	typesList := parseTypesFrom(t.Name(), ns)
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
@@ -278,8 +275,7 @@ func TestSimpleContent(t *testing.T) {
 }
 
 func TestComplexContent(t *testing.T) {
-	ns := "namespace"
-	typesList := parseTypesFrom(t.Name(), ns)
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 4 {
 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
@@ -307,18 +303,18 @@ func TestComplexContent(t *testing.T) {
 }
 
 //func TestNoDuplicateTypes(t *testing.T) {
-//	decoder := newDecoder()
+//	Decoder := NewDecoder()
 //	s := loadSchemaFrom("complexType.xsd")
-//	decoder.decode(&s, s.TargetNamespace)
+//	Decoder.Decode(&s, s.TargetNamespace)
 //	s = loadSchemaFrom("complexType.xsd")
-//	decoder.decode(&s, s.TargetNamespace)
+//	Decoder.Decode(&s, s.TargetNamespace)
 //
-//	typesList := decoder.GetTypes()
+//	typesList := Decoder.GetTypes()
 //	if len(typesList) != 1 {
 //		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 //	}
 //
-//	namespaces := decoder.GetNamespaces()
+//	namespaces := Decoder.GetNamespaces()
 //	if len(namespaces) != 1 {
 //		t.Fatalf("Wrong namespaces amount. 1 expected, %d got", len(namespaces))
 //	}
@@ -335,8 +331,7 @@ func TestComplexContent(t *testing.T) {
 //
 //
 func TestParseElementRef(t *testing.T) {
-	ns := "namespace"
-	typesList := parseTypesFrom(t.Name(), ns)
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
@@ -344,8 +339,7 @@ func TestParseElementRef(t *testing.T) {
 }
 
 func TestParseComplexElement(t *testing.T) {
-	ns := "namespace"
-	typesList := parseTypesFrom(t.Name(), ns)
+	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 6 {
 		t.Fatalf("Wrong types amount. 6 expected, %d got", len(typesList))
@@ -363,32 +357,17 @@ func TestParseComplexElement(t *testing.T) {
 }
 
 
-func parseTypesFrom(name, namespace string) []NamedType {
-	s := loadSchemaFrom(name)
-	res := newDecoder()
-	if namespace != "" {
-		res.decode(&s, namespace)
-	} else {
-		res.decode(&s, s.TargetNamespace)
-	}
+func parseTypesFrom(name string) []NamedType {
+	decoder := NewDecoder(&Ld{})
+	decoder.Decode(name + ".xsd")
 
-	return res.GetTypes()
+	return decoder.GetTypes()
 }
 
 
-func loadSchemaFrom(name string) xsd.Schema {
-	reader, err := os.Open("./translator/schema_test/" + name + ".xsd")
-	defer reader.Close()
+type Ld struct {}
 
-	if err != nil {
-		panic(err)
-	}
-
-	s := xsd.Schema{}
-	err = xml.NewDecoder(reader).Decode(&s)
-	if err != nil {
-		panic(err)
-	}
-
-	return s
+func (l *Ld) Load(path string) ([]byte, bool) {
+	data, _ := ioutil.ReadFile("./schema_test/" + path)
+	return data, false
 }

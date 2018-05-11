@@ -6,17 +6,16 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/xsd/type"
 )
 
-func (t *Decoder) Decode(schemaFileName string, targetNamespace string) {
-	t.curTargetNamespace = targetNamespace
-	if _, ok := t.namespacesList[targetNamespace]; !ok {
-		t.namespacesList[targetNamespace] = true
-	}
+func (t *Decoder) Decode(schemaFileName string) {
+	schemas := t.schemaParser.Parse(schemaFileName, "")
 
-	schemas := t.schemaParser.Parse(schemaFileName, targetNamespace)
+	for _, s := range schemas {
+		t.curTargetNamespace = s.TargetNamespace
+		if _, ok := t.namespacesList[t.curTargetNamespace]; !ok {
+			t.namespacesList[t.curTargetNamespace] = true
+		}
 
-	for s := range schemas {
 		t.parseNamespaces(s)
-
 		for _, attrGr := range s.AttributeGroup {
 			t.parseAttributeGroupTypes(attrGr)
 		}
@@ -38,8 +37,6 @@ func (t *Decoder) Decode(schemaFileName string, targetNamespace string) {
 		t.prepareGoNames()
 	}
 }
-
-
 
 
 func (t *Decoder) GetTypes() []NamedType {
