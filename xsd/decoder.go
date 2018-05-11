@@ -111,7 +111,7 @@ func (t *Decoder) generateFromElement(element *_type.Element, isParentSchema boo
 		typeName = "string"
 	}
 
-	field := &Field{Name: element.Name}
+	field := &Field{}
 	if element.MinOccurs == "0" {
 		field.MinOccurs, _ = strconv.Atoi(element.MinOccurs)
 	}
@@ -133,6 +133,12 @@ func (t *Decoder) generateFromElement(element *_type.Element, isParentSchema boo
 		field.TypeName = t.parseFullName(element.Ref)
 	} else {
 		field.TypeName = &QName{Name: typeName, Namespace: t.curTargetNamespace}
+	}
+
+	if element.Name != "" {
+		field.Name = element.Name
+	} else {
+		field.Name = field.TypeName.Name
 	}
 
 	if isParentSchema {

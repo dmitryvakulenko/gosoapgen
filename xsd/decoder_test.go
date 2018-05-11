@@ -352,7 +352,26 @@ func TestParseComplexElement(t *testing.T) {
 
 	field := cType.Fields[0]
 	if field.Type.GetName() != "TravelSector" {
-		t.Errorf("Field type should be string, %q got", field.Type.GetName())
+		t.Errorf("Field type should be %q, %q got", "TravelSector", field.Type.GetName())
+	}
+}
+
+
+func TestArrayAlias(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	firstType := typesList[0]
+	if firstType.GetName() != "AddressMetadatas" {
+		t.Errorf("First type name should be %q, %q got", "TravelSector", firstType.GetName())
+	}
+
+	firstField := (firstType).(*ComplexType).Fields[0]
+	if firstField.Name != "AddressMetadata" {
+		t.Errorf("Field name should be %q, %q got", "AddressMetadata", firstType.GetName())
 	}
 }
 
