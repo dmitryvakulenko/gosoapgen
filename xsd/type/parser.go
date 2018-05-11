@@ -1,6 +1,9 @@
 package _type
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"path"
+)
 
 // Интерфейс загрузки xsd
 // должен отслеживать уже загруженные файлы
@@ -25,16 +28,18 @@ func NewParser(l Loader) *Parser {
 
 // Returns all loaded schemas (included and imported)
 func (p *Parser) Parse(schemaFileName string, ns string) []*Schema {
-	res := make([]*Schema, 0)
 	xsdData, parsed := p.loader.Load(schemaFileName)
 	if parsed {
-		return res
+		return make([]*Schema, 0)
 	}
-	res = []*Schema{p.unmarshalXsd(xsdData)}
+
+	curSchema := p.unmarshalXsd(xsdData)
 	if ns != "" {
-		res[0].TargetNamespace = ns
+		curSchema.TargetNamespace = ns
 	}
-	res = append(res, p.parseImports(res[0], ns)...)
+	res := p.parseImports(curSchema, ns, path.Dir(schemaFileName))
+	// Здесь важен порядок - основная схема должна идти последней
+	res = append(res, curSchema)
 
 	return res
 }
@@ -51,7 +56,7 @@ func (p *Parser) unmarshalXsd(data []byte) *Schema {
 }
 
 // Parsing imports and includes
-func (p *Parser) parseImports(s *Schema, ns string) []*Schema {
+func (p *Parser) parseImports(s *Schema, ns string, baseFilePath string) []*Schema {
 	targetNamespace := ns
 	if targetNamespace == "" {
 		targetNamespace = s.TargetNamespace
@@ -63,11 +68,11 @@ func (p *Parser) parseImports(s *Schema, ns string) []*Schema {
 		if imp.Namespace != "" {
 			curNs = imp.Namespace
 		}
-		res = append(res, p.Parse(imp.SchemaLocation, curNs)...)
+		res = append(res, p.Parse(baseFilePath + "/" + imp.SchemaLocation, curNs)...)
 	}
 
 	for _, imp := range s.Include {
-		res = append(res, p.Parse(imp.SchemaLocation, targetNamespace)...)
+		res = append(res, p.Parse(baseFilePath + "/" + imp.SchemaLocation, targetNamespace)...)
 	}
 
 	return res

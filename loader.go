@@ -22,6 +22,8 @@ func (l *XsdLoader) Load(xsdFilePath string) ([]byte, bool) {
 		return make([]byte, 0), true
 	}
 
+	l.alreadyLoaded[filePath] = true
+
 	res, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)

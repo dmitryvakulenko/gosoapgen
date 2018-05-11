@@ -34,7 +34,7 @@ func main() {
 	basePath := path.Dir(wsdlName)
 	parser := xsd.NewDecoder(newXsdLoader(basePath))
 	for _, attr := range def.Import {
-		parser.Decode(attr.SchemaLocation, "")
+		parser.Decode(attr.SchemaLocation)
 	}
 
 	file, err := os.Create("./result/res.go")
