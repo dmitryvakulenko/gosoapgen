@@ -11,7 +11,8 @@ import (
 type Loader interface {
 	// Если второй параметр true, это означает
 	// что такой файл уже был загружен
-	Load(path string) ([]byte, bool)
+	Load(path string) ([]byte, error)
+	IsAlreadyLoadedError(error) bool
 }
 
 
@@ -28,8 +29,8 @@ func NewParser(l Loader) *Parser {
 
 // Returns all loaded schemas (included and imported)
 func (p *Parser) Parse(schemaFileName string, ns string) []*Schema {
-	xsdData, parsed := p.loader.Load(schemaFileName)
-	if parsed {
+	xsdData, err := p.loader.Load(schemaFileName)
+	if p.loader.IsAlreadyLoadedError(err) {
 		return make([]*Schema, 0)
 	}
 

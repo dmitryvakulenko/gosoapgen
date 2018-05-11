@@ -3,6 +3,11 @@ package main
 import (
 	"path"
 	"io/ioutil"
+	"errors"
+)
+
+var (
+	alreadyLoadedErr = errors.New("file already loaded")
 )
 
 type XsdLoader struct {
@@ -16,10 +21,11 @@ func newXsdLoader(baseDir string) *XsdLoader {
 		baseDir: baseDir}
 }
 
-func (l *XsdLoader) Load(xsdFilePath string) ([]byte, bool) {
+func (l *XsdLoader) Load(xsdFilePath string) ([]byte, error) {
 	filePath := path.Clean(l.baseDir + "/" + xsdFilePath)
+	var err error = nil
 	if _, exists := l.alreadyLoaded[filePath]; exists {
-		return make([]byte, 0), true
+		err = alreadyLoadedErr
 	}
 
 	l.alreadyLoaded[filePath] = true
@@ -29,5 +35,9 @@ func (l *XsdLoader) Load(xsdFilePath string) ([]byte, bool) {
 		panic(err)
 	}
 
-	return res, false
+	return res, err
+}
+
+func (l *XsdLoader) IsAlreadyLoadedError(e error) bool {
+	return e == alreadyLoadedErr
 }

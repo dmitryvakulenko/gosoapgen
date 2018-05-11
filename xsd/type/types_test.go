@@ -67,7 +67,7 @@ func TestParsingAdditionTypes(t *testing.T) {
 }
 
 func TestImportInclude(t *testing.T) {
-	parser := NewParser(&Ld{})
+	parser := NewParser(&loader{})
 	s := parser.Parse("4.xsd", "")
 
 	if len(s) != 3 {
@@ -77,14 +77,18 @@ func TestImportInclude(t *testing.T) {
 
 
 func parseSchema(fileName string) *Schema {
-	parser := NewParser(&Ld{})
+	parser := NewParser(&loader{})
 	return parser.Parse(fileName, "")[0]
 }
 
 
-type Ld struct {}
+type loader struct {}
 
-func (l *Ld) Load(path string) ([]byte, bool) {
+func (l *loader) Load(path string) ([]byte, error) {
 	data, _ := ioutil.ReadFile("./types_test/" + path)
-	return data, false
+	return data, nil
+}
+
+func (l *loader) IsAlreadyLoadedError(e error) bool {
+	return false
 }
