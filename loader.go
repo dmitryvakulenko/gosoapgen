@@ -23,19 +23,19 @@ func newXsdLoader(baseDir string) *XsdLoader {
 
 func (l *XsdLoader) Load(xsdFilePath string) ([]byte, error) {
 	filePath := path.Clean(l.baseDir + "/" + xsdFilePath)
-	var err error = nil
+	var loadedErr error = nil
 	if _, exists := l.alreadyLoaded[filePath]; exists {
-		err = alreadyLoadedErr
+		loadedErr = alreadyLoadedErr
+	} else {
+		l.alreadyLoaded[filePath] = true
 	}
-
-	l.alreadyLoaded[filePath] = true
 
 	res, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}
 
-	return res, err
+	return res, loadedErr
 }
 
 func (l *XsdLoader) IsAlreadyLoadedError(e error) bool {

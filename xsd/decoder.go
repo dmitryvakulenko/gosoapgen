@@ -107,6 +107,7 @@ func (t *Decoder) generateFromElement(element *_type.Element, isParentSchema boo
 	} else if element.ComplexType != nil {
 		t.parseComplexType(element.ComplexType, typeName)
 	} else {
+		// а встречаются элементы и без типа и без полей
 		typeName = "string"
 	}
 
@@ -152,6 +153,9 @@ func (t *Decoder) generateFromAttribute(attribute *_type.Attribute) *Field {
 		field.TypeName = t.parseFullName(attribute.Type)
 	} else if attribute.SimpleType != nil {
 		field.TypeName = t.parseFullName(attribute.SimpleType.Restriction.Base)
+	} else {
+		// на случай атрибута без типа
+		field.TypeName = &QName{"string", ""}
 	}
 
 	return field
@@ -353,13 +357,13 @@ func (t *Decoder) resolve(typeName *QName) NamedType {
 
 func mapStandardType(xmlType string) string {
 	switch xmlType {
-	case "integer", "positiveInteger", "nonNegativeInteger", "ID":
+	case "int", "integer", "positiveInteger", "nonNegativeInteger", "ID":
 		return "int"
 	case "decimal":
 		return "float64"
 	case "boolean":
 		return "bool"
-	case "date", "dateTime":
+	case "date", "dateTime", "time":
 		return "time.Time"
 	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration", "IDREF", "IDREFS", "gYear", "gMonth", "gDay", "gYearMonth":
 		return "string"
