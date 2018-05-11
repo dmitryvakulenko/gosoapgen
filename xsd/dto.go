@@ -2,8 +2,9 @@ package xsd
 
 import "github.com/dmitryvakulenko/gosoapgen/xsd/type"
 
-// Декодер xsd
+// Декодер xsd в плоский список типов
 // Использует Loader для загрузки included и import схем
+// TODO: сделать корректную обработку choice-ов
 type Decoder struct {
 	schemaParser        *_type.Parser
 	typesList           []NamedType
