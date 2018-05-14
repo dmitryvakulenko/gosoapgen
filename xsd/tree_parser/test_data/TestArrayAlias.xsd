@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 rel. 3 (http://www.altova.com) by Amadeus s.a.s. (Amadeus s.a.s.) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.amadeus.com/2010/06/Types_v1"
+           targetNamespace="http://xml.amadeus.com/2010/06/Types_v1" elementFormDefault="qualified" version="1.002" id="AMA2011Y">
+    <xs:element name="AddressMetadatas">
+        <xs:annotation>
+            <xs:documentation source="description" xml:lang="en">Pre-defined and Augmented ADDRESS Metadata.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="AddressMetadata" maxOccurs="unbounded">
+                    <xs:annotation>
+                        <xs:documentation source="description" xml:lang="en">ADDRESS Metadata.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="AddressMetadata" type="AddressMetadataType">
+        <xs:annotation>
+            <xs:documentation source="description" xml:lang="en">ADDRESS Metadata.</xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:complexType name="AddressMetadataType">
+        <xs:annotation>
+            <xs:documentation source="description" xml:lang="en">A data type for ADDRESS Metadata.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="AddressType" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>type of address eg Billing, Business, Home</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="AddressFields" minOccurs="0" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>list of address fields required by vendor</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
