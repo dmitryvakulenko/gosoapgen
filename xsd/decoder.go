@@ -38,7 +38,6 @@ func (t *Decoder) Decode(schemaFileName string) {
 	}
 }
 
-
 func (t *Decoder) GetTypes() []NamedType {
 	return t.typesList
 }
@@ -266,14 +265,14 @@ func (t *Decoder) generateFromSimpleContent(simpleContent *_type.Content) []*Fie
 
 func (t *Decoder) generateFromComplexContent(complexContent *_type.Content, baseTypeName string) ([]*Field, string) {
 	var (
-		res      []*Field
-		baseType string
+		res         []*Field
+		resTypeName string
 	)
 
 	if complexContent.Extension != nil {
 		baseType, ok := t.findType(complexContent.Extension.Base)
 		if !ok {
-			baseType = complexContent.Extension.Base
+			resTypeName = complexContent.Extension.Base
 		} else {
 			switch tp := baseType.(type) {
 			case *SimpleType:
@@ -296,7 +295,7 @@ func (t *Decoder) generateFromComplexContent(complexContent *_type.Content, base
 		// это обрабатывать смысла нет, т.к. там ограничиваются только значения полей, но не сами поля
 	}
 
-	return res, baseType
+	return res, resTypeName
 }
 
 func (t *Decoder) parseAttributeGroupTypes(attrGr *_type.AttributeGroup) {

@@ -1,4 +1,4 @@
-package main
+package xsdloader
 
 import (
 	"path"
@@ -15,7 +15,7 @@ type XsdLoader struct {
 	baseDir string
 }
 
-func newXsdLoader(baseDir string) *XsdLoader {
+func NewXsdLoader(baseDir string) *XsdLoader {
 	return &XsdLoader{
 		alreadyLoaded: make(map[string]bool),
 		baseDir: baseDir}

@@ -375,6 +375,26 @@ func TestArrayAlias(t *testing.T) {
 	}
 }
 
+func TestChoiceParsing(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+	}
+
+	fields := typesList[0].(*ComplexType).Fields
+	if len(fields) != 2 {
+		t.Fatalf("Wrong fields amount. 2 expected, %d got", len(fields))
+	}
+}
+
+//func TestElementsDuplication(t *testing.T) {
+//	typesList := parseTypesFrom(t.Name())
+//
+//	if len(typesList) != 4 {
+//		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
+//	}
+//}
 
 func parseTypesFrom(name string) []NamedType {
 	decoder := NewDecoder(&Ld{})

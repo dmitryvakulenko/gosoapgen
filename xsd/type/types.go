@@ -87,3 +87,8 @@ type Union struct {
 type List struct {
 	ItemType string `xml:"itemType,attr"`
 }
+
+type Choice struct {
+	Element  []*Element  `xml:"element"`
+	Sequence []*Sequence `xml:"sequence"`
+}
