@@ -3,9 +3,9 @@ package xsd
 import "testing"
 
 func TestGetTypeFromEmptyCollection(t *testing.T) {
-	collector := newTypesCollection()
+	collector := NewTypesCollection()
 
-	curType, ok := collector.find("aa", "bbbb")
+	curType, ok := collector.Find("aa", "bbbb")
 	if ok {
 		t.Errorf("Should be error")
 	}
@@ -16,13 +16,13 @@ func TestGetTypeFromEmptyCollection(t *testing.T) {
 }
 
 func TestStoringType(t *testing.T) {
-	collector := newTypesCollection()
+	collector := NewTypesCollection()
 
 	ns := "namespace"
 	typeName := "ComplexType"
 	addedType := &ComplexType{GoName: typeName, Namespace: ns}
-	collector.put(ns, addedType)
-	res, ok := collector.find(ns, typeName)
+	collector.Put(ns, addedType)
+	res, ok := collector.Find(ns, typeName)
 	if !ok {
 		t.Errorf("TypeName should exists!")
 	}

@@ -20,8 +20,8 @@ func NewDecoder(l _type.Loader) Decoder {
 		schemaParser:        _type.NewParser(l),
 		typesList:           make([]NamedType, 0),
 		namespacesList:      make(map[string]bool),
-		typesListCache:      newTypesCollection(),
-		attributeGroupCache: newTypesCollection(),
+		typesListCache:      NewTypesCollection(),
+		attributeGroupCache: NewTypesCollection(),
 		curXmlns:            make(map[string]string)}
 }
 

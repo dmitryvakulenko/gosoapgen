@@ -100,7 +100,7 @@ func TestSchemaComplexTypes(t *testing.T) {
 	}
 
 	if len(cType.Fields) != 4 {
-		t.Fatalf("TypeName should has 4 fields, %d getting", len(cType.Fields))
+		t.Fatalf("TypeName should Has 4 fields, %d getting", len(cType.Fields))
 	}
 
 }
@@ -258,7 +258,7 @@ func TestSimpleContent(t *testing.T) {
 	}
 
 	if len(cType.Fields) != 3 {
-		t.Errorf("CompanyNameType should has 3 field, %d instead", len(cType.Fields))
+		t.Errorf("CompanyNameType should Has 3 field, %d instead", len(cType.Fields))
 	}
 
 	field := cType.Fields[0]

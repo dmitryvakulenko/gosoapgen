@@ -43,20 +43,20 @@ func (t *Decoder) GetTypes() []NamedType {
 }
 
 func (t *Decoder) addType(newType NamedType) {
-	if !t.typesListCache.has(t.curTargetNamespace, newType.GetName()) {
-		t.typesListCache.put(t.curTargetNamespace, newType)
+	if !t.typesListCache.Has(t.curTargetNamespace, newType.GetName()) {
+		t.typesListCache.Put(t.curTargetNamespace, newType)
 		t.typesList = append(t.typesList, newType)
 	}
 }
 
 func (t *Decoder) findAttributeGroup(fullTypeName string) (interface{}, bool) {
 	qName := t.parseFullName(fullTypeName)
-	return t.attributeGroupCache.find(qName.Namespace, qName.Name)
+	return t.attributeGroupCache.Find(qName.Namespace, qName.Name)
 }
 
 func (t *Decoder) findType(fullTypeName string) (interface{}, bool) {
 	qName := t.parseFullName(fullTypeName)
-	return t.typesListCache.find(qName.Namespace, qName.Name)
+	return t.typesListCache.Find(qName.Namespace, qName.Name)
 }
 
 func (t *Decoder) parseFullName(fullTypeName string) *QName {
@@ -306,7 +306,7 @@ func (t *Decoder) parseAttributeGroupTypes(attrGr *_type.AttributeGroup) {
 		curType.Fields = append(curType.Fields, field)
 	}
 
-	t.attributeGroupCache.put(t.curTargetNamespace, curType)
+	t.attributeGroupCache.Put(t.curTargetNamespace, curType)
 }
 
 func (t *Decoder) generateFromSimpleType(simpleType *_type.SimpleType, fieldName string) {
@@ -352,7 +352,7 @@ func (t *Decoder) resolve(typeName *QName) NamedType {
 		return &SimpleType{Name: stdType}
 	}
 
-	curType, ok := t.typesListCache.find(typeName.Namespace, typeName.Name)
+	curType, ok := t.typesListCache.Find(typeName.Namespace, typeName.Name)
 	if !ok {
 		panic("Type " + typeName.Name + " not found")
 	}
@@ -434,7 +434,7 @@ func (t *Decoder) prepareGoNames() {
 //		return tmpType
 //	}
 //
-//	curType, ok := t.typesListCache.find(qName.Namespace, qName.Name)
+//	curType, ok := t.typesListCache.Find(qName.Namespace, qName.Name)
 //	if !ok {
 //		panic("TypeName " + qName.Name + " not found")
 //	}

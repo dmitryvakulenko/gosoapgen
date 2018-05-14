@@ -5,12 +5,12 @@ import "log"
 type typesCollection map[string]NamedType
 type namespacedTypes map[string]*typesCollection
 
-func newTypesCollection() *namespacedTypes {
+func NewTypesCollection() *namespacedTypes {
 	res := make(namespacedTypes)
 	return &res
 }
 
-func (t *namespacedTypes) find(namespace, typeName string) (NamedType, bool) {
+func (t *namespacedTypes) Find(namespace, typeName string) (NamedType, bool) {
 	var (
 		ns *typesCollection
 		ok bool
@@ -27,7 +27,7 @@ func (t *namespacedTypes) find(namespace, typeName string) (NamedType, bool) {
 	return curType, true
 }
 
-func (t *namespacedTypes) put(namespace string, addedType NamedType) {
+func (t *namespacedTypes) Put(namespace string, addedType NamedType) {
 	if _, ok := (*t)[namespace]; !ok {
 		newCollection := make(typesCollection)
 		(*t)[namespace] = &newCollection
@@ -42,7 +42,7 @@ func (t *namespacedTypes) put(namespace string, addedType NamedType) {
 	(*ns)[typeName] = addedType
 }
 
-func (t *namespacedTypes) has(namespace, typeName string) bool {
+func (t *namespacedTypes) Has(namespace, typeName string) bool {
 	if _, ok := (*t)[namespace]; !ok {
 		return false
 	}
@@ -55,7 +55,7 @@ func (t *namespacedTypes) has(namespace, typeName string) bool {
 	return true
 }
 
-func (t *namespacedTypes) getAllTypes() []NamedType {
+func (t *namespacedTypes) GetAllTypes() []NamedType {
 	var res []NamedType
 
 	for _, nsList := range *t {
