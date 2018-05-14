@@ -8,11 +8,10 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"github.com/dmitryvakulenko/gosoapgen/generate"
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
-	"strings"
 	"flag"
 	"io"
+	"github.com/dmitryvakulenko/gosoapgen/internal/pkg/xsdloader"
 )
-
 
 func main() {
 	flag.Parse()
@@ -35,8 +34,6 @@ func main() {
 		return
 	}
 
-
-
 	outFile, err := os.Create(outName)
 	defer outFile.Close()
 	if err != nil {
@@ -45,23 +42,8 @@ func main() {
 	}
 
 	outFile.Write([]byte("package " + outPackage + "\n\n"))
-
-	ext := strings.ToLower(path.Ext(inName))
-	switch ext {
-	case ".wsdl": wsdlProcessing(inName, outFile)
-	case ".xsd": xsdProcessing(inName, outFile)
-	}
+	wsdlProcessing(inName, outFile)
 }
-
-
-func xsdProcessing(xsdName string, out io.Writer) {
-	basePath := path.Dir(xsdName)
-	parser := xsd.NewDecoder(newXsdLoader(basePath))
-	parser.Decode(path.Base(xsdName))
-
-	generate.Types(parser, out)
-}
-
 
 func wsdlProcessing(wsdlName string, out io.Writer) {
 	stat, err := os.Stat(wsdlName)
@@ -79,7 +61,7 @@ func wsdlProcessing(wsdlName string, out io.Writer) {
 	xmlFile.Close()
 
 	basePath := path.Dir(wsdlName)
-	parser := xsd.NewDecoder(newXsdLoader(basePath))
+	parser := xsd.NewDecoder(xsdloader.NewXsdLoader(basePath))
 	for _, attr := range def.Import {
 		parser.Decode(attr.SchemaLocation)
 	}
