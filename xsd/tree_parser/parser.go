@@ -83,6 +83,10 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.nsStack.Pop()
 	case "simpleType":
 		p.typesStack.Pop()
+	case "complexType":
+		p.endComplexType()
+	case "sequence":
+		p.endSequence()
 	}
 }
 
@@ -154,7 +158,7 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 	return nil
 }
 
-
+// создаёт реальный, именованный тип и добавляет его во все списки
 func (p *parser) typeStarted(name string) *Type {
 	t := &Type{Name: name, Namespace: p.nsStack.GetLast()}
 	p.typesStack.Push(t)
@@ -162,19 +166,46 @@ func (p *parser) typeStarted(name string) *Type {
 	return t
 }
 
+// создаёт анонимный тип, в список типов не помещает
+// анонимные типы выступают просто контейнерами для других
+func (p *parser) anonTypeStarted() *Type {
+	t := &Type{}
+	p.typesStack.Push(t)
+	return t
+}
+
 
 func (p *parser) parseComplexType(elem *xml.StartElement) {
 	nameAttr := findAttributeByName(elem.Attr, "name")
 	if nameAttr == nil {
-		// анонимный тип, может быть только встроенным в element
-		// поэтому просто добавляем содержимое как поля
-		context := p.typesStack.GetLast()
-		context.IsSimple = false
+		p.anonTypeStarted()
 	} else {
 		// обычный тип с именем
 		p.typeStarted(nameAttr.Value)
 	}
 }
 func (p *parser) parseSequence(element *xml.StartElement) {
-	container := p.typesStack.GetLast()
+	p.anonTypeStarted()
+}
+
+
+func (p *parser) endSequence() {
+	t := p.typesStack.Pop()
+	context := p.typesStack.GetLast()
+	context.Fields = t.Fields
+}
+
+
+func (p *parser) endComplexType() {
+	t := p.typesStack.Pop()
+	if len(t.Fields) != 0 {
+		t.IsSimple = false
+	}
+
+	if t.Name != "" {
+		p.typesList.Put(t)
+ 	} else {
+ 		context := p.typesStack.GetLast()
+ 		context.Fields = t.Fields
+	}
 }
