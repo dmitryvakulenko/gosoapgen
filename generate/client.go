@@ -5,7 +5,8 @@ import (
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"text/template"
 	"io"
-	"github.com/dmitryvakulenko/gosoapgen/xsd"
+	"github.com/dmitryvakulenko/gosoapgen/xsd/flat_parser"
+	"github.com/metaleap/go-xsd"
 )
 
 var innerTypes = []string{
@@ -25,10 +26,10 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 }
 `
 
-func Types(parser xsd.Decoder, writer io.Writer) {
+func Types(parser flat_parser.Decoder, writer io.Writer) {
 	for _, t := range parser.GetTypes() {
 		switch curType := t.(type) {
-		case *xsd.ComplexType:
+		case *flat_parser.ComplexType:
 			writer.Write([]byte("type " + curType.GoName + " struct {\n"))
 			//typeNamespace[curType.GoName] = curType.Namespace
 			//alias := nsAliases[curType.Namespace]
@@ -39,7 +40,7 @@ func Types(parser xsd.Decoder, writer io.Writer) {
 					writer.Write([]byte("[]"))
 				}
 
-				_, isSimpleType := f.Type.(*xsd.SimpleType)
+				_, isSimpleType := f.Type.(*flat_parser.SimpleType)
 				if !isInnerType(f.Type.GetName()) && !isSimpleType {
 					writer.Write([]byte("*"))
 				}
@@ -59,7 +60,7 @@ func Types(parser xsd.Decoder, writer io.Writer) {
 				writer.Write([]byte("\"`\n"))
 			}
 			writer.Write([]byte("}\n\n"))
-		case *xsd.SimpleType:
+		case *flat_parser.SimpleType:
 			writer.Write([]byte("type " + curType.GoName + " " + curType.BaseType.GetName() + "\n\n"))
 		}
 	}
