@@ -5,7 +5,7 @@ type typesStack struct {
 }
 
 func (s *typesStack) Push(t NamedType) {
-	s.s = append(s.s)
+	s.s = append(s.s, t)
 }
 
 func (s *typesStack) Pop() NamedType {
@@ -37,7 +37,7 @@ type stringsStack struct {
 }
 
 func (s *stringsStack) Push(t string) {
-	s.s = append(s.s)
+	s.s = append(s.s, t)
 }
 
 func (s *stringsStack) Pop() string {
