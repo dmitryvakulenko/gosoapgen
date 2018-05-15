@@ -7,7 +7,6 @@ package tree_parser
 import (
 	"io"
 	"encoding/xml"
-	"fmt"
 )
 
 // Интерфейс загрузки xsd
@@ -72,11 +71,13 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 }
 
 func (p *parser) parseEndElement(elem *xml.EndElement) {
-	fmt.Printf("End %q\n", elem.Name.Local)
+	//fmt.Printf("End %q\n", elem.Name.Local)
 }
 
 func (p *parser) parseSimpleType(elem *xml.StartElement) {
 	curType := &SimpleType{}
+	nameAttr := findAttributeByName(elem.Attr, "name")
+	curType.Name = nameAttr.Value
 	p.typeStarted(curType)
 }
 
