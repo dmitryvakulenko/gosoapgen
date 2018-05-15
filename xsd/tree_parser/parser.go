@@ -66,10 +66,14 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 		p.parseSchema(elem)
 	case "simpleType":
 		p.parseSimpleType(elem)
+	case "complexType":
+		p.parseComplexType(elem)
 	case "restriction":
 		p.parseRestriction(elem)
 	case "element":
 		p.parseElement(elem)
+	case "sequence":
+		p.parseSequence(elem)
 	}
 }
 
@@ -100,24 +104,21 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 }
 
 func (p *parser) parseSimpleType(elem *xml.StartElement) {
-	curType := &Type{}
-	curType.Name = findAttributeByName(elem.Attr, "name").Value
-	curType.IsSimple = true
-	p.typeStarted(curType)
-}
-
-func (p *parser) typeStarted(t *Type) {
-	p.typesStack.Push(t)
-	p.typesList.Put(p.nsStack.GetLast(), t)
+	nameAttr := findAttributeByName(elem.Attr, "name")
+	if nameAttr == nil {
+		// анонимный тип, может быть только встроен в element
+	} else {
+		curType := p.typeStarted(nameAttr.Value)
+		curType.IsSimple = true
+	}
 }
 
 func (p *parser) GetTypes() []*Type {
 	return p.typesList.GetAllTypes()
 }
 
-func (p *parser) parseElement(element *xml.StartElement) {
-	//nameElem := findAttributeByName(element.Attr, "name")
-
+func (p *parser) parseElement(elem *xml.StartElement) {
+	p.typeStarted(findAttributeByName(elem.Attr, "name").Value)
 }
 
 func (p *parser) parseRestriction(element *xml.StartElement) {
@@ -151,4 +152,29 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 	}
 
 	return nil
+}
+
+
+func (p *parser) typeStarted(name string) *Type {
+	t := &Type{Name: name, Namespace: p.nsStack.GetLast()}
+	p.typesStack.Push(t)
+	p.typesList.Put(t)
+	return t
+}
+
+
+func (p *parser) parseComplexType(elem *xml.StartElement) {
+	nameAttr := findAttributeByName(elem.Attr, "name")
+	if nameAttr == nil {
+		// анонимный тип, может быть только встроенным в element
+		// поэтому просто добавляем содержимое как поля
+		context := p.typesStack.GetLast()
+		context.IsSimple = false
+	} else {
+		// обычный тип с именем
+		p.typeStarted(nameAttr.Value)
+	}
+}
+func (p *parser) parseSequence(element *xml.StartElement) {
+	container := p.typesStack.GetLast()
 }

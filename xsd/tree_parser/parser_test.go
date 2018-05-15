@@ -42,8 +42,8 @@ func TestSimpleTypes(t *testing.T) {
 func TestParseElements(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	if len(typesList) != 4 {
+		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
 	}
 
 	cType := typesList[0]
@@ -52,7 +52,7 @@ func TestParseElements(t *testing.T) {
 	}
 
 	typeName := "Session"
-	if cType.GoName != typeName {
+	if cType.Name != typeName {
 		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
 	}
 

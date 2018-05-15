@@ -27,19 +27,20 @@ func (t *NamespacedTypes) Find(namespace, typeName string) (*Type, bool) {
 	return curType, true
 }
 
-func (t *NamespacedTypes) Put(namespace string, addedType *Type) {
-	if _, ok := (*t)[namespace]; !ok {
+func (t *NamespacedTypes) Put(addedType *Type) {
+	nsName := addedType.Namespace
+	if _, ok := (*t)[nsName]; !ok {
 		newCollection := make(typesCollection)
-		(*t)[namespace] = &newCollection
+		(*t)[nsName] = &newCollection
 	}
 
 	typeName := addedType.Name
-	ns := (*t)[namespace]
-	if _, ok := (*ns)[typeName]; ok {
-		log.Panicf("Namespace %q already contain type %q", namespace, typeName)
+	nsTypes := (*t)[nsName]
+	if _, ok := (*nsTypes)[typeName]; ok {
+		log.Panicf("Namespace %q already contain type %q", nsName, typeName)
 	}
 
-	(*ns)[typeName] = addedType
+	(*nsTypes)[typeName] = addedType
 }
 
 func (t *NamespacedTypes) Has(namespace, typeName string) bool {
