@@ -24,7 +24,6 @@ func TestSimpleTypes(t *testing.T) {
 		t.Fatalf("Type should be *SimpleType")
 	}
 
-
 	name := "AlphaString_Length1To2"
 	if name != tp.Name {
 		t.Fatalf("Type name should be %q, got %q instead", name, tp.Name)

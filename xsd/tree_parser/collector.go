@@ -1,4 +1,4 @@
-package xsd
+package tree_parser
 
 import "log"
 

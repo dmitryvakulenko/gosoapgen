@@ -10,8 +10,8 @@ type Decoder struct {
 	typesList           []NamedType
 	namespacesList      map[string]bool
 	curTargetNamespace  string
-	typesListCache      *namespacedTypes
-	attributeGroupCache *namespacedTypes
+	typesListCache      *NamespacedTypes
+	attributeGroupCache *NamespacedTypes
 	curXmlns            map[string]string
 }
 
