@@ -115,6 +115,7 @@ func (p *parser) GetTypes() []NamedType {
 }
 
 func (p *parser) parseElement(element *xml.StartElement) {
+	//nameElem := findAttributeByName(element.Attr, "name")
 
 }
 
