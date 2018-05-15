@@ -22,11 +22,11 @@ func TestSimpleTypes(t *testing.T) {
 		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
 	}
 
-	tp, ok := typesList[0].(*SimpleType)
-	if !ok {
-		t.Fatalf("Type should be *SimpleType")
-	}
+	tp := typesList[0]
 
+	if !tp.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
 
 	name := "AlphaString_Length1To2"
 	if name != tp.Name {
@@ -46,8 +46,8 @@ func TestParseElements(t *testing.T) {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 
-	cType, ok := typesList[0].(*ComplexType)
-	if !ok {
+	cType := typesList[0]
+	if cType.IsSimple {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -70,8 +70,8 @@ func TestParseElements(t *testing.T) {
 		t.Errorf("Field name should be 'sequenceNumber', %q instead", field.Name)
 	}
 
-	if field.Type.GetName() != "string" {
-		t.Errorf("Field type should be 'string' %q instead", field.Type.GetName())
+	if field.Type.Name != "string" {
+		t.Errorf("Field type should be 'string' %q instead", field.Type.Name)
 	}
 
 	field = cType.Fields[3]
@@ -85,7 +85,7 @@ func TestParseElements(t *testing.T) {
 }
 
 
-func parseTypesFrom(name string) []NamedType {
+func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")
 

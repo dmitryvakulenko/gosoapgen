@@ -100,17 +100,18 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 }
 
 func (p *parser) parseSimpleType(elem *xml.StartElement) {
-	curType := &SimpleType{}
+	curType := &Type{}
 	curType.Name = findAttributeByName(elem.Attr, "name").Value
+	curType.IsSimple = true
 	p.typeStarted(curType)
 }
 
-func (p *parser) typeStarted(t NamedType) {
+func (p *parser) typeStarted(t *Type) {
 	p.typesStack.Push(t)
 	p.typesList.Put(p.nsStack.GetLast(), t)
 }
 
-func (p *parser) GetTypes() []NamedType {
+func (p *parser) GetTypes() []*Type {
 	return p.typesList.GetAllTypes()
 }
 
@@ -121,10 +122,9 @@ func (p *parser) parseElement(element *xml.StartElement) {
 
 func (p *parser) parseRestriction(element *xml.StartElement) {
 	c := p.typesStack.GetLast()
-	switch context := c.(type) {
-	case *SimpleType:
+	if c.IsSimple {
 		baseTypeName := findAttributeByName(element.Attr, "base")
-		context.BaseTypeName = p.createQName(baseTypeName.Value)
+		c.BaseTypeName = p.createQName(baseTypeName.Value)
 	}
 }
 

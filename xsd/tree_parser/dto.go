@@ -1,53 +1,18 @@
 package tree_parser
 
-type NamedType interface {
-	GetName() string
-	GetGoName() string
-}
-
-type ComplexType struct {
+type Type struct {
 	Name         string
+	IsSimple     bool
 	Namespace    string
 	GoName       string
 	Fields       []*Field
-	BaseType     NamedType
+	BaseType     *Type
 	BaseTypeName *QName
-}
-
-func (t *ComplexType) GetName() string {
-	return t.Name
-}
-
-func (t *ComplexType) GetGoName() string {
-	if t.GoName != "" {
-		return t.GoName
-	} else {
-		return t.Name
-	}
-}
-
-type SimpleType struct {
-	Name         string
-	GoName       string
-	BaseType     NamedType
-	BaseTypeName *QName
-}
-
-func (t *SimpleType) GetName() string {
-	return t.Name
-}
-
-func (t *SimpleType) GetGoName() string {
-	if t.GoName != "" {
-		return t.GoName
-	} else {
-		return t.Name
-	}
 }
 
 type Field struct {
 	Name      string
-	Type      NamedType
+	Type      *Type
 	TypeName  *QName
 	MinOccurs int
 	MaxOccurs int

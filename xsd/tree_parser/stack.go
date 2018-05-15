@@ -1,14 +1,14 @@
 package tree_parser
 
 type typesStack struct {
-	s []NamedType
+	s []*Type
 }
 
-func (s *typesStack) Push(t NamedType) {
+func (s *typesStack) Push(t *Type) {
 	s.s = append(s.s, t)
 }
 
-func (s *typesStack) Pop() NamedType {
+func (s *typesStack) Pop() *Type {
 	lastElem := len(s.s) - 1
 
 	if lastElem == -1 {
@@ -21,7 +21,7 @@ func (s *typesStack) Pop() NamedType {
 	return res
 }
 
-func (s *typesStack) GetLast() NamedType {
+func (s *typesStack) GetLast() *Type {
 	lastElem := len(s.s) - 1
 
 	if lastElem == -1 {

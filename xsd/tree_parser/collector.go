@@ -2,7 +2,7 @@ package tree_parser
 
 import "log"
 
-type typesCollection map[string]NamedType
+type typesCollection map[string]*Type
 type NamespacedTypes map[string]*typesCollection
 
 func NewTypesCollection() *NamespacedTypes {
@@ -10,11 +10,11 @@ func NewTypesCollection() *NamespacedTypes {
 	return &res
 }
 
-func (t *NamespacedTypes) Find(namespace, typeName string) (NamedType, bool) {
+func (t *NamespacedTypes) Find(namespace, typeName string) (*Type, bool) {
 	var (
 		ns *typesCollection
 		ok bool
-		curType NamedType
+		curType *Type
 	)
 	if ns, ok = (*t)[namespace]; !ok {
 		return nil, false
@@ -27,13 +27,13 @@ func (t *NamespacedTypes) Find(namespace, typeName string) (NamedType, bool) {
 	return curType, true
 }
 
-func (t *NamespacedTypes) Put(namespace string, addedType NamedType) {
+func (t *NamespacedTypes) Put(namespace string, addedType *Type) {
 	if _, ok := (*t)[namespace]; !ok {
 		newCollection := make(typesCollection)
 		(*t)[namespace] = &newCollection
 	}
 
-	typeName := addedType.GetName()
+	typeName := addedType.Name
 	ns := (*t)[namespace]
 	if _, ok := (*ns)[typeName]; ok {
 		log.Panicf("Namespace %q already contain type %q", namespace, typeName)
@@ -55,8 +55,8 @@ func (t *NamespacedTypes) Has(namespace, typeName string) bool {
 	return true
 }
 
-func (t *NamespacedTypes) GetAllTypes() []NamedType {
-	var res []NamedType
+func (t *NamespacedTypes) GetAllTypes() []*Type {
+	var res []*Type
 
 	for _, nsList := range *t {
 		for _, curType := range *nsList {
