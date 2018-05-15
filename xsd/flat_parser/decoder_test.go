@@ -1,4 +1,4 @@
-package xsd
+package flat_parser
 
 import (
 	"testing"

@@ -1,6 +1,6 @@
-package xsd
+package flat_parser
 
-import "github.com/dmitryvakulenko/gosoapgen/xsd/type"
+import "github.com/dmitryvakulenko/gosoapgen/xsd/flat_parser/type"
 
 // Декодер xsd в плоский список типов
 // Использует Loader для загрузки included и import схем

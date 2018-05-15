@@ -1,9 +1,9 @@
-package xsd
+package flat_parser
 
 import (
 	"strings"
 	"strconv"
-	"github.com/dmitryvakulenko/gosoapgen/xsd/type"
+	"github.com/dmitryvakulenko/gosoapgen/xsd/flat_parser/type"
 )
 
 func (t *Decoder) Decode(schemaFileName string) {
