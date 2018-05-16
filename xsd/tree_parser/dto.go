@@ -10,6 +10,7 @@ type element struct {
 	// чисто для сокрачения, поскольку вся эта информация содержится в startElem
 	name      string
 	typeName  *QName
+	isSimple  bool
 	startElem *xml.StartElement
 	namespace string
 	children  []*element

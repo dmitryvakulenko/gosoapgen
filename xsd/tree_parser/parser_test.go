@@ -38,6 +38,33 @@ func TestSimpleTypes(t *testing.T) {
 	}
 }
 
+func TestSimpleElements(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if !cType.IsSimple {
+		t.Fatalf("Type should be simple")
+	}
+
+	typeName := "minRange"
+	if cType.Name != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
+	}
+
+
+	ns := "http://xml.amadeus.com/2010/06/Types_v1"
+	if cType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
+	}
+
+	if cType.BaseTypeName.Name != "decimal" {
+		t.Errorf("Type should be decimal, got %q", cType.BaseTypeName.Name)
+	}
+}
 
 //func TestParseElements(t *testing.T) {
 //	typesList := parseTypesFrom(t.Name())
