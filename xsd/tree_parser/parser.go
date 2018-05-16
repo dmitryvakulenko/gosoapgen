@@ -126,6 +126,17 @@ func (p *parser) GetTypes() []*Type {
 func (p *parser) endElement() {
 	e := p.elStack.Pop()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
+	typeAttr := findAttributeByName(e.startElem.Attr, "type")
+	if typeAttr != nil {
+		e.typeName = p.createQName(typeAttr.Value)
+	} else if p.elStack.Deep() > 2 {
+		// если типа нет, придётся его создавать
+		t := p.createType(nameAttr.Value)
+		t.IsSimple = e.isSimple
+		t.Fields = createFieldsFromElems(e.children)
+
+		e.typeName = p.createQName(t.Name)
+	}
 
 	context := p.elStack.GetLast()
 
@@ -138,19 +149,24 @@ func (p *parser) endElement() {
 		t := p.createType(nameAttr.Value)
 		t.BaseTypeName = e.typeName
 		t.IsSimple = e.isSimple
-
-		for _, f := range e.children {
-			nameAttr := findAttributeByName(f.startElem.Attr, "name")
-			field := &Field{
-				Name:     nameAttr.Value,
-				TypeName: f.typeName,
-				IsAttr:   f.isAttr}
-			t.Fields = append(t.Fields, field)
-		}
-	} else {
-		e.typeName = p.createQName(findAttributeByName(e.startElem.Attr, "type").Value)
+		t.Fields = createFieldsFromElems(e.children)
+	} else if context.name == "sequence" {
 		context.children = append(context.children, e)
 	}
+}
+
+func createFieldsFromElems(elems []*element) []*Field {
+	var res []*Field
+	for _, f := range elems {
+		nameAttr := findAttributeByName(f.startElem.Attr, "name")
+		field := &Field{
+			Name:     nameAttr.Value,
+			TypeName: f.typeName,
+			IsAttr:   f.isAttr}
+		res = append(res, field)
+	}
+
+	return res
 }
 
 func (p *parser) createQName(qName string) *QName {
@@ -205,16 +221,6 @@ func (p *parser) endSequence() {
 	context.children = t.children
 }
 
-//func (p *parser) parseComplexType(e *xml.StartElement) {
-//	nameAttr := findAttributeByName(e.Attr, "name")
-//	if nameAttr == nil {
-//		p.anonTypeStarted(e.Name.Local)
-//	} else {
-//		// обычный тип с именем
-//		p.createType(e.Name.Local, nameAttr.Value)
-//	}
-//}
-//
 func (p *parser) endComplexType() {
 	e := p.elStack.Pop()
 	context := p.elStack.GetLast()

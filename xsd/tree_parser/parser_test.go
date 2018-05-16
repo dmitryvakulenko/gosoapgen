@@ -178,6 +178,67 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 }
 
+
+func TestInnerComplexTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	firstType := typesList[1]
+	if firstType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+
+	secType := typesList[0]
+	if secType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	typeName := "PNR_AddMultiElements"
+	if firstType.Name != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, firstType.Name)
+	}
+
+	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
+	if firstType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Namespace)
+	}
+
+	typeName = "travellerInfo"
+	if secType.Name != typeName {
+		t.Errorf("TypeName name should be %q, got %q", typeName, secType.Name)
+	}
+
+	if secType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Namespace)
+	}
+
+	if len(firstType.Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(firstType.Fields))
+	}
+
+	field := firstType.Fields[0]
+	if field.Name != "travellerInfo" {
+		t.Errorf("Field name should be 'travellerInfo', %q instead", field.Name)
+	}
+
+	if field.TypeName.Name != "travellerInfo" {
+		t.Errorf("Field type should be 'travellerInfo', %q instead", field.TypeName.Name)
+	}
+
+	if len(secType.Fields) != 1 {
+		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
+	}
+
+	if secType.Fields[0].Name != "elementManagementPassenger" {
+		t.Errorf("Second type name shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
+	}
+}
+
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")

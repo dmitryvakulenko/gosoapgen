@@ -52,6 +52,10 @@ func (s *elementsStack) GetLast() *element {
 	return s.s[lastElem]
 }
 
+func (s *elementsStack) Deep() int {
+	return len(s.s)
+}
+
 
 type stringsStack struct {
 	s []string
