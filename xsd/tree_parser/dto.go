@@ -1,5 +1,26 @@
 package tree_parser
 
+import "encoding/xml"
+
+// Абстрактное представление элемента схемы
+type element struct {
+	// название элемента схемы xsd
+	// из которого был создан данный тип
+	// element, complexType и т.д.
+	// чисто для сокрачения, поскольку вся эта информация содержится в startElem
+	name      string
+	typeName  *QName
+	startElem *xml.StartElement
+	namespace string
+	children  []*element
+}
+
+func newElement(startElem *xml.StartElement) *element {
+	return &element{
+		name:      startElem.Name.Local,
+		startElem: startElem}
+}
+
 type Type struct {
 	Name         string
 	IsSimple     bool

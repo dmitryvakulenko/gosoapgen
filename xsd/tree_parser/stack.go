@@ -21,7 +21,28 @@ func (s *typesStack) Pop() *Type {
 	return res
 }
 
-func (s *typesStack) GetLast() *Type {
+type elementsStack struct {
+	s []*element
+}
+
+func (s *elementsStack) Push(t *element) {
+	s.s = append(s.s, t)
+}
+
+func (s *elementsStack) Pop() *element {
+	lastElem := len(s.s) - 1
+
+	if lastElem == -1 {
+		return nil
+	}
+
+	res := s.s[lastElem]
+	s.s = s.s[0:lastElem]
+
+	return res
+}
+
+func (s *elementsStack) GetLast() *element {
 	lastElem := len(s.s) - 1
 
 	if lastElem == -1 {
