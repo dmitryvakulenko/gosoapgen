@@ -14,6 +14,7 @@ type element struct {
 	startElem *xml.StartElement
 	namespace string
 	children  []*element
+	isAttr    bool
 }
 
 func newElement(startElem *xml.StartElement) *element {

@@ -49,6 +49,9 @@ func (p *parser) Parse(inputFile string) {
 
 func (p *parser) parseImpl(decoder *xml.Decoder) {
 	for token, err := decoder.Token(); err != io.EOF; token, err = decoder.Token() {
+		if err != nil {
+			panic(err)
+		}
 		switch elem := token.(type) {
 		case xml.StartElement:
 			p.parseStartElement(&elem)
@@ -62,16 +65,16 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	switch elem.Name.Local {
 	case "schema":
 		p.parseSchema(elem)
-	case "element", "simpleType", "restriction":
+	case "element", "simpleType", "complexType", "restriction", "sequence", "attribute":
 		p.elementStarted(elem)
-	//case "complexType":
-	//	p.parseComplexType(elem)
-	//case "restriction":
-	//	p.parseRestriction(elem)
-	//case "element":
-	//	p.startElement(elem)
-	//case "sequence":
-	//	p.parseSequence(elem)
+		//case "complexType":
+		//	p.parseComplexType(elem)
+		//case "restriction":
+		//	p.parseRestriction(elem)
+		//case "element":
+		//	p.startElement(elem)
+		//case "sequence":
+		//	p.parseSequence(elem)
 	}
 }
 
@@ -88,12 +91,14 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endSimpleType()
 	case "restriction":
 		p.endRestriction()
-	//case "complexType":
-	//	p.endComplexType()
-	//case "sequence":
-	//	p.endSequence()
+	case "complexType":
+		p.endComplexType()
+	case "sequence":
+		p.endSequence()
 	case "element":
 		p.endElement()
+	case "attribute":
+		p.endAttribute()
 	}
 }
 
@@ -114,47 +119,39 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 	}
 }
 
-//func (p *parser) startSimpleType(e *xml.StartElement) {
-//	nameAttr := findAttributeByName(e.Attr, "name")
-//	if nameAttr == nil {
-//		// анонимный тип, может быть только встроен в element
-//	} else {
-//		curType := p.createType(e.Name.Local, nameAttr.Value)
-//		curType.IsSimple = true
-//	}
-//}
-
 func (p *parser) GetTypes() []*Type {
 	return p.typesList.GetAllTypes()
 }
 
-//func (p *parser) startElement(e *xml.StartElement) {
-//	t := p.createType(e.Name.Local, findAttributeByName(e.Attr, "name").Value)
-//	typeAttr := findAttributeByName(e.Attr, "name")
-//	if typeAttr != nil {
-//		t.BaseTypeName = p.createQName(typeAttr.Value)
-//	}
-//}
-//
 func (p *parser) endElement() {
 	e := p.elStack.Pop()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
-	if nameAttr != nil {
+
+	context := p.elStack.GetLast()
+
+	if context == nil {
+		// значит предок у нас - schema, т.е. это глобальный тип
+		if nameAttr == nil {
+			panic("Element should has name attribute")
+		}
+
 		t := p.createType(nameAttr.Value)
 		t.BaseTypeName = e.typeName
 		t.IsSimple = e.isSimple
-	} else {
 
+		for _, f := range e.children {
+			nameAttr := findAttributeByName(f.startElem.Attr, "name")
+			field := &Field{
+				Name:     nameAttr.Value,
+				TypeName: f.typeName,
+				IsAttr: f.isAttr}
+			t.Fields = append(t.Fields, field)
+		}
+	} else {
+		e.typeName = p.createQName(findAttributeByName(e.startElem.Attr, "type").Value)
+		context.children = append(context.children, e)
 	}
 }
-
-//func (p *parser) parseRestriction(element *xml.StartElement) {
-//	c := p.elStack.GetLast()
-//	if c.IsSimple {
-//		baseTypeName := findAttributeByName(element.Attr, "base")
-//		c.BaseTypeName = p.createQName(baseTypeName.Value)
-//	}
-//}
 
 func (p *parser) createQName(name string) *QName {
 	typesParts := strings.Split(name, ":")
@@ -195,16 +192,12 @@ func (p *parser) createType(name string) *Type {
 //	return t
 //}
 //
-//func (p *parser) parseSequence(e *xml.StartElement) {
-//	p.anonTypeStarted(e.Name.Local)
-//}
-//
-//func (p *parser) endSequence() {
-//	t := p.elStack.Pop()
-//	context := p.elStack.GetLast()
-//	context.Fields = t.Fields
-//}
-//
+func (p *parser) endSequence() {
+	t := p.elStack.Pop()
+	context := p.elStack.GetLast()
+	context.children = t.children
+}
+
 //func (p *parser) parseComplexType(e *xml.StartElement) {
 //	nameAttr := findAttributeByName(e.Attr, "name")
 //	if nameAttr == nil {
@@ -215,19 +208,18 @@ func (p *parser) createType(name string) *Type {
 //	}
 //}
 //
-//func (p *parser) endComplexType() {
-//	t := p.elStack.Pop()
-//	if len(t.Fields) != 0 {
-//		t.IsSimple = false
-//	}
-//
-//	if t.Name != "" {
-//		p.typesList.Put(t)
-//	} else {
-//		context := p.elStack.GetLast()
-//		context.Fields = t.Fields
-//	}
-//}
+func (p *parser) endComplexType() {
+	e := p.elStack.Pop()
+	context := p.elStack.GetLast()
+
+	if context == nil {
+		eName := findAttributeByName(e.startElem.Attr, "name")
+		t := p.createType(eName.Value)
+		t.BaseTypeName = e.typeName
+	} else {
+		context.children = e.children
+	}
+}
 
 func (p *parser) endSimpleType() {
 	e := p.elStack.Pop()
@@ -250,4 +242,13 @@ func (p *parser) endRestriction() {
 	context := p.elStack.GetLast()
 	baseType := findAttributeByName(e.startElem.Attr, "base")
 	context.typeName = p.createQName(baseType.Value)
+}
+
+func (p *parser) endAttribute() {
+	e := p.elStack.Pop()
+	e.isAttr = true
+	typeAttr := findAttributeByName(e.startElem.Attr, "type")
+	e.typeName = p.createQName(typeAttr.Value)
+	context := p.elStack.GetLast()
+	context.children = append(context.children, e)
 }
