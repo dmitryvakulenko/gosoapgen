@@ -28,17 +28,20 @@ type parser struct {
 	nsStack *stringsStack
 	curNs   map[string]string
 
+	// рабочий список типов
+	typesListCache *NamespacedTypes
+
 	// результирующий список типов
-	typesList *NamespacedTypes
+	resultTypesList []*Type
 }
 
 func NewParser(l Loader) *parser {
 	return &parser{
-		loader:    l,
-		elStack:   &elementsStack{},
-		nsStack:   &stringsStack{},
-		curNs:     make(map[string]string),
-		typesList: NewTypesCollection()}
+		loader:         l,
+		elStack:        &elementsStack{},
+		nsStack:        &stringsStack{},
+		curNs:          make(map[string]string),
+		typesListCache: NewTypesCollection()}
 }
 
 func (p *parser) Parse(inputFile string) {
@@ -120,7 +123,7 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 }
 
 func (p *parser) GetTypes() []*Type {
-	return p.typesList.GetAllTypes()
+	return p.resultTypesList
 }
 
 func (p *parser) endElement() {
@@ -203,18 +206,11 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 
 func (p *parser) createType(name string) *Type {
 	t := &Type{Name: name, Namespace: p.nsStack.GetLast()}
-	p.typesList.Put(t)
+	p.typesListCache.Put(t)
+	p.resultTypesList = append(p.resultTypesList, t)
 	return t
 }
 
-// создаёт анонимный тип, в список типов не помещает
-// анонимные типы выступают просто контейнерами для других
-//func (p *parser) anonTypeStarted(sourceElement string) *Type {
-//	t := &Type{Element: sourceElement}
-//	p.elStack.Push(t)
-//	return t
-//}
-//
 func (p *parser) endSequence() {
 	t := p.elStack.Pop()
 	context := p.elStack.GetLast()

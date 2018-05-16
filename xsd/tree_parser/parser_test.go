@@ -14,7 +14,6 @@ func TestEmptySchema(t *testing.T) {
 	}
 }
 
-
 func TestSimpleTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
@@ -54,7 +53,6 @@ func TestSimpleElements(t *testing.T) {
 	if cType.Name != typeName {
 		t.Errorf("TypeName name should be %q, got %q", typeName, cType.GoName)
 	}
-
 
 	ns := "http://xml.amadeus.com/2010/06/Types_v1"
 	if cType.Namespace != ns {
@@ -178,7 +176,6 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 }
 
-
 func TestInnerComplexTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
@@ -190,7 +187,6 @@ func TestInnerComplexTypes(t *testing.T) {
 	if firstType.IsSimple {
 		t.Fatalf("Type should be complex type")
 	}
-
 
 	secType := typesList[0]
 	if secType.IsSimple {
@@ -238,6 +234,36 @@ func TestInnerComplexTypes(t *testing.T) {
 	}
 }
 
+func TestAttributeGroup(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if cType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	name := "CodeType"
+	if cType.Name != "CodeType" {
+		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.Name)
+	}
+
+	if len(cType.Fields) != 5 {
+		t.Fatalf("Fields amount should be 5, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "Owner" {
+		t.Fatalf("Field name should be 'Owner', %q instead", field.Name)
+	}
+
+	if !field.IsAttr {
+		t.Fatalf("Owner should be attribute")
+	}
+}
 
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
@@ -246,8 +272,7 @@ func parseTypesFrom(name string) []*Type {
 	return parser.GetTypes()
 }
 
-
-type SimpleLoader struct {}
+type SimpleLoader struct{}
 
 func (l *SimpleLoader) Load(path string) (io.ReadCloser, error) {
 	file, _ := os.Open("./test_data/" + path)
@@ -257,4 +282,3 @@ func (l *SimpleLoader) Load(path string) (io.ReadCloser, error) {
 func (l *SimpleLoader) IsAlreadyLoadedError(e error) bool {
 	return false
 }
-
