@@ -144,7 +144,7 @@ func (p *parser) endElement() {
 			field := &Field{
 				Name:     nameAttr.Value,
 				TypeName: f.typeName,
-				IsAttr: f.isAttr}
+				IsAttr:   f.isAttr}
 			t.Fields = append(t.Fields, field)
 		}
 	} else {
@@ -153,19 +153,26 @@ func (p *parser) endElement() {
 	}
 }
 
-func (p *parser) createQName(name string) *QName {
-	typesParts := strings.Split(name, ":")
-	if len(typesParts) != 2 {
-		panic("Can't parse " + name)
-	}
-	ns, ok := p.curNs[typesParts[0]]
-	if !ok {
-		panic("Unknown namespace alias " + typesParts[0])
+func (p *parser) createQName(qName string) *QName {
+	typesParts := strings.Split(qName, ":")
+	var (
+		name, namespace string
+		ok              bool
+	)
+	if len(typesParts) == 1 {
+		name = typesParts[0]
+		namespace = p.nsStack.GetLast()
+	} else {
+		name = typesParts[1]
+		namespace, ok = p.curNs[typesParts[0]]
+		if !ok {
+			panic("Unknown namespace alias " + typesParts[0])
+		}
 	}
 
 	return &QName{
-		Name:      typesParts[1],
-		Namespace: ns}
+		Name:      name,
+		Namespace: namespace}
 }
 
 func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
