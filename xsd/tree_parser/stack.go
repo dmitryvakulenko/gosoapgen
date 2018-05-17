@@ -22,14 +22,14 @@ func (s *typesStack) Pop() *Type {
 }
 
 type elementsStack struct {
-	s []*element
+	s []*Node
 }
 
-func (s *elementsStack) Push(t *element) {
+func (s *elementsStack) Push(t *Node) {
 	s.s = append(s.s, t)
 }
 
-func (s *elementsStack) Pop() *element {
+func (s *elementsStack) Pop() *Node {
 	lastElem := len(s.s) - 1
 
 	if lastElem == -1 {
@@ -42,7 +42,7 @@ func (s *elementsStack) Pop() *element {
 	return res
 }
 
-func (s *elementsStack) GetLast() *element {
+func (s *elementsStack) GetLast() *Node {
 	lastElem := len(s.s) - 1
 
 	if lastElem == -1 {

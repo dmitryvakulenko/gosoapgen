@@ -1,3 +1,6 @@
+/*
+Коллекция типов, имеющих namespace
+ */
 package tree_parser
 
 import "log"
