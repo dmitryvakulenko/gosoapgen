@@ -308,7 +308,7 @@ func TestComplexContent(t *testing.T) {
 //	s = loadSchemaFrom("complexType.xsd")
 //	Decoder.Decode(&s, s.TargetNamespace)
 //
-//	typesList := Decoder.GetTypes()
+//	typesList := Decoder.GenerateTypes()
 //	if len(typesList) != 1 {
 //		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 //	}

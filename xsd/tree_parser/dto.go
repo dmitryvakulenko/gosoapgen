@@ -3,27 +3,81 @@ package tree_parser
 import "encoding/xml"
 
 // Абстрактное представление элемента схемы
-type Node struct {
+type node struct {
 	// название элемента схемы xsd
 	// из которого был создан данный тип
-	// Node, complexType и т.д.
+	// node, complexType и т.д.
 	// чисто для сокрачения, поскольку вся эта информация содержится в startElem
+	elemName  string
+	// Имя типа. По сути, значение атрибута name
 	name      string
 	typeName  *QName
-	isSimple  bool
 	startElem *xml.StartElement
 	namespace string
-	children  []*Node
+	children  []*node
 	// список типов встраиваемых элементов
-	refs          []string
+	refs []string
 	// ссылка на сгенерированный тип, чтобы добавить туда refs-ы
 	generatedType *Type
+	isSimple      bool
 	isAttr        bool
 }
 
-func newElement(startElem *xml.StartElement) *Node {
-	return &Node{
-		name:      startElem.Name.Local,
+type rootNode struct {
+	// список дочерних узлов - это всё глобальные элементы
+	children []*node
+}
+
+func (r *rootNode) find(ns, name string) *node {
+	for _, n := range r.children {
+		if ns == n.namespace && name == n.name {
+			return n
+		}
+	}
+
+	return nil
+}
+
+//type node struct {
+//	// название элемента схемы xsd
+//	elementName string
+//	// название самого типа - не обязательно
+//	typeName string
+//	// пространство имён
+//	namespace string
+//	// дочерние узлы
+//	children []*node
+//	// это атрибут?
+//	isAttr bool
+//}
+//
+//func (n *node) Find(ns, elemName string) *node {
+//	if n.namespace == ns && n.typeName == elemName {
+//		return n
+//	}
+//
+//	for _, ch := range n.children {
+//		res := ch.Find(ns, elemName)
+//		if res != nil {
+//			return res
+//		}
+//	}
+//
+//	return nil
+//}
+
+func newNode(startElem *xml.StartElement) *node {
+	name := ""
+	for _, a := range startElem.Attr {
+		if a.Name.Local == "name" {
+			name = a.Value
+			break;
+		}
+	}
+
+	return &node{
+		name: name,
+		elemName:  startElem.Name.Local,
 		startElem: startElem}
 }
 

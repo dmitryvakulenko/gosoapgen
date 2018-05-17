@@ -23,10 +23,11 @@ type Loader interface {
 }
 
 type parser struct {
-	loader  Loader
-	elStack *elementsStack
-	nsStack *stringsStack
-	curNs   map[string]string
+	loader   Loader
+	elStack  *elementsStack
+	nsStack  *stringsStack
+	curNs    map[string]string
+	rootNode *rootNode
 
 	// кеш
 	attGroupsCache *NamespacedTypes
@@ -40,10 +41,11 @@ type parser struct {
 
 func NewParser(l Loader) *parser {
 	return &parser{
-		loader:         l,
-		elStack:        &elementsStack{},
-		nsStack:        &stringsStack{},
-		curNs:          make(map[string]string),
+		loader:  l,
+		elStack: &elementsStack{},
+		nsStack: &stringsStack{},
+		curNs:   make(map[string]string),
+		rootNode: &rootNode{},
 		//attGroupsCache: NewTypesCollection(),
 		typesListCache: NewTypesCollection()}
 }
@@ -55,7 +57,7 @@ func (p *parser) Parse(inputFile string) {
 }
 
 func (p *parser) parseImpl(decoder *xml.Decoder) {
-	for  {
+	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
 			break
@@ -79,14 +81,14 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	switch elem.Name.Local {
 	case "schema":
 		p.parseSchema(elem)
-	case "Node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup":
+	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup":
 		p.elementStarted(elem)
 	}
 }
 
-// Начало элемента, любого, а не только Node
+// Начало элемента, любого, а не только node
 func (p *parser) elementStarted(e *xml.StartElement) {
-	p.elStack.Push(newElement(e))
+	p.elStack.Push(newNode(e))
 }
 
 func (p *parser) resolveRefs(e *xml.StartElement) {
@@ -107,7 +109,7 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endComplexType()
 	case "sequence":
 		p.endSequence()
-	case "Node":
+	case "node":
 		p.endElement()
 	case "attribute":
 		p.endAttribute()
@@ -133,13 +135,15 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 	}
 }
 
-func (p *parser) GetTypes() []*Type {
-	return p.resultTypesList
+// Сгенерировать список типов по построенному дереву
+func (p *parser) GenerateTypes() []*Type {
+	var res []*Type
+	return res
 }
 
 func (p *parser) endElement() {
 	e := p.elStack.Pop()
-	nameAttr := findAttributeByName(e.startElem.Attr, "name")
+	nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
 	typeAttr := findAttributeByName(e.startElem.Attr, "type")
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
@@ -157,22 +161,22 @@ func (p *parser) endElement() {
 	if context == nil {
 		// значит предок у нас - schema, т.е. это глобальный тип
 		if nameAttr == nil {
-			panic("Element should has name attribute")
+			panic("Element should has elemName attribute")
 		}
 
 		t := p.createAndAddType(nameAttr.Value, e)
 		t.BaseTypeName = e.typeName
 		t.IsSimple = e.isSimple
 		t.Fields = createFieldsFromElems(e.children)
-	} else if context.name == "sequence" {
+	} else if context.elemName == "sequence" {
 		context.children = append(context.children, e)
 	}
 }
 
-func createFieldsFromElems(elems []*Node) []*Field {
+func createFieldsFromElems(elems []*node) []*Field {
 	var res []*Field
 	for _, f := range elems {
-		nameAttr := findAttributeByName(f.startElem.Attr, "name")
+		nameAttr := findAttributeByName(f.startElem.Attr, "elemName")
 		field := &Field{
 			Name:     nameAttr.Value,
 			TypeName: f.typeName,
@@ -215,13 +219,13 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 	return nil
 }
 
-func (p *parser) createAndAddType(name string, e *Node) *Type {
+func (p *parser) createAndAddType(name string, e *node) *Type {
 	t := p.createType(name, e)
 	p.resultTypesList = append(p.resultTypesList, t)
 	return t
 }
 
-func (p *parser) createType(name string, e *Node) *Type {
+func (p *parser) createType(name string, e *node) *Type {
 	t := &Type{Name: name, Namespace: p.nsStack.GetLast()}
 	e.generatedType = t
 	p.typesListCache.Put(t)
@@ -239,7 +243,7 @@ func (p *parser) endComplexType() {
 	context := p.elStack.GetLast()
 
 	if context == nil {
-		nameAttr := findAttributeByName(e.startElem.Attr, "name")
+		nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
 		t := p.createAndAddType(nameAttr.Value, e)
 		t.BaseTypeName = e.typeName
 	} else {
@@ -249,7 +253,7 @@ func (p *parser) endComplexType() {
 
 func (p *parser) endSimpleType() {
 	e := p.elStack.Pop()
-	nameAttr := findAttributeByName(e.startElem.Attr, "name")
+	nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
 	if nameAttr != nil {
 		// отдельный глобальный тип
 		t := p.createAndAddType(nameAttr.Value, e)
@@ -281,7 +285,7 @@ func (p *parser) endAttribute() {
 
 func (p *parser) endAttributeGroup() {
 	e := p.elStack.Pop()
-	nameAttr := findAttributeByName(e.startElem.Attr, "name")
+	nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
 	refAttr := findAttributeByName(e.startElem.Attr, "ref")
 	if nameAttr != nil {
 		t := p.createType(nameAttr.Value, e)
@@ -292,6 +296,6 @@ func (p *parser) endAttributeGroup() {
 		context := p.elStack.GetLast()
 		context.refs = append(context.refs, refAttr.Value)
 	} else {
-		panic("No name and no ref for attribute group")
+		panic("No elemName and no ref for attribute group")
 	}
 }
