@@ -17,8 +17,6 @@ type node struct {
 	children  []*node
 	// список типов встраиваемых элементов
 	refs []string
-	// ссылка на сгенерированный тип, чтобы добавить туда refs-ы
-	generatedType *Type
 	isSimple      bool
 	isAttr        bool
 }

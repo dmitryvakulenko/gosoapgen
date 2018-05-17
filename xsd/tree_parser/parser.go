@@ -81,7 +81,7 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	switch elem.Name.Local {
 	case "schema":
 		p.parseSchema(elem)
-	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup":
+	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup", "element":
 		p.elementStarted(elem)
 	}
 }
@@ -115,6 +115,8 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endAttribute()
 	case "attributeGroup":
 		p.endAttributeGroup()
+	case "element":
+		p.endElement()
 	}
 }
 
@@ -154,31 +156,35 @@ func (p *parser) generateTypesImpl(node *node, deep int) []*Type {
 
 func (p *parser) endElement() {
 	e := p.elStack.Pop()
+	e.namespace = p.nsStack.GetLast()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 	typeAttr := findAttributeByName(e.startElem.Attr, "type")
+
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
-	} else if p.elStack.Deep() > 2 {
-		// если типа нет, придётся его создавать
-		t := p.createAndAddType(nameAttr.Value, e)
-		t.IsSimple = e.isSimple
-		t.Fields = createFieldsFromElems(e.children)
-
-		e.typeName = p.createQName(t.Name)
 	}
+	//} else if p.elStack.Deep() > 2 {
+	//	// если типа нет, придётся его создавать
+	//	t := p.createAndAddType(nameAttr.Value, e)
+	//	t.IsSimple = e.isSimple
+	//	t.Fields = createFieldsFromElems(e.children)
+	//
+	//	e.typeName = p.createQName(t.Name)
+	//}
 
 	context := p.elStack.GetLast()
 
-	if context == nil {
+	if context.elemName == "schema" {
 		// значит предок у нас - schema, т.е. это глобальный тип
 		if nameAttr == nil {
 			panic("Element should has elemName attribute")
 		}
 
-		t := p.createAndAddType(nameAttr.Value, e)
-		t.BaseTypeName = e.typeName
-		t.IsSimple = e.isSimple
-		t.Fields = createFieldsFromElems(e.children)
+		//t := p.createAndAddType(nameAttr.Value, e)
+		//t.BaseTypeName = e.typeName
+		//t.IsSimple = e.isSimple
+		//t.Fields = createFieldsFromElems(e.children)
+		p.rootNode.add(e)
 	} else if context.elemName == "sequence" {
 		context.children = append(context.children, e)
 	}
@@ -227,7 +233,7 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 		}
 	}
 
-	return &xml.Attr{}
+	return nil
 }
 
 func (p *parser) createAndAddType(name string, e *node) *Type {
@@ -238,7 +244,6 @@ func (p *parser) createAndAddType(name string, e *node) *Type {
 
 func (p *parser) createType(name string, e *node) *Type {
 	t := &Type{Name: name, Namespace: p.nsStack.GetLast()}
-	e.generatedType = t
 	p.typesListCache.Put(t)
 	return t
 }
@@ -266,7 +271,10 @@ func (p *parser) endSimpleType() {
 	e := p.elStack.Pop()
 	e.namespace = p.nsStack.GetLast()
 	e.isSimple = true
-	e.name = findAttributeByName(e.startElem.Attr, "name").Value
+	nameAttr := findAttributeByName(e.startElem.Attr, "name")
+	if nameAttr != nil {
+		e.name = nameAttr.Value
+	}
 
 	context := p.elStack.GetLast()
 	if context.elemName == "schema" {
