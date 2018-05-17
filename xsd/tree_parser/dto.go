@@ -8,7 +8,7 @@ type node struct {
 	// из которого был создан данный тип
 	// node, complexType и т.д.
 	// чисто для сокрачения, поскольку вся эта информация содержится в startElem
-	elemName  string
+	elemName string
 	// Имя типа. По сути, значение атрибута name
 	name      string
 	typeName  *QName
@@ -16,9 +16,12 @@ type node struct {
 	namespace string
 	children  []*node
 	// список типов встраиваемых элементов
-	refs []string
-	isSimple      bool
-	isAttr        bool
+	refs     []string
+	isSimple bool
+	isAttr   bool
+
+	// сгенерированный тип
+	genType *Type
 }
 
 func (r *node) find(ns, name string) *node {
@@ -73,17 +76,17 @@ func newNode(startElem *xml.StartElement) *node {
 	}
 
 	return &node{
-		name: name,
+		name:      name,
 		elemName:  startElem.Name.Local,
 		startElem: startElem}
 }
 
 type Type struct {
-	Name         string
-	IsSimple     bool
-	Namespace    string
-	GoName       string
-	Fields       []*Field
+	Name      string
+	IsSimple  bool
+	Namespace string
+	GoName    string
+	Fields    []*Field
 
 	// Только для simpleType
 	BaseType     *Type
@@ -94,11 +97,11 @@ func (t *Type) addField(f *Field) {
 	t.Fields = append(t.Fields, f)
 }
 
-func newType(n * node) *Type {
+func newType(n *node) *Type {
 	return &Type{
-		Name: n.name,
+		Name:      n.name,
 		Namespace: n.namespace,
-		IsSimple: n.isSimple}
+		IsSimple:  n.isSimple}
 }
 
 type Field struct {
@@ -111,8 +114,11 @@ type Field struct {
 	Comment   string
 }
 
-func newField() *Field {
-	return &Field{}
+func newField(n *node) *Field {
+	return &Field{
+		Name:     n.name,
+		TypeName: n.typeName,
+		IsAttr:   n.isAttr}
 }
 
 type attributeGroup struct {

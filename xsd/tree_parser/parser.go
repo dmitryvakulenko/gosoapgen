@@ -146,10 +146,18 @@ func (p *parser) GenerateTypes() []*Type {
 // Сгенерировать список типов по построенному дереву
 func (p *parser) generateTypesImpl(node *node, deep int) []*Type {
 	var res []*Type
-	for _, n := range p.rootNode.children {
-		t := newType(n)
-		t.BaseTypeName = n.typeName
-		res = append(res, t)
+	for _, n := range node.children {
+		if node.elemName == "element" {
+			f := newField(n)
+			node.genType.addField(f)
+		} else {
+			t := newType(n)
+			t.BaseTypeName = n.typeName
+			n.genType = t
+
+			res = append(res, t)
+			res = append(res, p.generateTypesImpl(n, deep+1)...)
+		}
 	}
 	return res
 }
@@ -258,7 +266,7 @@ func (p *parser) endComplexType() {
 	e := p.elStack.Pop()
 	context := p.elStack.GetLast()
 
-	if context == nil {
+	if context.elemName == "schema" {
 		nameAttr := findAttributeByName(e.startElem.Attr, "name")
 		t := p.createAndAddType(nameAttr.Value, e)
 		t.BaseTypeName = e.typeName
