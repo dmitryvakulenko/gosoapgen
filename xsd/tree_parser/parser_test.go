@@ -14,29 +14,29 @@ func TestEmptySchema(t *testing.T) {
 	}
 }
 
-//func TestSimpleTypes(t *testing.T) {
-//	typesList := parseTypesFrom(t.Name())
-//
-//	if len(typesList) != 1 {
-//		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
-//	}
-//
-//	tp := typesList[0]
-//
-//	if !tp.IsSimple {
-//		t.Fatalf("Type should be complex type")
-//	}
-//
-//	name := "AlphaString_Length1To2"
-//	if name != tp.Name {
-//		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name)
-//	}
-//
-//	if tp.BaseTypeName.Name != "string" {
-//		t.Errorf("Field should be string, got %q instead", tp.Name)
-//	}
-//}
-//
+func TestSimpleTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
+	}
+
+	tp := typesList[0]
+
+	if !tp.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	name := "AlphaString_Length1To2"
+	if name != tp.Name {
+		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name)
+	}
+
+	if tp.BaseTypeName.Name != "string" {
+		t.Errorf("Field should be string, got %q instead", tp.Name)
+	}
+}
+
 //func TestSimpleElements(t *testing.T) {
 //	typesList := parseTypesFrom(t.Name())
 //

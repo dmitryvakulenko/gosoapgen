@@ -23,12 +23,7 @@ type node struct {
 	isAttr        bool
 }
 
-type rootNode struct {
-	// список дочерних узлов - это всё глобальные элементы
-	children []*node
-}
-
-func (r *rootNode) find(ns, name string) *node {
+func (r *node) find(ns, name string) *node {
 	for _, n := range r.children {
 		if ns == n.namespace && name == n.name {
 			return n
@@ -36,6 +31,10 @@ func (r *rootNode) find(ns, name string) *node {
 	}
 
 	return nil
+}
+
+func (r *node) add(e *node) {
+	r.children = append(r.children, e)
 }
 
 //type node struct {
@@ -71,7 +70,7 @@ func newNode(startElem *xml.StartElement) *node {
 	for _, a := range startElem.Attr {
 		if a.Name.Local == "name" {
 			name = a.Value
-			break;
+			break
 		}
 	}
 
@@ -87,8 +86,21 @@ type Type struct {
 	Namespace    string
 	GoName       string
 	Fields       []*Field
+
+	// Только для simpleType
 	BaseType     *Type
 	BaseTypeName *QName
+}
+
+func (t *Type) addField(f *Field) {
+	t.Fields = append(t.Fields, f)
+}
+
+func newType(n * node) *Type {
+	return &Type{
+		Name: n.name,
+		Namespace: n.namespace,
+		IsSimple: n.isSimple}
 }
 
 type Field struct {
@@ -99,6 +111,10 @@ type Field struct {
 	MaxOccurs int
 	IsAttr    bool
 	Comment   string
+}
+
+func newField() *Field {
+	return &Field{}
 }
 
 type attributeGroup struct {

@@ -27,7 +27,7 @@ type parser struct {
 	elStack  *elementsStack
 	nsStack  *stringsStack
 	curNs    map[string]string
-	rootNode *rootNode
+	rootNode *node
 
 	// кеш
 	attGroupsCache *NamespacedTypes
@@ -45,7 +45,7 @@ func NewParser(l Loader) *parser {
 		elStack: &elementsStack{},
 		nsStack: &stringsStack{},
 		curNs:   make(map[string]string),
-		rootNode: &rootNode{},
+		rootNode: &node{},
 		//attGroupsCache: NewTypesCollection(),
 		typesListCache: NewTypesCollection()}
 }
@@ -120,7 +120,7 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 
 func (p *parser) parseSchema(elem *xml.StartElement) {
 	ns := findAttributeByName(elem.Attr, "targetNamespace")
-	if ns != nil {
+	if ns.Value != "" {
 		p.nsStack.Push(ns.Value)
 	} else {
 		// Используем родительский ns. А правильно ли?
@@ -133,17 +133,28 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 			p.curNs[attr.Name.Local] = attr.Value
 		}
 	}
+
+	p.elStack.Push(newNode(elem))
+}
+
+func (p *parser) GenerateTypes() []*Type {
+	return p.generateTypesImpl(p.rootNode, 0)
 }
 
 // Сгенерировать список типов по построенному дереву
-func (p *parser) GenerateTypes() []*Type {
+func (p *parser) generateTypesImpl(node *node, deep int) []*Type {
 	var res []*Type
+	for _, n := range p.rootNode.children {
+		t := newType(n)
+		t.BaseTypeName = n.typeName
+		res = append(res, t)
+	}
 	return res
 }
 
 func (p *parser) endElement() {
 	e := p.elStack.Pop()
-	nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
+	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 	typeAttr := findAttributeByName(e.startElem.Attr, "type")
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
@@ -176,7 +187,7 @@ func (p *parser) endElement() {
 func createFieldsFromElems(elems []*node) []*Field {
 	var res []*Field
 	for _, f := range elems {
-		nameAttr := findAttributeByName(f.startElem.Attr, "elemName")
+		nameAttr := findAttributeByName(f.startElem.Attr, "name")
 		field := &Field{
 			Name:     nameAttr.Value,
 			TypeName: f.typeName,
@@ -216,7 +227,7 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 		}
 	}
 
-	return nil
+	return &xml.Attr{}
 }
 
 func (p *parser) createAndAddType(name string, e *node) *Type {
@@ -243,7 +254,7 @@ func (p *parser) endComplexType() {
 	context := p.elStack.GetLast()
 
 	if context == nil {
-		nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
+		nameAttr := findAttributeByName(e.startElem.Attr, "name")
 		t := p.createAndAddType(nameAttr.Value, e)
 		t.BaseTypeName = e.typeName
 	} else {
@@ -253,17 +264,18 @@ func (p *parser) endComplexType() {
 
 func (p *parser) endSimpleType() {
 	e := p.elStack.Pop()
-	nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
-	if nameAttr != nil {
-		// отдельный глобальный тип
-		t := p.createAndAddType(nameAttr.Value, e)
-		t.BaseTypeName = e.typeName
-		t.IsSimple = true
+	e.namespace = p.nsStack.GetLast()
+	e.isSimple = true
+	e.name = findAttributeByName(e.startElem.Attr, "name").Value
+
+	context := p.elStack.GetLast()
+	if context.elemName == "schema" {
+		p.rootNode.add(e)
 	} else {
 		// анонимный тип, встраиваем в контейнер
 		context := p.elStack.GetLast()
 		context.typeName = e.typeName
-		context.isSimple = true
+		context.isSimple = e.isSimple
 	}
 }
 
@@ -285,7 +297,7 @@ func (p *parser) endAttribute() {
 
 func (p *parser) endAttributeGroup() {
 	e := p.elStack.Pop()
-	nameAttr := findAttributeByName(e.startElem.Attr, "elemName")
+	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 	refAttr := findAttributeByName(e.startElem.Attr, "ref")
 	if nameAttr != nil {
 		t := p.createType(nameAttr.Value, e)

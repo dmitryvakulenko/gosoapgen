@@ -46,7 +46,7 @@ func (s *elementsStack) GetLast() *node {
 	lastElem := len(s.s) - 1
 
 	if lastElem == -1 {
-		return nil
+		return &node{}
 	}
 
 	return s.s[lastElem]
