@@ -46,7 +46,6 @@ func NewParser(l Loader) *parser {
 		nsStack: &stringsStack{},
 		curNs:   make(map[string]string),
 		rootNode: &node{},
-		//attGroupsCache: NewTypesCollection(),
 		typesListCache: NewTypesCollection()}
 }
 
@@ -89,12 +88,6 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 // Начало элемента, любого, а не только node
 func (p *parser) elementStarted(e *xml.StartElement) {
 	p.elStack.Push(newNode(e))
-}
-
-func (p *parser) resolveRefs(e *xml.StartElement) {
-	//for _, t := range p.typesListCache.GetAllTypes() {
-	//	if len
-	//}
 }
 
 func (p *parser) parseEndElement(elem *xml.EndElement) {
@@ -140,11 +133,12 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 }
 
 func (p *parser) GenerateTypes() []*Type {
-	return p.generateTypesImpl(p.rootNode, 0)
+	l := p.generateTypesImpl(p.rootNode)
+	return p.linkTypes(l)
 }
 
 // Сгенерировать список типов по построенному дереву
-func (p *parser) generateTypesImpl(node *node, deep int) []*Type {
+func (p *parser) generateTypesImpl(node *node) []*Type {
 	var res []*Type
 	for _, n := range node.children {
 		f := newField(n)
@@ -152,8 +146,7 @@ func (p *parser) generateTypesImpl(node *node, deep int) []*Type {
 		if node == p.rootNode || len(n.children) > 0 {
 			t := newType(n)
 			t.BaseTypeName = n.typeName
-			n.genType = t
-			f.TypeName = &QName{t.Name, t.Namespace}
+			n.genType, f.Type = t, t
 			res = append(res, t)
 		}
 
@@ -161,9 +154,47 @@ func (p *parser) generateTypesImpl(node *node, deep int) []*Type {
 			node.genType.addField(f)
 		}
 
-		res = append(res, p.generateTypesImpl(n, deep+1)...)
+		res = append(res, p.generateTypesImpl(n)...)
 	}
+
 	return res
+}
+
+// связать все типы
+func (p *parser) linkTypes(typesList []*Type) []*Type {
+	for _, t := range typesList {
+		if t.IsSimple {
+			t.BaseType = p.findGlobalTypeNode(*t.BaseTypeName).genType
+		} else {
+			for _, f := range t.Fields {
+				if f.Type != nil {
+					continue
+				}
+
+				fTypeNode := p.findGlobalTypeNode(*f.TypeName)
+				if fTypeNode.elemName == "attributeGroup" {
+					f.Name = fTypeNode.name
+				}
+				f.Type = fTypeNode.genType
+			}
+		}
+	}
+
+	return typesList
+}
+
+func (p *parser) findGlobalTypeNode(name QName) *node {
+	if name.Namespace == "http://www.w3.org/2001/XMLSchema" {
+		return &node{genType: &Type{Name: name.Name, Namespace: name.Namespace}}
+	}
+
+	for _, t := range p.rootNode.children {
+		if t.name == name.Name && t.namespace == name.Namespace {
+			return t
+		}
+	}
+
+	panic("Can't find type " + name.Name)
 }
 
 func (p *parser) endElement() {
@@ -175,14 +206,6 @@ func (p *parser) endElement() {
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
 	}
-	//} else if p.elStack.Deep() > 2 {
-	//	// если типа нет, придётся его создавать
-	//	t := p.createAndAddType(nameAttr.Value, e)
-	//	t.IsSimple = e.isSimple
-	//	t.Fields = createFieldsFromElems(e.children)
-	//
-	//	e.typeName = p.createQName(t.Name)
-	//}
 
 	context := p.elStack.GetLast()
 
@@ -192,28 +215,10 @@ func (p *parser) endElement() {
 			panic("Element should has elemName attribute")
 		}
 
-		//t := p.createAndAddType(nameAttr.Value, e)
-		//t.BaseTypeName = e.typeName
-		//t.IsSimple = e.isSimple
-		//t.Fields = createFieldsFromElems(e.children)
 		p.rootNode.add(e)
 	} else if context.elemName == "sequence" {
 		context.children = append(context.children, e)
 	}
-}
-
-func createFieldsFromElems(elems []*node) []*Field {
-	var res []*Field
-	for _, f := range elems {
-		nameAttr := findAttributeByName(f.startElem.Attr, "name")
-		field := &Field{
-			Name:     nameAttr.Value,
-			TypeName: f.typeName,
-			IsAttr:   f.isAttr}
-		res = append(res, field)
-	}
-
-	return res
 }
 
 func (p *parser) createQName(qName string) *QName {
@@ -273,6 +278,7 @@ func (p *parser) endComplexType() {
 	if context.elemName == "schema" {
 		nameAttr := findAttributeByName(e.startElem.Attr, "name")
 		e.name = nameAttr.Value
+		e.namespace = p.nsStack.GetLast()
 		p.rootNode.add(e)
 		//t := p.createAndAddType(nameAttr.Value, e)
 	} else {
@@ -318,16 +324,18 @@ func (p *parser) endAttribute() {
 
 func (p *parser) endAttributeGroup() {
 	e := p.elStack.Pop()
+	e.isAttr = true
+	e.namespace = p.nsStack.GetLast()
+
+	context := p.elStack.GetLast()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 	refAttr := findAttributeByName(e.startElem.Attr, "ref")
-	if nameAttr != nil {
-		t := p.createType(nameAttr.Value, e)
-		t.Namespace = p.nsStack.GetLast()
-		t.IsSimple = false
-		t.Fields = createFieldsFromElems(e.children)
+	if context.elemName == "schema" {
+		e.name = nameAttr.Value
+		p.rootNode.add(e)
 	} else if refAttr != nil {
-		context := p.elStack.GetLast()
-		context.refs = append(context.refs, refAttr.Value)
+		e.typeName = p.createQName(refAttr.Value)
+		context.add(e)
 	} else {
 		panic("No elemName and no ref for attribute group")
 	}
