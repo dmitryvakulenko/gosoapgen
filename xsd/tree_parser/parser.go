@@ -51,6 +51,8 @@ func NewParser(l Loader) *parser {
 
 func (p *parser) Parse(inputFile string) {
 	reader, _ := p.loader.Load(inputFile)
+	defer reader.Close()
+
 	decoder := xml.NewDecoder(reader)
 	p.parseImpl(decoder)
 }

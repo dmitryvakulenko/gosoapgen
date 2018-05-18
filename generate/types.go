@@ -3,7 +3,7 @@ package generate
 import (
 	"strings"
 	"io"
-	"github.com/dmitryvakulenko/gosoapgen/xsd/flat_parser"
+	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
 )
 
 var innerTypes = []string{
@@ -23,43 +23,35 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 }
 `
 
-func Types(parser flat_parser.Decoder, writer io.Writer) {
-	for _, t := range parser.GetTypes() {
-		switch curType := t.(type) {
-		case *flat_parser.ComplexType:
-			writer.Write([]byte("type " + curType.GoName + " struct {\n"))
-			//typeNamespace[curType.GoName] = curType.Namespace
-			//alias := nsAliases[curType.Namespace]
-			//writer.Write([]byte("XMLName string `xml:\"" + alias + ":" + curType.GoName + "\"`\n"))
-			for _, f := range curType.Fields {
-				writer.Write([]byte(firstUp(f.Name) + " "))
-				if f.MaxOccurs != 0 {
-					writer.Write([]byte("[]"))
-				}
-
-				_, isSimpleType := f.Type.(*flat_parser.SimpleType)
-				if !isInnerType(f.Type.GetName()) && !isSimpleType {
-					writer.Write([]byte("*"))
-				}
-
-				//alias := ""
-				//if !f.IsAttr {
-				//	alias = nsAliases[curType.Namespace] + ":"
-				//}
-				writer.Write([]byte(firstUp(f.Type.GetGoName()) + " `xml:\"" + curType.Namespace + " " + f.Name))
-				if f.IsAttr {
-					writer.Write([]byte(",attr"))
-
-				}
-				if f.MinOccurs == 0 {
-					writer.Write([]byte(",omitempty"))
-				}
-				writer.Write([]byte("\"`\n"))
-			}
-			writer.Write([]byte("}\n\n"))
-		case *flat_parser.SimpleType:
-			writer.Write([]byte("type " + curType.GoName + " " + curType.BaseType.GetName() + "\n\n"))
+func Types(typesList []*tree_parser.Type, writer io.Writer) {
+	for _, curType := range typesList {
+		if curType.IsSimple {
+			writer.Write([]byte("type " + curType.Name + " " + curType.BaseType.Name + "\n\n"))
+			continue
 		}
+
+		writer.Write([]byte("type " + curType.GoName + " struct {\n"))
+		for _, f := range curType.Fields {
+			writer.Write([]byte(firstUp(f.Name) + " "))
+			if f.MaxOccurs != 0 {
+				writer.Write([]byte("[]"))
+			}
+
+			if !isInnerType(f.Type.Name) && !f.Type.IsSimple {
+				writer.Write([]byte("*"))
+			}
+
+			writer.Write([]byte(firstUp(f.Type.Name) + " `xml:\"" + curType.Namespace + " " + f.Name))
+			if f.IsAttr {
+				writer.Write([]byte(",attr"))
+
+			}
+			if f.MinOccurs == 0 {
+				writer.Write([]byte(",omitempty"))
+			}
+			writer.Write([]byte("\"`\n"))
+		}
+		writer.Write([]byte("}\n\n"))
 	}
 }
 

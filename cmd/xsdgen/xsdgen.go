@@ -4,13 +4,13 @@ import (
 	"os"
 	"fmt"
 	"path"
-	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"github.com/dmitryvakulenko/gosoapgen/generate"
 	"flag"
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/internal/pkg/xsdloader"
+	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
+	"log"
 )
-
 
 func main() {
 	flag.Parse()
@@ -33,12 +33,10 @@ func main() {
 		return
 	}
 
-
-
 	outFile, err := os.Create(outName)
 	defer outFile.Close()
 	if err != nil {
-		fmt.Printf("Can't write result outFile")
+		log.Fatalf("Can't write result outFile %s", err)
 		return
 	}
 
@@ -49,8 +47,9 @@ func main() {
 
 func xsdProcessing(xsdName string, out io.Writer) {
 	basePath := path.Dir(xsdName)
-	parser := xsd.NewDecoder(xsdloader.NewXsdLoader(basePath))
-	parser.Decode(path.Base(xsdName))
+	parser := tree_parser.NewParser(xsdloader.NewXsdLoader(basePath))
+	parser.Parse(path.Base(xsdName))
+	typesList := parser.GenerateTypes()
 
-	generate.Types(parser, out)
+	generate.Types(typesList, out)
 }

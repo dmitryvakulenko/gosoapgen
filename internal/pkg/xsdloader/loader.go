@@ -2,8 +2,9 @@ package xsdloader
 
 import (
 	"path"
-	"io/ioutil"
 	"errors"
+	"io"
+	"os"
 )
 
 var (
@@ -21,7 +22,7 @@ func NewXsdLoader(baseDir string) *XsdLoader {
 		baseDir: baseDir}
 }
 
-func (l *XsdLoader) Load(xsdFilePath string) ([]byte, error) {
+func (l *XsdLoader) Load(xsdFilePath string) (io.ReadCloser, error) {
 	filePath := path.Clean(l.baseDir + "/" + xsdFilePath)
 	var loadedErr error = nil
 	if _, exists := l.alreadyLoaded[filePath]; exists {
@@ -30,7 +31,7 @@ func (l *XsdLoader) Load(xsdFilePath string) ([]byte, error) {
 		l.alreadyLoaded[filePath] = true
 	}
 
-	res, err := ioutil.ReadFile(filePath)
+	res, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
 	}
