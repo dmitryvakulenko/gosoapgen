@@ -8,6 +8,7 @@ import (
 	"io"
 	"encoding/xml"
 	"strings"
+	"path"
 )
 
 // Интерфейс загрузки xsd
@@ -37,27 +38,37 @@ type parser struct {
 
 	// результирующий список типов
 	resultTypesList []*Type
+
+	basePath string
 }
 
 func NewParser(l Loader) *parser {
 	return &parser{
-		loader:  l,
-		elStack: &elementsStack{},
-		nsStack: &stringsStack{},
-		curNs:   make(map[string]string),
-		rootNode: &node{},
+		loader:         l,
+		elStack:        &elementsStack{},
+		nsStack:        &stringsStack{},
+		curNs:          make(map[string]string),
+		rootNode:       &node{},
 		typesListCache: NewTypesCollection()}
 }
 
 func (p *parser) Parse(inputFile string) {
+	if p.basePath == "" {
+		p.basePath = path.Clean(path.Dir(inputFile))
+	}
+
+	p.parseImpl(inputFile)
+}
+
+func (p *parser) parseImpl(inputFile string) {
 	reader, _ := p.loader.Load(inputFile)
 	defer reader.Close()
 
 	decoder := xml.NewDecoder(reader)
-	p.parseImpl(decoder)
+	p.decodeXsd(decoder)
 }
 
-func (p *parser) parseImpl(decoder *xml.Decoder) {
+func (p *parser) decodeXsd(decoder *xml.Decoder) {
 	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
@@ -84,6 +95,8 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 		p.parseSchema(elem)
 	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup", "element":
 		p.elementStarted(elem)
+	case "include", "import":
+		p.includeStarted(elem)
 	}
 }
 
@@ -117,7 +130,7 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 
 func (p *parser) parseSchema(elem *xml.StartElement) {
 	ns := findAttributeByName(elem.Attr, "targetNamespace")
-	if ns.Value != "" {
+	if ns != nil {
 		p.nsStack.Push(ns.Value)
 	} else {
 		// Используем родительский ns. А правильно ли?
@@ -346,4 +359,9 @@ func (p *parser) endAttributeGroup() {
 	} else {
 		panic("No elemName and no ref for attribute group")
 	}
+}
+
+func (p *parser) includeStarted(e *xml.StartElement) {
+	l := findAttributeByName(e.Attr, "schemaLocation")
+	p.parseImpl(l.Value)
 }
