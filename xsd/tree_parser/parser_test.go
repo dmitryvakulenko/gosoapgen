@@ -109,131 +109,131 @@ func TestComplexType(t *testing.T) {
 	}
 }
 
-//func TestSchemaComplexTypes(t *testing.T) {
-//	typesList := parseTypesFrom(t.Name())
-//
-//	if len(typesList) != 2 {
-//		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
-//	}
-//
-//	cType := typesList[0]
-//	if cType.IsSimple {
-//		t.Fatalf("Type should be complex type")
-//	}
-//
-//	typeName := "AMA_SecurityHostedUser"
-//	if cType.Name != typeName {
-//		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
-//	}
-//
-//	ns := "http://xml.amadeus.com/2010/06/Security_v1"
-//	if cType.Namespace != ns {
-//		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
-//	}
-//
-//	if len(cType.Fields) != 4 {
-//		t.Fatalf("TypeName should Has 4 fields, %d getting", len(cType.Fields))
-//	}
-//}
-//
-//func TestComplexTypeWithAttributes(t *testing.T) {
-//	typesList := parseTypesFrom(t.Name())
-//
-//	if len(typesList) != 1 {
-//		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-//	}
-//
-//	cType := typesList[0]
-//	if cType.IsSimple {
-//		t.Fatalf("Type should be complex type")
-//	}
-//
-//	typeName := "Session"
-//	if cType.Name != typeName {
-//		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
-//	}
-//
-//	ns := "http://xml.amadeus.com/2010/06/Session_v3"
-//	if cType.Namespace != ns {
-//		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
-//	}
-//
-//	if len(cType.Fields) != 1 {
-//		t.Fatalf("Should be 1 fields, %d getting", len(cType.Fields))
-//	}
-//
-//	field := cType.Fields[0]
-//	if field.Name != "TransactionStatusCode" {
-//		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
-//	}
-//
-//	if field.TypeName.Name != "NMTOKEN" {
-//		t.Errorf("Field type should be 'string' %s instead", field.TypeName.Name)
-//	}
-//
-//	if !field.IsAttr {
-//		t.Errorf("TransactionStatusCode should be attribute")
-//	}
-//}
-//
-//func TestInnerComplexTypes(t *testing.T) {
-//	typesList := parseTypesFrom(t.Name())
-//
-//	if len(typesList) != 3 {
-//		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-//	}
-//
-//	firstType := typesList[1]
-//	if firstType.IsSimple {
-//		t.Fatalf("Type should be complex type")
-//	}
-//
-//	secType := typesList[0]
-//	if secType.IsSimple {
-//		t.Fatalf("Type should be complex type")
-//	}
-//
-//	typeName := "PNR_AddMultiElements"
-//	if firstType.Name != typeName {
-//		t.Errorf("TypeName elemName should be %q, got %q", typeName, firstType.Name)
-//	}
-//
-//	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
-//	if firstType.Namespace != ns {
-//		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Namespace)
-//	}
-//
-//	typeName = "travellerInfo"
-//	if secType.Name != typeName {
-//		t.Errorf("TypeName elemName should be %q, got %q", typeName, secType.Name)
-//	}
-//
-//	if secType.Namespace != ns {
-//		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Namespace)
-//	}
-//
-//	if len(firstType.Fields) != 1 {
-//		t.Fatalf("Should be 1 fields, %d getting", len(firstType.Fields))
-//	}
-//
-//	field := firstType.Fields[0]
-//	if field.Name != "travellerInfo" {
-//		t.Errorf("Field elemName should be 'travellerInfo', %q instead", field.Name)
-//	}
-//
-//	if field.TypeName.Name != "travellerInfo" {
-//		t.Errorf("Field type should be 'travellerInfo', %q instead", field.TypeName.Name)
-//	}
-//
-//	if len(secType.Fields) != 1 {
-//		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
-//	}
-//
-//	if secType.Fields[0].Name != "elementManagementPassenger" {
-//		t.Errorf("Second type elemName shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
-//	}
-//}
-//
+func TestSchemaComplexTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 2 {
+		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if cType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	typeName := "AMA_SecurityHostedUser"
+	if cType.Name != typeName {
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Security_v1"
+	if cType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
+	}
+
+	if len(cType.Fields) != 4 {
+		t.Fatalf("TypeName should Has 4 fields, %d getting", len(cType.Fields))
+	}
+}
+
+func TestComplexTypeWithAttributes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if cType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	typeName := "Session"
+	if cType.Name != typeName {
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Session_v3"
+	if cType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
+	}
+
+	if len(cType.Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(cType.Fields))
+	}
+
+	field := cType.Fields[0]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if field.TypeName.Name != "NMTOKEN" {
+		t.Errorf("Field type should be 'string' %s instead", field.TypeName.Name)
+	}
+
+	if !field.IsAttr {
+		t.Errorf("TransactionStatusCode should be attribute")
+	}
+}
+
+func TestInnerComplexTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	firstType := typesList[0]
+	if firstType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	secType := typesList[1]
+	if secType.IsSimple {
+		t.Fatalf("Type should be complex type")
+	}
+
+	typeName := "PNR_AddMultiElements"
+	if firstType.Name != typeName {
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, firstType.Name)
+	}
+
+	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
+	if firstType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Namespace)
+	}
+
+	typeName = "travellerInfo"
+	if secType.Name != typeName {
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, secType.Name)
+	}
+
+	if secType.Namespace != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Namespace)
+	}
+
+	if len(firstType.Fields) != 1 {
+		t.Fatalf("Should be 1 fields, %d getting", len(firstType.Fields))
+	}
+
+	field := firstType.Fields[0]
+	if field.Name != "travellerInfo" {
+		t.Errorf("Field elemName should be 'travellerInfo', %q instead", field.Name)
+	}
+
+	if field.TypeName.Name != "travellerInfo" {
+		t.Errorf("Field type should be 'travellerInfo', %q instead", field.TypeName.Name)
+	}
+
+	if len(secType.Fields) != 1 {
+		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
+	}
+
+	if secType.Fields[0].Name != "elementManagementPassenger" {
+		t.Errorf("Second type elemName shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
+	}
+}
+
 //func TestAttributeGroup(t *testing.T) {
 //	typesList := parseTypesFrom(t.Name())
 //
