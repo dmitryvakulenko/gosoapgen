@@ -318,6 +318,21 @@ func TestSimpleTypeAttribute(t *testing.T) {
 	}
 }
 
+func TestUnion(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	if typesList[0].Name != "OwnerSimpleType" {
+		t.Errorf("Type name shoud be 'OwnerSimpleType', %q given", typesList[0].Name)
+	}
+
+	if typesList[0].BaseTypeName.Name != "string" {
+		t.Errorf("Type base type shoud be 'string', %q given", typesList[0].BaseTypeName.Name)
+	}
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")

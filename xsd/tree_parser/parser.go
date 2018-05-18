@@ -11,6 +11,10 @@ import (
 	"path"
 )
 
+var (
+	stringQName = &QName{Name: "string", Namespace: "http://www.w3.org/2001/XMLSchema"}
+)
+
 // Интерфейс загрузки xsd
 // должен отслеживать уже загруженные файлы
 // и правильно отрабатывать относительные пути
@@ -93,7 +97,7 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	switch elem.Name.Local {
 	case "schema":
 		p.parseSchema(elem)
-	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup", "element":
+	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup", "element", "union":
 		p.elementStarted(elem)
 	case "include", "import":
 		p.includeStarted(elem)
@@ -125,6 +129,8 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endAttributeGroup()
 	case "element":
 		p.endElement()
+	case "union":
+		p.endUnion()
 	}
 }
 
@@ -338,7 +344,11 @@ func (p *parser) endAttribute() {
 	e.isAttr = true
 	if e.typeName == nil {
 		typeAttr := findAttributeByName(e.startElem.Attr, "type")
-		e.typeName = p.createQName(typeAttr.Value)
+		if typeAttr != nil {
+			e.typeName = p.createQName(typeAttr.Value)
+		} else {
+			e.typeName = stringQName
+		}
 	}
 
 	context := p.elStack.GetLast()
@@ -367,4 +377,11 @@ func (p *parser) endAttributeGroup() {
 func (p *parser) includeStarted(e *xml.StartElement) {
 	l := findAttributeByName(e.Attr, "schemaLocation")
 	p.parseImpl(l.Value)
+}
+
+
+func (p *parser) endUnion() {
+	p.elStack.Pop()
+	context := p.elStack.GetLast()
+	context.typeName = stringQName
 }
