@@ -307,7 +307,14 @@ func TestInclude(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
 	if len(typesList) != 3 {
-		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+}
+
+func TestSimpleTypeAttribute(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 }
 

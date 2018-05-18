@@ -336,8 +336,11 @@ func (p *parser) endRestriction() {
 func (p *parser) endAttribute() {
 	e := p.elStack.Pop()
 	e.isAttr = true
-	typeAttr := findAttributeByName(e.startElem.Attr, "type")
-	e.typeName = p.createQName(typeAttr.Value)
+	if e.typeName == nil {
+		typeAttr := findAttributeByName(e.startElem.Attr, "type")
+		e.typeName = p.createQName(typeAttr.Value)
+	}
+
 	context := p.elStack.GetLast()
 	context.children = append(context.children, e)
 }
