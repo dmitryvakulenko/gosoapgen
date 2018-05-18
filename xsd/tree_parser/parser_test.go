@@ -232,6 +232,16 @@ func TestInnerComplexTypes(t *testing.T) {
 	if secType.Fields[0].Name != "elementManagementPassenger" {
 		t.Errorf("Second type elemName shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
 	}
+
+	thirdType := typesList[2]
+	field = thirdType.Fields[0]
+	if field.Name != "reference" {
+		t.Errorf("Field elemName should be 'reference', %q instead", field.Name)
+	}
+
+	if field.TypeName.Name != "string" {
+		t.Errorf("Field type should be 'string', %q instead", field.TypeName.Name)
+	}
 }
 
 //func TestAttributeGroup(t *testing.T) {
