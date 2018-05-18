@@ -201,10 +201,15 @@ func (p *parser) endElement() {
 	e := p.elStack.Pop()
 	e.namespace = p.nsStack.GetLast()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
-	typeAttr := findAttributeByName(e.startElem.Attr, "type")
 
+	typeAttr := findAttributeByName(e.startElem.Attr, "type")
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
+	}
+
+	refAttr := findAttributeByName(e.startElem.Attr, "ref")
+	if refAttr != nil {
+		e.typeName = p.createQName(refAttr.Value)
 	}
 
 	context := p.elStack.GetLast()

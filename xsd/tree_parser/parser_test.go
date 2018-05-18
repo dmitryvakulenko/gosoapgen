@@ -294,6 +294,14 @@ func TestAttributeGroup(t *testing.T) {
 	}
 }
 
+func TestParseElementRef(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 2 {
+		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+	}
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")
