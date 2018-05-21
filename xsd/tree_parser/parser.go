@@ -9,6 +9,7 @@ import (
 	"encoding/xml"
 	"strings"
 	"path"
+	"strconv"
 )
 
 var (
@@ -158,7 +159,9 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 
 func (p *parser) ParseTypes() []*Type {
 	l := p.parseTypesImpl(p.rootNode)
-	return p.linkTypes(l)
+	p.linkTypes(l)
+	p.renameDuplicatedTypes(l)
+	return l
 }
 
 // Сгенерировать список типов по построенному дереву
@@ -214,6 +217,18 @@ func (p *parser) linkTypes(typesList []*Type) []*Type {
 	}
 
 	return typesList
+}
+
+func (p *parser) renameDuplicatedTypes(typesList []*Type) {
+	names := make(map[string]int)
+	for _, t := range typesList {
+		if _, exist := names[t.Name]; exist {
+			names[t.Name]++
+			t.Name = t.Name + "_" + strconv.Itoa(names[t.Name])
+		} else {
+			names[t.Name] = 0
+		}
+	}
 }
 
 func (p *parser) findGlobalTypeNode(name QName) *node {
