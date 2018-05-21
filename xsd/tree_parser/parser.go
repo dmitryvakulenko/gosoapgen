@@ -33,16 +33,6 @@ type parser struct {
 	nsStack  *stringsStack
 	curNs    map[string]string
 	rootNode *node
-
-	// кеш
-	attGroupsCache *NamespacedTypes
-
-	// рабочий список типов
-	typesListCache *NamespacedTypes
-
-	// результирующий список типов
-	resultTypesList []*Type
-
 	basePath string
 }
 
@@ -52,8 +42,7 @@ func NewParser(l Loader) *parser {
 		elStack:        &elementsStack{},
 		nsStack:        &stringsStack{},
 		curNs:          make(map[string]string),
-		rootNode:       &node{},
-		typesListCache: NewTypesCollection()}
+		rootNode:       &node{}}
 }
 
 func (p *parser) Parse(inputFile string) {
@@ -65,8 +54,15 @@ func (p *parser) Parse(inputFile string) {
 }
 
 func (p *parser) parseImpl(inputFile string) {
-	reader, _ := p.loader.Load(inputFile)
+	reader, err := p.loader.Load(inputFile)
 	defer reader.Close()
+	if err != nil {
+		if p.loader.IsAlreadyLoadedError(err) {
+			return
+		} else {
+			panic(err)
+		}
+	}
 
 	decoder := xml.NewDecoder(reader)
 	p.decodeXsd(decoder)
@@ -150,7 +146,7 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 		p.nsStack.Push(p.nsStack.GetLast())
 	}
 
-	p.curNs = make(map[string]string)
+	//p.curNs = make(map[string]string)
 	for _, attr := range elem.Attr {
 		if attr.Name.Space == "xmlns" && attr.Name.Local != "" {
 			p.curNs[attr.Name.Local] = attr.Value
@@ -160,13 +156,13 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 	p.elStack.Push(newNode(elem))
 }
 
-func (p *parser) GenerateTypes() []*Type {
-	l := p.generateTypesImpl(p.rootNode)
+func (p *parser) ParseTypes() []*Type {
+	l := p.parseTypesImpl(p.rootNode)
 	return p.linkTypes(l)
 }
 
 // Сгенерировать список типов по построенному дереву
-func (p *parser) generateTypesImpl(node *node) []*Type {
+func (p *parser) parseTypesImpl(node *node) []*Type {
 	var res []*Type
 	for _, n := range node.children {
 		f := newField(n)
@@ -182,7 +178,7 @@ func (p *parser) generateTypesImpl(node *node) []*Type {
 			res = append(res, t)
 		}
 
-		res = append(res, p.generateTypesImpl(n)...)
+		res = append(res, p.parseTypesImpl(n)...)
 	}
 
 	// простое содержимое с атрибутами
@@ -259,7 +255,7 @@ func (p *parser) endElement() {
 			panic("Element should has elemName attribute")
 		}
 
-		p.rootNode.add(e)
+		p.rootNode.addChild(e)
 	} else if context.elemName == "sequence" || context.elemName == "choice" {
 		context.children = append(context.children, e)
 	}
@@ -297,18 +293,6 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 	return nil
 }
 
-func (p *parser) createAndAddType(name string, e *node) *Type {
-	t := p.createType(name, e)
-	p.resultTypesList = append(p.resultTypesList, t)
-	return t
-}
-
-func (p *parser) createType(name string, e *node) *Type {
-	t := &Type{Name: name, Namespace: p.nsStack.GetLast()}
-	p.typesListCache.Put(t)
-	return t
-}
-
 func (p *parser) endSequence() {
 	t := p.elStack.Pop()
 	context := p.elStack.GetLast()
@@ -323,7 +307,7 @@ func (p *parser) endComplexType() {
 		nameAttr := findAttributeByName(e.startElem.Attr, "name")
 		e.name = nameAttr.Value
 		e.namespace = p.nsStack.GetLast()
-		p.rootNode.add(e)
+		p.rootNode.addChild(e)
 		//t := p.createAndAddType(nameAttr.Value, e)
 	} else {
 		context.isSimpleContent = e.isSimpleContent
@@ -344,7 +328,7 @@ func (p *parser) endSimpleType() {
 
 	context := p.elStack.GetLast()
 	if context.elemName == "schema" {
-		p.rootNode.add(e)
+		p.rootNode.addChild(e)
 	} else {
 		// анонимный тип, встраиваем в контейнер
 		context := p.elStack.GetLast()
@@ -387,10 +371,10 @@ func (p *parser) endAttributeGroup() {
 	refAttr := findAttributeByName(e.startElem.Attr, "ref")
 	if context.elemName == "schema" {
 		e.name = nameAttr.Value
-		p.rootNode.add(e)
+		p.rootNode.addChild(e)
 	} else if refAttr != nil {
 		e.typeName = p.createQName(refAttr.Value)
-		context.add(e)
+		context.addChild(e)
 	} else {
 		panic("No elemName and no ref for attribute group")
 	}

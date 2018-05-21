@@ -423,7 +423,7 @@ func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")
 
-	return parser.GenerateTypes()
+	return parser.ParseTypes()
 }
 
 type SimpleLoader struct{}

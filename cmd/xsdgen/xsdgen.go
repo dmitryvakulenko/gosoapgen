@@ -49,7 +49,7 @@ func xsdProcessing(xsdName string, out io.Writer) {
 	basePath := path.Dir(xsdName)
 	parser := tree_parser.NewParser(xsdloader.NewXsdLoader(basePath))
 	parser.Parse(path.Base(xsdName))
-	typesList := parser.GenerateTypes()
+	typesList := parser.ParseTypes()
 
 	generate.Types(typesList, out)
 }

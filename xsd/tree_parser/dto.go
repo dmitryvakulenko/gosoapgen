@@ -16,7 +16,6 @@ type node struct {
 	namespace string
 	children  []*node
 	// список типов встраиваемых элементов
-	refs            []string
 	isSimpleContent bool
 	isAttr          bool
 
@@ -34,7 +33,7 @@ func (r *node) find(ns, name string) *node {
 	return nil
 }
 
-func (r *node) add(e *node) {
+func (r *node) addChild(e *node) {
 	r.children = append(r.children, e)
 }
 
