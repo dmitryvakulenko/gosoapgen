@@ -63,7 +63,7 @@ type Type struct {
 	GoName          string
 	Fields          []*Field
 
-	// Только для simpleType
+	// Если это не simpleType, значит создано из extension/restriction
 	BaseType     *Type
 	BaseTypeName *QName
 }

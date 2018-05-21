@@ -98,7 +98,7 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	case "schema":
 		p.parseSchema(elem)
 	case "node", "simpleType", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
-			"simpleContent":
+			"simpleContent", "complexContent":
 		p.elementStarted(elem)
 	case "include", "import":
 		p.includeStarted(elem)
@@ -134,6 +134,8 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endUnion()
 	case "simpleContent":
 		p.endSimpleContent()
+	case "complexContent":
+		p.endComplexContent()
 	}
 }
 
@@ -196,20 +198,20 @@ func (p *parser) generateTypesImpl(node *node) []*Type {
 // связать все типы
 func (p *parser) linkTypes(typesList []*Type) []*Type {
 	for _, t := range typesList {
-		if len(t.Fields) == 0 {
+		if t.BaseTypeName != nil {
 			t.BaseType = p.findGlobalTypeNode(*t.BaseTypeName).genType
-		} else {
-			for _, f := range t.Fields {
-				if f.Type != nil {
-					continue
-				}
+		}
 
-				fTypeNode := p.findGlobalTypeNode(*f.TypeName)
-				if fTypeNode.elemName == "attributeGroup" {
-					f.Name = fTypeNode.name
-				}
-				f.Type = fTypeNode.genType
+		for _, f := range t.Fields {
+			if f.Type != nil {
+				continue
 			}
+
+			fTypeNode := p.findGlobalTypeNode(*f.TypeName)
+			if fTypeNode.elemName == "attributeGroup" {
+				f.Name = fTypeNode.name
+			}
+			f.Type = fTypeNode.genType
 		}
 	}
 
@@ -404,6 +406,15 @@ func (p *parser) endSimpleContent() {
 	e := p.elStack.Pop()
 	context := p.elStack.GetLast()
 	context.isSimpleContent = true
+	context.typeName = e.typeName
+	context.children = append(context.children, e.children...)
+}
+
+
+func (p *parser) endComplexContent() {
+	e := p.elStack.Pop()
+	context := p.elStack.GetLast()
+	context.isSimpleContent = false
 	context.typeName = e.typeName
 	context.children = append(context.children, e.children...)
 }
