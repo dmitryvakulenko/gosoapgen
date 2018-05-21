@@ -242,6 +242,8 @@ func (p *parser) endElement() {
 	typeAttr := findAttributeByName(e.startElem.Attr, "type")
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
+	} else if e.typeName == nil {
+		e.typeName = stringQName
 	}
 
 	refAttr := findAttributeByName(e.startElem.Attr, "ref")
