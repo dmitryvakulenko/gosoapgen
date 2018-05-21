@@ -98,7 +98,7 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	case "schema":
 		p.parseSchema(elem)
 	case "node", "simpleType", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
-			"simpleContent", "complexContent":
+			"simpleContent", "complexContent", "choice":
 		p.elementStarted(elem)
 	case "include", "import":
 		p.includeStarted(elem)
@@ -136,6 +136,8 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endSimpleContent()
 	case "complexContent":
 		p.endComplexContent()
+	case "choice":
+		p.endChoice()
 	}
 }
 
@@ -256,7 +258,7 @@ func (p *parser) endElement() {
 		}
 
 		p.rootNode.add(e)
-	} else if context.elemName == "sequence" {
+	} else if context.elemName == "sequence" || context.elemName == "choice" {
 		context.children = append(context.children, e)
 	}
 }
@@ -419,5 +421,12 @@ func (p *parser) endComplexContent() {
 	context := p.elStack.GetLast()
 	context.isSimpleContent = false
 	context.typeName = e.typeName
+	context.children = append(context.children, e.children...)
+}
+
+
+func (p *parser) endChoice() {
+	e := p.elStack.Pop()
+	context := p.elStack.GetLast()
 	context.children = append(context.children, e.children...)
 }

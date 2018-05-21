@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+    <xsd:complexType name="AirPassDetailType">
+        <xsd:sequence>
+            <xsd:element name="Holder" minOccurs="0">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Test1" type="xsd:string"/>
+                        <xsd:element name="Test2" type="xsd:string"/>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
