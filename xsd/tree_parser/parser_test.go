@@ -398,6 +398,14 @@ func TestComplexContent(t *testing.T) {
 	}
 }
 
+func TestComplexTypeSimpleContent(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")

@@ -322,7 +322,10 @@ func (p *parser) endComplexType() {
 		p.rootNode.add(e)
 		//t := p.createAndAddType(nameAttr.Value, e)
 	} else {
+		context.isSimpleContent = e.isSimpleContent
+		context.isAttr = e.isAttr
 		context.children = e.children
+		context.typeName = e.typeName
 	}
 }
 
