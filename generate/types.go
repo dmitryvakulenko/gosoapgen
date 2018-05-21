@@ -25,7 +25,7 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
 	for _, curType := range typesList {
-		if curType.IsSimple {
+		if curType.IsSimpleContent {
 			writer.Write([]byte("type " + curType.Name + " " + curType.BaseType.Name + "\n\n"))
 			continue
 		}
@@ -37,7 +37,7 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 				writer.Write([]byte("[]"))
 			}
 
-			if !isInnerType(f.Type.Name) && !f.Type.IsSimple {
+			if !isInnerType(f.Type.Name) && !f.Type.IsSimpleContent {
 				writer.Write([]byte("*"))
 			}
 

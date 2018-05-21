@@ -23,7 +23,7 @@ func TestSimpleTypes(t *testing.T) {
 
 	tp := typesList[0]
 
-	if !tp.IsSimple {
+	if !tp.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -45,7 +45,7 @@ func TestSimpleElements(t *testing.T) {
 	}
 
 	cType := typesList[0]
-	if !cType.IsSimple {
+	if !cType.IsSimpleContent {
 		t.Fatalf("Type should be simple")
 	}
 
@@ -80,7 +80,7 @@ func TestComplexType(t *testing.T) {
 	}
 
 	cType := typesList[0]
-	if cType.IsSimple {
+	if cType.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -125,7 +125,7 @@ func TestSchemaComplexTypes(t *testing.T) {
 	}
 
 	cType := typesList[0]
-	if cType.IsSimple {
+	if cType.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -161,7 +161,7 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 
 	cType := typesList[0]
-	if cType.IsSimple {
+	if cType.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -201,12 +201,12 @@ func TestInnerComplexTypes(t *testing.T) {
 	}
 
 	firstType := typesList[0]
-	if firstType.IsSimple {
+	if firstType.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
 	secType := typesList[1]
-	if secType.IsSimple {
+	if secType.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -271,7 +271,7 @@ func TestAttributeGroup(t *testing.T) {
 	}
 
 	cType := typesList[0]
-	if cType.IsSimple {
+	if cType.IsSimpleContent {
 		t.Fatalf("Type should be complex type")
 	}
 
@@ -330,6 +330,40 @@ func TestUnion(t *testing.T) {
 
 	if typesList[0].BaseTypeName.Name != "string" {
 		t.Errorf("Type base type shoud be 'string', %q given", typesList[0].BaseTypeName.Name)
+	}
+}
+
+func TestSimpleContent(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[1]
+	if !cType.IsSimpleContent {
+		t.Errorf("Type should be simple content")
+	}
+
+	name := "CompanyNameType"
+	if cType.Name != name {
+		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.Name)
+	}
+
+	if len(cType.Fields) != 3 {
+		t.Fatalf("CompanyNameType should Has 3 field, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[2]
+
+	name = "Value"
+	if field.Name != name {
+		t.Fatalf("Field name should be %q, got %q instead", name, field.Name)
+	}
+
+	fType := "StringLength0to128"
+	if field.Type.Name != fType {
+		t.Fatalf("Field type should be %q, got %q instead", fType, field.Type.Name)
 	}
 }
 

@@ -97,7 +97,8 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
 	switch elem.Name.Local {
 	case "schema":
 		p.parseSchema(elem)
-	case "node", "simpleType", "complexType", "restriction", "sequence", "attribute", "attributeGroup", "element", "union":
+	case "node", "simpleType", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
+			"simpleContent":
 		p.elementStarted(elem)
 	case "include", "import":
 		p.includeStarted(elem)
@@ -115,8 +116,8 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.nsStack.Pop()
 	case "simpleType":
 		p.endSimpleType()
-	case "restriction":
-		p.endRestriction()
+	case "extension", "restriction":
+		p.endExtensionRestriction()
 	case "complexType":
 		p.endComplexType()
 	case "sequence":
@@ -131,6 +132,8 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
 		p.endElement()
 	case "union":
 		p.endUnion()
+	case "simpleContent":
+		p.endSimpleContent()
 	}
 }
 
@@ -164,6 +167,10 @@ func (p *parser) generateTypesImpl(node *node) []*Type {
 	for _, n := range node.children {
 		f := newField(n)
 
+		if node != p.rootNode {
+			node.genType.addField(f)
+		}
+
 		if node == p.rootNode || len(n.children) > 0 {
 			t := newType(n)
 			t.BaseTypeName = n.typeName
@@ -171,11 +178,16 @@ func (p *parser) generateTypesImpl(node *node) []*Type {
 			res = append(res, t)
 		}
 
-		if node != p.rootNode {
-			node.genType.addField(f)
-		}
-
 		res = append(res, p.generateTypesImpl(n)...)
+	}
+
+	// простое содержимое с атрибутами
+	if len(node.children) > 0 && node.isSimpleContent {
+		f := &Field{
+			Name: "Value",
+			TypeName: node.typeName}
+			node.genType.addField(f)
+
 	}
 
 	return res
@@ -184,7 +196,7 @@ func (p *parser) generateTypesImpl(node *node) []*Type {
 // связать все типы
 func (p *parser) linkTypes(typesList []*Type) []*Type {
 	for _, t := range typesList {
-		if t.IsSimple {
+		if len(t.Fields) == 0 {
 			t.BaseType = p.findGlobalTypeNode(*t.BaseTypeName).genType
 		} else {
 			for _, f := range t.Fields {
@@ -315,7 +327,7 @@ func (p *parser) endComplexType() {
 func (p *parser) endSimpleType() {
 	e := p.elStack.Pop()
 	e.namespace = p.nsStack.GetLast()
-	e.isSimple = true
+	e.isSimpleContent = true
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 	if nameAttr != nil {
 		e.name = nameAttr.Value
@@ -328,15 +340,16 @@ func (p *parser) endSimpleType() {
 		// анонимный тип, встраиваем в контейнер
 		context := p.elStack.GetLast()
 		context.typeName = e.typeName
-		context.isSimple = e.isSimple
+		context.isSimpleContent = e.isSimpleContent
 	}
 }
 
-func (p *parser) endRestriction() {
+func (p *parser) endExtensionRestriction() {
 	e := p.elStack.Pop()
 	context := p.elStack.GetLast()
 	baseType := findAttributeByName(e.startElem.Attr, "base")
 	context.typeName = p.createQName(baseType.Value)
+	context.children = append(context.children, e.children...)
 }
 
 func (p *parser) endAttribute() {
@@ -384,4 +397,13 @@ func (p *parser) endUnion() {
 	p.elStack.Pop()
 	context := p.elStack.GetLast()
 	context.typeName = stringQName
+}
+
+
+func (p *parser) endSimpleContent() {
+	e := p.elStack.Pop()
+	context := p.elStack.GetLast()
+	context.isSimpleContent = true
+	context.typeName = e.typeName
+	context.children = append(context.children, e.children...)
 }

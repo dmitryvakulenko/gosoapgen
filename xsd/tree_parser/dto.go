@@ -16,9 +16,9 @@ type node struct {
 	namespace string
 	children  []*node
 	// список типов встраиваемых элементов
-	refs     []string
-	isSimple bool
-	isAttr   bool
+	refs            []string
+	isSimpleContent bool
+	isAttr          bool
 
 	// сгенерированный тип
 	genType *Type
@@ -38,34 +38,6 @@ func (r *node) add(e *node) {
 	r.children = append(r.children, e)
 }
 
-//type node struct {
-//	// название элемента схемы xsd
-//	elementName string
-//	// название самого типа - не обязательно
-//	typeName string
-//	// пространство имён
-//	namespace string
-//	// дочерние узлы
-//	children []*node
-//	// это атрибут?
-//	isAttr bool
-//}
-//
-//func (n *node) Find(ns, elemName string) *node {
-//	if n.namespace == ns && n.typeName == elemName {
-//		return n
-//	}
-//
-//	for _, ch := range n.children {
-//		res := ch.Find(ns, elemName)
-//		if res != nil {
-//			return res
-//		}
-//	}
-//
-//	return nil
-//}
-
 func newNode(startElem *xml.StartElement) *node {
 	name := ""
 	for _, a := range startElem.Attr {
@@ -82,11 +54,14 @@ func newNode(startElem *xml.StartElement) *node {
 }
 
 type Type struct {
-	Name      string
-	IsSimple  bool
-	Namespace string
-	GoName    string
-	Fields    []*Field
+	Name string
+	// Если нет полей, то тип по определению - simple
+	// Если поля есть, но установлен этот флаг - значит, поля атрибуты,
+	// а сам элемент содержит простой контент
+	IsSimpleContent bool
+	Namespace       string
+	GoName          string
+	Fields          []*Field
 
 	// Только для simpleType
 	BaseType     *Type
@@ -99,9 +74,9 @@ func (t *Type) addField(f *Field) {
 
 func newType(n *node) *Type {
 	return &Type{
-		Name:      n.name,
-		Namespace: n.namespace,
-		IsSimple:  n.isSimple}
+		Name:            n.name,
+		Namespace:       n.namespace,
+		IsSimpleContent: n.isSimpleContent}
 }
 
 type Field struct {
@@ -119,20 +94,6 @@ func newField(n *node) *Field {
 		Name:     n.name,
 		TypeName: n.typeName,
 		IsAttr:   n.isAttr}
-}
-
-type attributeGroup struct {
-	Name      string
-	Namespace string
-	Fields    []*Field
-}
-
-func (t *attributeGroup) GetName() string {
-	return t.Name
-}
-
-func (t *attributeGroup) GetGoName() string {
-	return t.Name
 }
 
 type QName struct {
