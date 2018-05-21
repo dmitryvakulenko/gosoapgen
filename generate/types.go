@@ -34,9 +34,6 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 		for _, f := range curType.Fields {
 			writeField(f, curType.Namespace, writer)
 		}
-		if curType.IsSimpleContent {
-			writer.Write([]byte("Value string `xml:\"chardata\"`"))
-		}
 		writer.Write([]byte("}\n\n"))
 	}
 }
@@ -64,7 +61,10 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
 			writer.Write([]byte(",attr"))
 
 		}
-		if field.MinOccurs == 0 {
+
+		if field.Type.IsSimpleContent && field.Name == "Value" {
+			writer.Write([]byte(",chardata"))
+		} else if field.MinOccurs == 0 {
 			writer.Write([]byte(",omitempty"))
 		}
 		writer.Write([]byte("\"`\n"))
