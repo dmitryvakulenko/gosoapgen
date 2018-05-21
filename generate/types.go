@@ -25,33 +25,48 @@ func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
 
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
 	for _, curType := range typesList {
-		if curType.IsSimpleContent {
+		if curType.IsSimpleContent && len(curType.Fields) == 0 {
 			writer.Write([]byte("type " + curType.Name + " " + curType.BaseType.Name + "\n\n"))
 			continue
 		}
 
-		writer.Write([]byte("type " + curType.GoName + " struct {\n"))
+		writer.Write([]byte("type " + firstUp(curType.Name) + " struct {\n"))
 		for _, f := range curType.Fields {
-			writer.Write([]byte(firstUp(f.Name) + " "))
-			if f.MaxOccurs != 0 {
-				writer.Write([]byte("[]"))
-			}
-
-			if !isInnerType(f.Type.Name) && !f.Type.IsSimpleContent {
-				writer.Write([]byte("*"))
-			}
-
-			writer.Write([]byte(firstUp(f.Type.Name) + " `xml:\"" + curType.Namespace + " " + f.Name))
-			if f.IsAttr {
-				writer.Write([]byte(",attr"))
-
-			}
-			if f.MinOccurs == 0 {
-				writer.Write([]byte(",omitempty"))
-			}
-			writer.Write([]byte("\"`\n"))
+			writeField(f, curType.Namespace, writer)
+		}
+		if curType.IsSimpleContent {
+			writer.Write([]byte("Value string `xml:\"chardata\"`"))
 		}
 		writer.Write([]byte("}\n\n"))
+	}
+}
+
+func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
+	if field.IsAttr && len(field.Type.Fields) != 0 {
+		// обработка attributeGroup
+		for _, f := range field.Type.Fields {
+			writeField(f, field.Type.Namespace, writer)
+		}
+	} else {
+		// обработка обычного поля
+		writer.Write([]byte(firstUp(field.Name) + " "))
+		if field.MaxOccurs != 0 {
+			writer.Write([]byte("[]"))
+		}
+
+		if !isInnerType(field.Type.Name) && !field.Type.IsSimpleContent {
+			writer.Write([]byte("*"))
+		}
+
+		writer.Write([]byte(firstUp(field.Type.Name) + " `xml:\"" + ns + " " + field.Name))
+		if field.IsAttr {
+			writer.Write([]byte(",attr"))
+
+		}
+		if field.MinOccurs == 0 {
+			writer.Write([]byte(",omitempty"))
+		}
+		writer.Write([]byte("\"`\n"))
 	}
 }
 
