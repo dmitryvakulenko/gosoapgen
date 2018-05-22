@@ -13,15 +13,6 @@ var innerTypes = []string{
 	"time.Time",
 	"string"}
 
-const funcTemplate = `
-func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
-	header := c.transporter.CreateHeader("{{.Action}}")
-	response := c.transporter.Send("{{.Action}}", header, body)
-	res := {{.Output}}{}
-	xml.Unmarshal(response, &res)
-	return &res
-}
-`
 
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
 	for _, curType := range typesList {

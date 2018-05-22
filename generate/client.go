@@ -6,6 +6,17 @@ import (
 	"text/template"
 )
 
+
+const funcTemplate = `
+func (c *SoapClient) {{.Name}}(body *{{.Input}}) *{{.Output}} {
+	header := c.transporter.CreateHeader("{{.Action}}")
+	response := c.transporter.Send("{{.Action}}", header, body)
+	res := {{.Output}}{}
+	xml.Unmarshal(response, &res)
+	return &res
+}
+`
+
 func Client(wsdl *wsdl.Definitions, writer io.Writer) {
 	writer.Write([]byte(`
 
