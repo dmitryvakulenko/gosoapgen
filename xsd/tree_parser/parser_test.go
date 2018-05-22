@@ -300,6 +300,15 @@ func TestParseElementRef(t *testing.T) {
 	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
 	}
+
+	if len(typesList[0].Fields) != 1 {
+		t.Fatalf("Fields amount should be 1, %d got", len(typesList[0].Fields))
+	}
+
+	f := typesList[0].Fields[0]
+	if f.Name != "TPA_Extensions" {
+		t.Errorf("Field name shoud be 'TPA_Extensions', %q got", f.Name)
+	}
 }
 
 func TestInclude(t *testing.T) {

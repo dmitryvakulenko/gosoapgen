@@ -265,6 +265,7 @@ func (p *parser) endElement() {
 	refAttr := findAttributeByName(e.startElem.Attr, "ref")
 	if refAttr != nil {
 		e.typeName = p.createQName(refAttr.Value)
+		e.name = e.typeName.Name
 	}
 
 	context := p.elStack.GetLast()
