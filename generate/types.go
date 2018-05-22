@@ -22,6 +22,9 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 		}
 
 		writer.Write([]byte("type " + firstUp(curType.Name) + " struct {\n"))
+		if curType.BaseType != nil {
+			writer.Write([]byte(firstUp(curType.BaseType.Name) + "\n"))
+		}
 		for _, f := range curType.Fields {
 			writeField(f, curType.Namespace, writer)
 		}

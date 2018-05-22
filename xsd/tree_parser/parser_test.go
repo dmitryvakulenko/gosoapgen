@@ -428,6 +428,23 @@ func TestChoice(t *testing.T) {
 	}
 }
 
+func TestElementRefWithType(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	tp := typesList[1]
+	if tp.BaseType == nil {
+		t.Fatalf("Type should has base type")
+	}
+
+	if tp.BaseType.Name != "PointOfSaleType" {
+		t.Errorf("Base type name should be 'PointOfSaleType', %q got", tp.BaseType.Name)
+	}
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Parse(name + ".xsd")
