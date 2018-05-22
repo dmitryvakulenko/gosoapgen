@@ -250,6 +250,11 @@ func (p *parser) endElement() {
 	e.namespace = p.nsStack.GetLast()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 
+	maxAttr := findAttributeByName(e.startElem.Attr, "maxOccurs")
+	if maxAttr != nil {
+		e.isArray = true
+	}
+
 	typeAttr := findAttributeByName(e.startElem.Attr, "type")
 	if typeAttr != nil {
 		e.typeName = p.createQName(typeAttr.Value)
@@ -323,7 +328,7 @@ func (p *parser) endComplexType() {
 		e.name = nameAttr.Value
 		e.namespace = p.nsStack.GetLast()
 		p.rootNode.addChild(e)
-		//t := p.createAndAddType(nameAttr.Value, e)
+
 	} else {
 		context.isSimpleContent = e.isSimpleContent
 		context.isAttr = e.isAttr

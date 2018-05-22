@@ -47,7 +47,7 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
 	} else {
 		// обработка обычного поля
 		writer.Write([]byte(firstUp(field.Name) + " "))
-		if field.MaxOccurs != 0 {
+		if field.IsArray {
 			writer.Write([]byte("[]"))
 		}
 
@@ -64,7 +64,7 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
 
 		if field.Type.IsSimpleContent && field.Name == "Value" {
 			writer.Write([]byte(",chardata"))
-		} else if field.MinOccurs == 0 {
+		} else {
 			writer.Write([]byte(",omitempty"))
 		}
 		writer.Write([]byte("\"`\n"))

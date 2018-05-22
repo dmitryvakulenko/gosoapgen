@@ -10,14 +10,14 @@ type node struct {
 	// чисто для сокрачения, поскольку вся эта информация содержится в startElem
 	elemName string
 	// Имя типа. По сути, значение атрибута name
-	name      string
-	typeName  *QName
-	startElem *xml.StartElement
-	namespace string
-	children  []*node
-	// список типов встраиваемых элементов
+	name            string
+	typeName        *QName
+	startElem       *xml.StartElement
+	namespace       string
+	children        []*node
 	isSimpleContent bool
 	isAttr          bool
+	isArray         bool
 
 	// сгенерированный тип
 	genType *Type
@@ -79,20 +79,20 @@ func newType(n *node) *Type {
 }
 
 type Field struct {
-	Name      string
-	Type      *Type
-	TypeName  *QName
-	MinOccurs int
-	MaxOccurs int
-	IsAttr    bool
-	Comment   string
+	Name     string
+	Type     *Type
+	TypeName *QName
+	IsArray  bool
+	IsAttr   bool
+	Comment  string
 }
 
 func newField(n *node) *Field {
 	return &Field{
 		Name:     n.name,
 		TypeName: n.typeName,
-		IsAttr:   n.isAttr}
+		IsAttr:   n.isAttr,
+		IsArray:  n.isArray}
 }
 
 type QName struct {
