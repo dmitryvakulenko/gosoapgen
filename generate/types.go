@@ -96,9 +96,8 @@ func mapStandardType(xmlType string) string {
 		return "float64"
 	case "boolean":
 		return "bool"
-	case "date", "dateTime", "time":
-		return "time.Time"
-	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration", "IDREF", "IDREFS", "gYear", "gMonth", "gDay", "gYearMonth":
+	case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration", "IDREF", "IDREFS", "gYear", "gMonth", "gDay", "gYearMonth",
+			"date", "dateTime", "time":
 		return "string"
 	default:
 		return ""
