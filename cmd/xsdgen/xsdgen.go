@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"path"
 	"github.com/dmitryvakulenko/gosoapgen/generate"
@@ -9,7 +8,7 @@ import (
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/internal/pkg/xsdloader"
 	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
-	"log"
+	"github.com/dmitryvakulenko/gosoapgen/xsd/dom_parser"
 )
 
 func main() {
@@ -33,15 +32,16 @@ func main() {
 		return
 	}
 
-	outFile, err := os.Create(outName)
-	defer outFile.Close()
-	if err != nil {
-		log.Fatalf("Can't write result outFile %s", err)
-		return
-	}
-
-	outFile.Write([]byte("package " + outPackage + "\n\n"))
-	xsdProcessing(inName, outFile)
+	dom_parser.Parse(inName)
+	//outFile, err := os.Create(outName)
+	//defer outFile.Close()
+	//if err != nil {
+	//	log.Fatalf("Can't write result outFile %s", err)
+	//	return
+	//}
+	//
+	//outFile.Write([]byte("package " + outPackage + "\n\n"))
+	//xsdProcessing(inName, outFile)
 }
 
 

@@ -270,6 +270,10 @@ func (p *parser) endElement() {
 
 	context := p.elStack.GetLast()
 
+	if len(e.children) == 0 {
+		e.isSimpleContent = true
+	}
+
 	if context.elemName == "schema" {
 		// значит предок у нас - schema, т.е. это глобальный тип
 		if nameAttr == nil {
