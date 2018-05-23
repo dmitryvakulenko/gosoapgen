@@ -2,14 +2,23 @@ package dom_parser
 
 import (
 	dom "github.com/subchen/go-xmldom"
-	"fmt"
 )
 
-func Parse(fileName string) {
-	doc, err := dom.ParseFile(fileName)
+type parser struct {
+}
+
+func NewParser() *parser {
+	return &parser{}
+}
+
+func (p *parser) LoadFile(fileName string) {
+	_, err := dom.ParseFile(fileName)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(doc.Root.Name)
+}
+
+func (p *parser) GetTypes() []*Type {
+	return []*Type{}
 }

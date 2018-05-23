@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 rel. 3 (http://www.altova.com) by Amadeus s.a.s. (Amadeus s.a.s.) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.amadeus.com/2010/06/Types_v1"
+           targetNamespace="http://xml.amadeus.com/2010/06/Types_v1"
+           xmlns:iata="http://www.iata.org/IATA/2007/00/IATA2010.1"
+           xmlns:ota="http://www.opentravel.org/OTA/2003/05/OTA2010B" elementFormDefault="qualified"
+           attributeFormDefault="unqualified" version="1.002" id="AMA2011Y">
+    <xs:element name="minRange">
+        <xs:simpleType>
+            <xs:restriction base="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Format limitations: n..2</xs:documentation>
+                </xs:annotation>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+</xs:schema>
