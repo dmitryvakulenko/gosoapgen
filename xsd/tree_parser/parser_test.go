@@ -419,6 +419,25 @@ func TestComplexTypeSimpleContent(t *testing.T) {
 	}
 }
 
+func TestComplexTypeWithSimpleContent(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    if len(typesList) != 1 {
+        t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+    }
+    ct := typesList[0]
+
+    if ct.BaseType != nil {
+        t.Fatalf("Base type should be nil")
+    }
+
+
+    if len(ct.Fields) != 3 {
+        t.Fatalf("Wrong type fields amount. 3 expected, %d got", len(typesList))
+    }
+
+}
+
 func TestChoice(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 

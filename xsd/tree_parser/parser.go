@@ -189,7 +189,7 @@ func (p *parser) parseTypesImpl(node *node) []*Type {
             Name:     "Value",
             TypeName: node.typeName}
         node.genType.addField(f)
-
+        node.genType.BaseTypeName = nil
     }
 
     return res
