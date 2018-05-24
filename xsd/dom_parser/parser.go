@@ -5,6 +5,7 @@ import (
 )
 
 type parser struct {
+	types []*Type
 }
 
 func NewParser() *parser {
@@ -12,13 +13,45 @@ func NewParser() *parser {
 }
 
 func (p *parser) LoadFile(fileName string) {
-	_, err := dom.ParseFile(fileName)
+	doc, err := dom.ParseFile(fileName)
 	if err != nil {
 		panic(err)
 	}
 
+	for _, n := range doc.Root.Children {
+		p.parseNode(n)
+	}
+}
+
+func (p *parser) parseNode(n *dom.Node) {
+	switch n.Name {
+	case "simpleType":
+		p.simpleType(n)
+	}
+}
+
+func (p *parser) simpleType(n *dom.Node) {
+	nameAttr := n.GetAttribute("name")
+	if nameAttr != nil {
+		newType := p.createAndAddType(nameAttr.Value)
+		newType.IsSimpleContent = true
+
+		typeAttr  := n.GetAttribute("type")
+		newType.BaseTypeName = p.createAndAddType()
+	}
+}
+
+func (p *parser) createAndAddType(name string) *Type {
+	newType := &Type{Name: name}
+	p.types = append(p.types, newType)
+
+	return newType
+}
+
+func (p *parser) parseAndCreateQName(name string) QName {
+
 }
 
 func (p *parser) GetTypes() []*Type {
-	return []*Type{}
+	return p.types
 }
