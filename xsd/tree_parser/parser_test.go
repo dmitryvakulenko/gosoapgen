@@ -94,6 +94,10 @@ func TestComplexType(t *testing.T) {
 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
 	}
 
+	if cType.BaseType != nil {
+		t.Errorf("Type should has no base type")
+	}
+
 	if len(cType.Fields) != 4 {
 		t.Fatalf("Should be 4 fields, %d getting", len(cType.Fields))
 	}
