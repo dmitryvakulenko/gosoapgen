@@ -152,8 +152,8 @@ func TestSchemaComplexTypes(t *testing.T) {
 		t.Fatalf("Field should has type")
 	}
 
-	if field.Type.Name != "StringLength1to64" {
-		t.Fatalf("Field type name shoud be 'StringLength1to64', %q got", field.Type.Name)
+	if field.Type.Name != "string" {
+		t.Fatalf("Field type name shoud be 'string', %q got", field.Type.Name)
 	}
 }
 
@@ -373,7 +373,7 @@ func TestSimpleContent(t *testing.T) {
 		t.Errorf("Field name should be %q, got %q instead", name, field.Name)
 	}
 
-	fType := "StringLength0to128"
+	fType := "string"
 	if field.Type.Name != fType {
 		t.Errorf("Field type should be %q, got %q instead", fType, field.Type.Name)
 	}
@@ -435,7 +435,6 @@ func TestComplexTypeWithSimpleContent(t *testing.T) {
     if len(ct.Fields) != 3 {
         t.Fatalf("Wrong type fields amount. 3 expected, %d got", len(typesList))
     }
-
 }
 
 func TestChoice(t *testing.T) {
@@ -479,6 +478,40 @@ func TestComplexChoice(t *testing.T) {
 	if len(cType.Fields) != 3 {
 		t.Errorf("Wrong type fields amount. 3 expected, %d got", len(cType.Fields))
 	}
+}
+
+func TestSimpleTypesFolding(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    if len(typesList) != 3 {
+        t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+    }
+
+    ct := typesList[0]
+    if ct.Name != "CountryCode" {
+        t.Errorf("Type name shoud be 'OwnerSimpleType', %q given", ct.Name)
+    }
+
+    if len(ct.Fields) != 0 {
+        t.Errorf("Wrong type fields amount. 0 expected, %d got", len(ct.Fields))
+    }
+
+    if ct.BaseType == nil {
+        t.Fatalf("Type should has base type")
+    }
+
+    fields := ct.BaseType.Fields
+    if len(fields) != 2 {
+        t.Errorf("Wrong type fields amount. 2 expected, %d got", len(fields))
+    }
+
+    if fields[1].Name != "Value" {
+        t.Errorf("Last field should be Value")
+    }
+
+    if fields[1].Type.Name != "string" {
+        t.Errorf("Last field type should be string")
+    }
 }
 
 func parseTypesFrom(name string) []*Type {

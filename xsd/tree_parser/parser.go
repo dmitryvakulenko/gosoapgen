@@ -160,6 +160,7 @@ func (p *parser) GetTypes() []*Type {
     l := p.parseTypesImpl(p.rootNode)
     p.linkTypes(l)
     p.renameDuplicatedTypes(l)
+    p.foldSimpleTypes(l)
     return l
 }
 
@@ -227,6 +228,24 @@ func (p *parser) renameDuplicatedTypes(typesList []*Type) {
         } else {
             names[t.Name] = 0
         }
+    }
+}
+
+func (p *parser) foldSimpleTypes(typesList []*Type) {
+    for _, t := range typesList {
+        for _, f := range t.Fields {
+            if f.Type.IsSimpleContent {
+                f.Type = getLastType(f.Type)
+            }
+        }
+    }
+}
+
+func getLastType(t *Type) *Type {
+    if t.BaseType == nil {
+        return t
+    } else {
+        return getLastType(t.BaseType)
     }
 }
 
