@@ -460,9 +460,9 @@ func TestComplexChoice(t *testing.T) {
 
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
-	parser.Parse(name + ".xsd")
+	parser.Load(name + ".xsd")
 
-	return parser.ParseTypes()
+	return parser.GetTypes()
 }
 
 type SimpleLoader struct{}

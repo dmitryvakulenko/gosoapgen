@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -13,17 +14,16 @@ var (
 
 type XsdLoader struct {
 	alreadyLoaded map[string]bool
-	baseDir string
+	curDir        string
 }
 
-func NewXsdLoader(baseDir string) *XsdLoader {
+func NewXsdLoader() *XsdLoader {
 	return &XsdLoader{
-		alreadyLoaded: make(map[string]bool),
-		baseDir: baseDir}
+		alreadyLoaded: make(map[string]bool)}
 }
 
 func (l *XsdLoader) Load(xsdFilePath string) (io.ReadCloser, error) {
-	filePath := path.Clean(l.baseDir + "/" + xsdFilePath)
+	filePath := l.buildFilePath(xsdFilePath)
 	var loadedErr error = nil
 	if _, exists := l.alreadyLoaded[filePath]; exists {
 		loadedErr = alreadyLoadedErr
@@ -37,6 +37,27 @@ func (l *XsdLoader) Load(xsdFilePath string) (io.ReadCloser, error) {
 	}
 
 	return res, loadedErr
+}
+
+func (l *XsdLoader) buildFilePath(name string) string {
+	fullName, err := filepath.Abs(name)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = os.Stat(fullName)
+	if err == nil {
+		l.curDir = path.Dir(fullName)
+		return fullName
+	}
+
+	fullName = path.Clean(l.curDir + "/" + name)
+	_, err = os.Stat(fullName)
+	if err != nil {
+		panic(err)
+	}
+
+	return fullName
 }
 
 func (l *XsdLoader) IsAlreadyLoadedError(e error) bool {

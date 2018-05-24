@@ -8,7 +8,6 @@ import (
 	"io"
 	"encoding/xml"
 	"strings"
-	"path"
 	"strconv"
 )
 
@@ -34,7 +33,7 @@ type parser struct {
 	nsStack  *stringsStack
 	curNs    map[string]string
 	rootNode *node
-	basePath string
+	//basePath string
 }
 
 func NewParser(l Loader) *parser {
@@ -46,10 +45,10 @@ func NewParser(l Loader) *parser {
 		rootNode:       &node{}}
 }
 
-func (p *parser) Parse(inputFile string) {
-	if p.basePath == "" {
-		p.basePath = path.Clean(path.Dir(inputFile))
-	}
+func (p *parser) Load(inputFile string) {
+	//if p.basePath == "" {
+	//	p.basePath = path.Clean(path.Dir(inputFile))
+	//}
 
 	p.parseImpl(inputFile)
 }
@@ -157,7 +156,7 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
 	p.elStack.Push(newNode(elem))
 }
 
-func (p *parser) ParseTypes() []*Type {
+func (p *parser) GetTypes() []*Type {
 	l := p.parseTypesImpl(p.rootNode)
 	p.linkTypes(l)
 	p.renameDuplicatedTypes(l)

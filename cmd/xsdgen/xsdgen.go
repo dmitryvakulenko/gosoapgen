@@ -2,54 +2,50 @@ package main
 
 import (
 	"fmt"
-	"path"
 	"github.com/dmitryvakulenko/gosoapgen/generate"
 	"flag"
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/internal/pkg/xsdloader"
 	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
-	"github.com/dmitryvakulenko/gosoapgen/xsd/dom_parser"
+	"os"
+	"log"
 )
 
 func main() {
-	flag.Parse()
+	xsds, outName, packageName := parseArguments()
 
-	var inName = flag.Arg(0)
-	if inName == "" {
-		fmt.Print("Enter input outFile")
+	outFile, err := os.Create(outName)
+	defer outFile.Close()
+	if err != nil {
+		log.Fatalf("Can't write result outFile %s", err)
 		return
 	}
 
-	var outName = flag.Arg(1)
-	if outName == "" {
-		fmt.Print("Enter output outFile")
-		return
-	}
-
-	var outPackage = flag.Arg(2)
-	if outPackage == "" {
-		fmt.Print("Enter output package name")
-		return
-	}
-
-	dom_parser.Parse(inName)
-	//outFile, err := os.Create(outName)
-	//defer outFile.Close()
-	//if err != nil {
-	//	log.Fatalf("Can't write result outFile %s", err)
-	//	return
-	//}
-	//
-	//outFile.Write([]byte("package " + outPackage + "\n\n"))
-	//xsdProcessing(inName, outFile)
+	outFile.Write([]byte("package " + packageName + "\n\n"))
+	xsdProcessing(xsds, outFile)
 }
 
+func parseArguments() ([]string, string, string) {
+	flag.Parse()
+	allArgs := flag.Args()
+	amount := len(allArgs)
+	if amount < 3 {
+		fmt.Println("Usage: [xsd-files...] out-file out-package")
+		os.Exit(0)
+	}
 
-func xsdProcessing(xsdName string, out io.Writer) {
-	basePath := path.Dir(xsdName)
-	parser := tree_parser.NewParser(xsdloader.NewXsdLoader(basePath))
-	parser.Parse(path.Base(xsdName))
-	typesList := parser.ParseTypes()
+	out := allArgs[amount-2:]
 
+	return allArgs[:amount-2], out[0], out[1]
+}
+
+func xsdProcessing(xsds []string, out io.Writer) {
+	parser := tree_parser.NewParser(xsdloader.NewXsdLoader())
+
+	for _, xsdName := range xsds {
+		parser.Load(xsdName)
+	}
+
+	typesList := parser.GetTypes()
 	generate.Types(typesList, out)
 }
