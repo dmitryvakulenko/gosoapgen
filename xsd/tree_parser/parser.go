@@ -246,6 +246,7 @@ func (p *parser) findGlobalTypeNode(name QName) *node {
 
 func (p *parser) endElement() {
 	e := p.elStack.Pop()
+
 	e.namespace = p.nsStack.GetLast()
 	nameAttr := findAttributeByName(e.startElem.Attr, "name")
 
@@ -280,6 +281,10 @@ func (p *parser) endElement() {
 		p.rootNode.addChild(e)
 	} else if context.elemName == "sequence" || context.elemName == "choice" {
 		context.children = append(context.children, e)
+	}
+
+	if e.typeName == nil && len(e.children) == 0 {
+		e.typeName = stringQName
 	}
 }
 
