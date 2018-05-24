@@ -16,7 +16,8 @@ var innerTypes = []string{
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
     for _, curType := range typesList {
         if curType.IsSimpleContent && len(curType.Fields) == 0 {
-            writer.Write([]byte("type " + curType.Name + " " + mapStandardType(curType.BaseType.Name) + "\n\n"))
+            typeName := mapStandardType(curType.BaseType.Name)
+            writer.Write([]byte("type " + curType.Name + " " + firstUp(typeName) + "\n\n"))
             continue
         }
 
@@ -49,7 +50,11 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
             fieldType = firstUp(field.Type.Name)
         }
 
-        writer.Write([]byte("*" + fieldType + " `xml:\""))
+        if !isInnerType(fieldType) {
+            writer.Write([]byte("*"))
+        }
+
+        writer.Write([]byte(fieldType + " `xml:\""))
         if field.IsAttr {
             writer.Write([]byte(",attr"))
         } else if field.Type.IsSimpleContent && field.Name == "Value" {
