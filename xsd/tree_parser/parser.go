@@ -319,9 +319,9 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
 }
 
 func (p *parser) endSequence() {
-	t := p.elStack.Pop()
+	e := p.elStack.Pop()
 	context := p.elStack.GetLast()
-	context.children = t.children
+	context.children = append(context.children, e.children...)
 }
 
 func (p *parser) endComplexType() {
@@ -337,7 +337,7 @@ func (p *parser) endComplexType() {
 	} else {
 		context.isSimpleContent = e.isSimpleContent
 		context.isAttr = e.isAttr
-		context.children = e.children
+		context.children = append(context.children, e.children...)
 		context.typeName = e.typeName
 	}
 }

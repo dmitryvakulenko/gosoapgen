@@ -50,16 +50,14 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
 			fieldType = firstUp(field.Type.Name)
 		}
 
-		writer.Write([]byte("*" + fieldType + " `xml:\"" + ns + " " + field.Name))
+		writer.Write([]byte("*" + fieldType + " `xml:\""))
 		if field.IsAttr {
 			writer.Write([]byte(",attr"))
 
-		}
-
-		if field.Type.IsSimpleContent && field.Name == "Value" {
+		} else if field.Type.IsSimpleContent && field.Name == "Value" {
 			writer.Write([]byte(",chardata"))
 		} else {
-			writer.Write([]byte(",omitempty"))
+			writer.Write([]byte(ns + " " + field.Name + ",omitempty"))
 		}
 		writer.Write([]byte("\"`\n"))
 	}

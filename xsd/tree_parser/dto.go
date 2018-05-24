@@ -59,7 +59,7 @@ type Type struct {
 	// а сам элемент содержит простой контент
 	IsSimpleContent bool
 	Namespace       string
-	GoName          string
+	//GoName          string
 	Fields          []*Field
 
 	// Если это не simpleType, значит создано из extension/restriction
@@ -69,6 +69,10 @@ type Type struct {
 
 func (t *Type) addField(f *Field) {
 	t.Fields = append(t.Fields, f)
+}
+
+func (t *Type) Hash() {
+	// надо реализовать и учитывать при проверке дублей
 }
 
 func newType(n *node) *Type {

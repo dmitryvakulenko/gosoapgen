@@ -86,7 +86,7 @@ func TestComplexType(t *testing.T) {
 
 	typeName := "Session"
 	if cType.Name != typeName {
-		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
 	}
 
 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
@@ -131,7 +131,7 @@ func TestSchemaComplexTypes(t *testing.T) {
 
 	typeName := "AMA_SecurityHostedUser"
 	if cType.Name != typeName {
-		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
 	}
 
 	ns := "http://xml.amadeus.com/2010/06/Security_v1"
@@ -167,7 +167,7 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 
 	typeName := "Session"
 	if cType.Name != typeName {
-		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.GoName)
+		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
 	}
 
 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
@@ -442,6 +442,19 @@ func TestElementRefWithType(t *testing.T) {
 
 	if tp.BaseType.Name != "PointOfSaleType" {
 		t.Errorf("Base type name should be 'PointOfSaleType', %q got", tp.BaseType.Name)
+	}
+}
+
+func TestComplexChoice(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if len(cType.Fields) != 3 {
+		t.Errorf("Wrong type fields amount. 3 expected, %d got", len(cType.Fields))
 	}
 }
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.iata.org/IATA/EDIST"
+            targetNamespace="http://www.iata.org/IATA/EDIST" elementFormDefault="qualified"
+            attributeFormDefault="unqualified" version="3.001" id="IATA2016.2">
+    <xsd:element name="AirShoppingRS">
+        <xsd:complexType>
+            <xsd:choice>
+                <xsd:sequence>
+                    <xsd:element name="Document" type="xsd:string"/>
+                    <xsd:element name="Warnings" type="xsd:string" minOccurs="0"/>
+                </xsd:sequence>
+                <xsd:sequence>
+                    <xsd:element name="Errors" type="xsd:string" maxOccurs="unbounded"/>
+                </xsd:sequence>
+            </xsd:choice>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
