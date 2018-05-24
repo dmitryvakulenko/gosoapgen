@@ -17,7 +17,7 @@ var innerTypes = []string{
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
 	for _, curType := range typesList {
 		if curType.IsSimpleContent && len(curType.Fields) == 0 {
-			writer.Write([]byte("type " + curType.Name + " " + curType.BaseType.Name + "\n\n"))
+			writer.Write([]byte("type " + curType.Name + " " + mapStandardType(curType.BaseType.Name) + "\n\n"))
 			continue
 		}
 
@@ -101,6 +101,6 @@ func mapStandardType(xmlType string) string {
 			"date", "dateTime", "time":
 		return "string"
 	default:
-		return ""
+		return xmlType
 	}
 }
