@@ -46,14 +46,6 @@ func NewParser(l Loader) *parser {
 }
 
 func (p *parser) Load(inputFile string) {
-    // if p.basePath == "" {
-    // 	p.basePath = path.Clean(path.Dir(inputFile))
-    // }
-
-    p.parseImpl(inputFile)
-}
-
-func (p *parser) parseImpl(inputFile string) {
     reader, err := p.loader.Load(inputFile)
     defer reader.Close()
     if err != nil {
@@ -234,7 +226,7 @@ func (p *parser) renameDuplicatedTypes(typesList []*Type) {
 func (p *parser) foldSimpleTypes(typesList []*Type) {
     for _, t := range typesList {
         for _, f := range t.Fields {
-            if f.Type.IsSimpleContent {
+            if f.Type.IsSimpleContent && len(f.Type.Fields) == 0 {
                 f.Type = getLastType(f.Type)
             }
         }
@@ -242,7 +234,7 @@ func (p *parser) foldSimpleTypes(typesList []*Type) {
 }
 
 func getLastType(t *Type) *Type {
-    if t.BaseType == nil {
+    if t.BaseType == nil || len(t.Fields) != 0 {
         return t
     } else {
         return getLastType(t.BaseType)
@@ -251,7 +243,7 @@ func getLastType(t *Type) *Type {
 
 func (p *parser) findGlobalTypeNode(name QName) *node {
     if name.Namespace == "http://www.w3.org/2001/XMLSchema" {
-        return &node{genType: &Type{Name: name.Name, Namespace: name.Namespace}}
+        return &node{genType: &Type{Name: name.Name, Namespace: name.Namespace, IsSimpleContent: true}}
     }
 
     for _, t := range p.rootNode.children {
@@ -427,7 +419,7 @@ func (p *parser) endAttributeGroup() {
 
 func (p *parser) includeStarted(e *xml.StartElement) {
     l := findAttributeByName(e.Attr, "schemaLocation")
-    p.parseImpl(l.Value)
+    p.Load(l.Value)
 }
 
 func (p *parser) endUnion() {

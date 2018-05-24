@@ -56,7 +56,7 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
 
         writer.Write([]byte(fieldType + " `xml:\""))
         if field.IsAttr {
-            writer.Write([]byte(",attr"))
+            writer.Write([]byte(",attr,omitempty"))
         } else if field.Type.IsSimpleContent && field.Name == "Value" {
             writer.Write([]byte(",chardata"))
         } else {
@@ -93,14 +93,14 @@ func isInnerType(t string) bool {
 
 func mapStandardType(xmlType string) string {
     switch xmlType {
-    case "int", "integer", "positiveInteger", "nonNegativeInteger", "ID":
+    case "int", "integer", "positiveInteger", "nonNegativeInteger":
         return "int"
     case "decimal":
         return "float64"
     case "boolean":
         return "bool"
     case "string", "NMTOKEN", "anyURI", "language", "base64Binary", "duration", "IDREF", "IDREFS", "gYear", "gMonth", "gDay", "gYearMonth",
-        "date", "dateTime", "time":
+        "date", "dateTime", "time", "ID":
         return "string"
     default:
         return xmlType
