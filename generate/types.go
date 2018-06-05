@@ -8,7 +8,7 @@ import (
 
 var innerTypes = []string{
     "int",
-    "float64",
+    "float32",
     "bool",
     "time.Time",
     "string"}
@@ -56,7 +56,7 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
 
         writer.Write([]byte(fieldType + " `xml:\""))
         if field.IsAttr {
-            writer.Write([]byte(",attr,omitempty"))
+            writer.Write([]byte(field.Name + ",attr,omitempty"))
         } else if field.Type.IsSimpleContent && field.Name == "Value" {
             writer.Write([]byte(",chardata"))
         } else {

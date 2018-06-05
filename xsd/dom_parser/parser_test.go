@@ -16,6 +16,19 @@ func TestSimpleElements(t *testing.T) {
 	if len(typesList) != 1 {
 		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
 	}
+
+	tp := typesList[0]
+    if len(tp.Fields) != 2 {
+        t.Fatalf("Wrong number of type fields. 2 expected, but got %d", len(tp.Fields))
+    }
+
+    if tp.Fields[0].Name != "XMLName" {
+        t.Errorf(`First field name should be "XMLName", %q got`, tp.Fields[0].Name)
+    }
+
+    if tp.Fields[1].Name != "XMLValue" {
+        t.Errorf(`First field name should be "XMLValue", %q got`, tp.Fields[1].Name)
+    }
 }
 
 //func TestSimpleTypes(t *testing.T) {
