@@ -5,6 +5,7 @@ import (
     "encoding/xml"
     "container/list"
     "log"
+    "strings"
 )
 
 var (
@@ -18,13 +19,15 @@ type parser struct {
     types      map[xml.Name]*Type
     parseStack *typesStack
     nsStack    *list.List
+    nsAlias    map[string]string
 }
 
 func NewParser() *parser {
     return &parser{
         types:      make(map[xml.Name]*Type),
         parseStack: new(typesStack),
-        nsStack:    list.New()}
+        nsStack:    list.New(),
+        nsAlias:    make(map[string]string)}
 }
 
 func (p *parser) LoadFile(fileName string) {
@@ -41,19 +44,25 @@ func (p *parser) LoadFile(fileName string) {
 }
 
 func (p *parser) parseNs(n *dom.Document) {
-    nsAttr := n.Root.GetAttribute("targetNamespace")
-    if nsAttr != nil {
-        p.nsStack.PushBack(nsAttr.Value)
+    targetNs := n.Root.GetAttributeValue("targetNamespace")
+    if targetNs != "" {
+        p.nsStack.PushBack(targetNs)
     } else {
         prevNs := p.nsStack.Back().Value.(string)
         p.nsStack.PushBack(prevNs)
+    }
+
+    for _, ns := range n.Root.Attributes {
+        if ns.Name != "xmlns" {
+            continue
+        }
     }
 }
 
 func (p *parser) parseNode(n *dom.Node) {
     switch n.Name {
-    // case "simpleType":
-    // 	p.simpleType(n)
+    case "simpleType":
+        p.simpleType(n)
     case "element":
         p.element(n)
     }
@@ -62,11 +71,25 @@ func (p *parser) parseNode(n *dom.Node) {
 func (p *parser) simpleType(n *dom.Node) {
     nameAttr := n.GetAttribute("name")
     if nameAttr != nil {
-        // newType := p.createAndAddType(nameAttr.Value)
-        // newType.IsSimpleContent = true
+        newType := p.createAndAddType(nameAttr.Value)
+        switch ch := n.FirstChild(); ch.Name {
+        case "restriction":
+            newType.BaseTypeName = p.parseRestriction(ch)
+        }
+    }
+}
 
-        // typeAttr  := n.GetAttribute("type")
-        // newType.BaseTypeName = p.createAndAddType()
+func (p *parser) parseRestriction(n *dom.Node) xml.Name {
+    base := n.GetAttributeValue("base")
+    return p.createName(base)
+}
+
+func (p *parser) createName(typ string) xml.Name {
+    parts := strings.Split(typ, ":")
+    if len(parts) == 2 {
+        return xml.Name{Local: parts[1], Space: p.nsAlias[parts[0]]}
+    } else {
+        return xml.Name{Local: parts[0], Space: p.nsStack.Back().Value.(string)}
     }
 }
 
@@ -80,12 +103,6 @@ func (p *parser) createAndAddType(name string) *Type {
     p.types[newType.Name] = newType
 
     return newType
-}
-
-// Просто сокращение для создания xml.Name
-func (p *parser) createName(name string) xml.Name {
-    lastNs := p.nsStack.Back().Value.(string)
-    return xml.Name{Local: name, Space: lastNs}
 }
 
 func (p *parser) GetTypes() []*Type {
@@ -123,9 +140,8 @@ func (p *parser) element(n *dom.Node) {
     if nameAttr != nil {
         newType := p.createAndAddType(nameAttr.Value)
         p.parseStack.Push(newType)
-        ct := n.GetChild("complexContent")
-        ct2 := n.GetChild("simpleType")
-        if ct != nil || ct2 != nil {
+        ct := n.FirstChild()
+        if ct.Name == "simpleType" || ct.Name == "simpleContent" {
             f := newField("XMLValue", tString)
             newType.addField(f)
         } else {
