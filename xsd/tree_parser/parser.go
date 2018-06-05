@@ -182,14 +182,14 @@ func (p *parser) parseTypesImpl(node *node) []*Type {
             Name:     "Value",
             TypeName: node.typeName}
         node.genType.addField(f)
-        node.genType.BaseTypeName = nil
+        // node.genType.BaseTypeName = nil
     }
 
     return res
 }
 
 // связать все типы
-func (p *parser) linkTypes(typesList []*Type) []*Type {
+func (p *parser) linkTypes(typesList []*Type) {
     for _, t := range typesList {
         if t.BaseTypeName != nil {
             t.BaseType = p.findGlobalTypeNode(*t.BaseTypeName).genType
@@ -207,8 +207,6 @@ func (p *parser) linkTypes(typesList []*Type) []*Type {
             f.Type = fTypeNode.genType
         }
     }
-
-    return typesList
 }
 
 func (p *parser) renameDuplicatedTypes(typesList []*Type) {
@@ -257,9 +255,7 @@ func (p *parser) findGlobalTypeNode(name QName) *node {
 
 func (p *parser) endElement() {
     e := p.elStack.Pop()
-
     e.namespace = p.nsStack.GetLast()
-    nameAttr := findAttributeByName(e.startElem.Attr, "name")
 
     maxAttr := findAttributeByName(e.startElem.Attr, "maxOccurs")
     if maxAttr != nil {
@@ -279,11 +275,8 @@ func (p *parser) endElement() {
 
     context := p.elStack.GetLast()
 
-    if len(e.children) == 0 {
-        e.isSimpleContent = true
-    }
-
     if context.elemName == "schema" {
+        nameAttr := findAttributeByName(e.startElem.Attr, "name")
         // значит предок у нас - schema, т.е. это глобальный тип
         if nameAttr == nil {
             panic("Element should has elemName attribute")

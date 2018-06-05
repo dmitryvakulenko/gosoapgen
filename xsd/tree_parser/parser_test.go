@@ -363,7 +363,7 @@ func TestSimpleContent(t *testing.T) {
 	}
 
 	if len(cType.Fields) != 3 {
-		t.Fatalf("CompanyNameType should Has 3 field, %d instead", len(cType.Fields))
+		t.Fatalf("CompanyNameType should has 3 field, %d instead", len(cType.Fields))
 	}
 
 	field := cType.Fields[2]
@@ -511,6 +511,19 @@ func TestSimpleTypesFolding(t *testing.T) {
 
     if fields[1].Type.Name != "string" {
         t.Errorf("Last field type should be string")
+    }
+}
+
+func TestTwoLevelSimpleContent(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    if len(typesList) != 3 {
+        t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+    }
+
+    ct := typesList[0]
+    if len(ct.Fields) != 3 {
+        t.Fatalf("Wrong type fields amount. 3 expected, %d got", len(ct.Fields))
     }
 }
 
