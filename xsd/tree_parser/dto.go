@@ -4,16 +4,15 @@ import "encoding/xml"
 
 // Абстрактное представление элемента схемы
 type node struct {
-    // название элемента схемы xsd
-    // из которого был создан данный тип
-    // node, complexType и т.д.
-    // чисто для сокрачения, поскольку вся эта информация содержится в startElem
+    // название элемента схемы xsd из которого был создан данный node, complexType и т.д.
+    // чисто для сокращения, поскольку вся эта информация содержится в startElem
     elemName string
-    // Имя типа. По сути, значение атрибута name
-    name            string
-    typeName        xml.Name
+
+    // имя элемента, по сути, значение атрибута name
+    name xml.Name
+
+    // сам элемент, из которого создавался node
     startElem       *xml.StartElement
-    namespace       string
     children        []*node
     isSimpleContent bool
     isAttr          bool
@@ -25,7 +24,7 @@ type node struct {
 
 func (r *node) find(ns, name string) *node {
     for _, n := range r.children {
-        if ns == n.namespace && name == n.name {
+        if ns == n.name.Space && name == n.name.Local {
             return n
         }
     }
@@ -47,7 +46,7 @@ func newNode(startElem *xml.StartElement) *node {
     }
 
     return &node{
-        name:      name,
+        name:      xml.Name{Local: name},
         elemName:  startElem.Name.Local,
         startElem: startElem}
 }
@@ -71,8 +70,7 @@ func (t *Type) Hash() {
 
 func newType(n *node) *Type {
     return &Type{
-        Name:            n.name,
-        Namespace:       n.namespace}
+        Name: n.name}
 }
 
 type Field struct {
@@ -86,9 +84,8 @@ type Field struct {
 
 func newField(n *node) *Field {
     return &Field{
-        Name:     n.name,
-        TypeName: n.typeName,
+        Name:     n.name.Local,
+        TypeName: n.name,
         IsAttr:   n.isAttr,
         IsArray:  n.isArray}
 }
-

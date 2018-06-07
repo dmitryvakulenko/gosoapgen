@@ -12,7 +12,7 @@ import (
 )
 
 var (
-    stringQName = &QName{Name: "string", Namespace: "http://www.w3.org/2001/XMLSchema"}
+    stringQName = xml.Name{Local: "string", Space: "http://www.w3.org/2001/XMLSchema"}
 )
 
 // Интерфейс загрузки xsd
@@ -168,7 +168,7 @@ func (p *parser) parseTypesImpl(node *node) []*Type {
 
         if node == p.rootNode || len(n.children) > 0 {
             t := newType(n)
-            t.BaseTypeName = n.typeName
+            t.BaseTypeName = n.name
             n.genType, f.Type = t, t
             res = append(res, t)
         }
@@ -180,7 +180,7 @@ func (p *parser) parseTypesImpl(node *node) []*Type {
     if len(node.children) > 0 && node.isSimpleContent {
         f := &Field{
             Name:     "Value",
-            TypeName: node.typeName}
+            TypeName: node.name}
         node.genType.addField(f)
         // node.genType.BaseTypeName = nil
     }
@@ -191,8 +191,8 @@ func (p *parser) parseTypesImpl(node *node) []*Type {
 // связать все типы
 func (p *parser) linkTypes(typesList []*Type) {
     for _, t := range typesList {
-        if t.BaseTypeName != nil {
-            t.BaseType = p.findGlobalTypeNode(*t.BaseTypeName).genType
+        if t.BaseTypeName.Local != "" {
+            t.BaseType = p.findGlobalTypeNode(t.BaseTypeName).genType
         }
 
         for _, f := range t.Fields {
@@ -200,9 +200,9 @@ func (p *parser) linkTypes(typesList []*Type) {
                 continue
             }
 
-            fTypeNode := p.findGlobalTypeNode(*f.TypeName)
+            fTypeNode := p.findGlobalTypeNode(f.TypeName)
             if fTypeNode.elemName == "attributeGroup" {
-                f.Name = fTypeNode.name
+                f.Name = fTypeNode.name.Local
             }
             f.Type = fTypeNode.genType
         }
@@ -212,11 +212,11 @@ func (p *parser) linkTypes(typesList []*Type) {
 func (p *parser) renameDuplicatedTypes(typesList []*Type) {
     names := make(map[string]int)
     for _, t := range typesList {
-        if _, exist := names[t.Name]; exist {
-            names[t.Name]++
-            t.Name = t.Name + "_" + strconv.Itoa(names[t.Name])
+        if _, exist := names[t.Name.Local]; exist {
+            names[t.Name.Local]++
+            t.Name.Local = t.Name.Local + "_" + strconv.Itoa(names[t.Name.Local])
         } else {
-            names[t.Name] = 0
+            names[t.Name.Local] = 0
         }
     }
 }
@@ -224,7 +224,7 @@ func (p *parser) renameDuplicatedTypes(typesList []*Type) {
 func (p *parser) foldSimpleTypes(typesList []*Type) {
     for _, t := range typesList {
         for _, f := range t.Fields {
-            if f.Type.IsSimpleContent && len(f.Type.Fields) == 0 {
+            if len(f.Type.Fields) == 0 {
                 f.Type = getLastType(f.Type)
             }
         }
@@ -239,23 +239,23 @@ func getLastType(t *Type) *Type {
     }
 }
 
-func (p *parser) findGlobalTypeNode(name QName) *node {
-    if name.Namespace == "http://www.w3.org/2001/XMLSchema" {
-        return &node{genType: &Type{Name: name.Name, Namespace: name.Namespace, IsSimpleContent: true}}
+func (p *parser) findGlobalTypeNode(name xml.Name) *node {
+    if name.Space == "http://www.w3.org/2001/XMLSchema" {
+        return &node{genType: &Type{Name: name}}
     }
 
     for _, t := range p.rootNode.children {
-        if t.name == name.Name && t.namespace == name.Namespace {
+        if t.name == name {
             return t
         }
     }
 
-    panic("Can't find type " + name.Name)
+    panic("Can't find type " + name.Local)
 }
 
 func (p *parser) endElement() {
     e := p.elStack.Pop()
-    e.namespace = p.nsStack.GetLast()
+    e.name.Space = p.nsStack.GetLast()
 
     maxAttr := findAttributeByName(e.startElem.Attr, "maxOccurs")
     if maxAttr != nil {
@@ -264,13 +264,12 @@ func (p *parser) endElement() {
 
     typeAttr := findAttributeByName(e.startElem.Attr, "type")
     if typeAttr != nil {
-        e.typeName = p.createQName(typeAttr.Value)
+        e.name = p.createQName(typeAttr.Value)
     }
 
     refAttr := findAttributeByName(e.startElem.Attr, "ref")
     if refAttr != nil {
-        e.typeName = p.createQName(refAttr.Value)
-        e.name = e.typeName.Name
+        e.name = p.createQName(refAttr.Value)
     }
 
     context := p.elStack.GetLast()
@@ -287,12 +286,12 @@ func (p *parser) endElement() {
         context.children = append(context.children, e)
     }
 
-    if e.typeName == nil && len(e.children) == 0 {
-        e.typeName = stringQName
+    if e.name.Local == "" && len(e.children) == 0 {
+        e.name = stringQName
     }
 }
 
-func (p *parser) createQName(qName string) *QName {
+func (p *parser) createQName(qName string) xml.Name {
     typesParts := strings.Split(qName, ":")
     var (
         name, namespace string
@@ -309,9 +308,9 @@ func (p *parser) createQName(qName string) *QName {
         }
     }
 
-    return &QName{
-        Name:      name,
-        Namespace: namespace}
+    return xml.Name{
+        Local: name,
+        Space: namespace}
 }
 
 func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
@@ -336,24 +335,24 @@ func (p *parser) endComplexType() {
 
     if context.elemName == "schema" {
         nameAttr := findAttributeByName(e.startElem.Attr, "name")
-        e.name = nameAttr.Value
-        e.namespace = p.nsStack.GetLast()
+        e.name.Local = nameAttr.Value
+        e.name.Space = p.nsStack.GetLast()
         p.rootNode.addChild(e)
     } else {
         context.isSimpleContent = e.isSimpleContent
         context.isAttr = e.isAttr
         context.children = append(context.children, e.children...)
-        context.typeName = e.typeName
+        context.name = e.name
     }
 }
 
 func (p *parser) endSimpleType() {
     e := p.elStack.Pop()
-    e.namespace = p.nsStack.GetLast()
+    e.name.Space = p.nsStack.GetLast()
     e.isSimpleContent = true
     nameAttr := findAttributeByName(e.startElem.Attr, "name")
     if nameAttr != nil {
-        e.name = nameAttr.Value
+        e.name.Local = nameAttr.Value
     }
 
     context := p.elStack.GetLast()
@@ -362,7 +361,7 @@ func (p *parser) endSimpleType() {
     } else {
         // анонимный тип, встраиваем в контейнер
         context := p.elStack.GetLast()
-        context.typeName = e.typeName
+        context.name = e.name
         context.isSimpleContent = e.isSimpleContent
     }
 }
@@ -371,19 +370,19 @@ func (p *parser) endExtensionRestriction() {
     e := p.elStack.Pop()
     context := p.elStack.GetLast()
     baseType := findAttributeByName(e.startElem.Attr, "base")
-    context.typeName = p.createQName(baseType.Value)
+    context.name = p.createQName(baseType.Value)
     context.children = append(context.children, e.children...)
 }
 
 func (p *parser) endAttribute() {
     e := p.elStack.Pop()
     e.isAttr = true
-    if e.typeName == nil {
+    if e.name.Local == "" {
         typeAttr := findAttributeByName(e.startElem.Attr, "type")
         if typeAttr != nil {
-            e.typeName = p.createQName(typeAttr.Value)
+            e.name = p.createQName(typeAttr.Value)
         } else {
-            e.typeName = stringQName
+            e.name = stringQName
         }
     }
 
@@ -394,16 +393,16 @@ func (p *parser) endAttribute() {
 func (p *parser) endAttributeGroup() {
     e := p.elStack.Pop()
     e.isAttr = true
-    e.namespace = p.nsStack.GetLast()
+    e.name.Space = p.nsStack.GetLast()
 
     context := p.elStack.GetLast()
     nameAttr := findAttributeByName(e.startElem.Attr, "name")
     refAttr := findAttributeByName(e.startElem.Attr, "ref")
     if context.elemName == "schema" {
-        e.name = nameAttr.Value
+        e.name.Local = nameAttr.Value
         p.rootNode.addChild(e)
     } else if refAttr != nil {
-        e.typeName = p.createQName(refAttr.Value)
+        e.name = p.createQName(refAttr.Value)
         context.addChild(e)
     } else {
         panic("No elemName and no ref for attribute group")
@@ -418,14 +417,14 @@ func (p *parser) includeStarted(e *xml.StartElement) {
 func (p *parser) endUnion() {
     p.elStack.Pop()
     context := p.elStack.GetLast()
-    context.typeName = stringQName
+    context.name = stringQName
 }
 
 func (p *parser) endSimpleContent() {
     e := p.elStack.Pop()
     context := p.elStack.GetLast()
     context.isSimpleContent = true
-    context.typeName = e.typeName
+    context.name = e.name
     context.children = append(context.children, e.children...)
 }
 
@@ -433,7 +432,7 @@ func (p *parser) endComplexContent() {
     e := p.elStack.Pop()
     context := p.elStack.GetLast()
     context.isSimpleContent = false
-    context.typeName = e.typeName
+    context.name = e.name
     context.children = append(context.children, e.children...)
 }
 

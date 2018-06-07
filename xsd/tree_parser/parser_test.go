@@ -23,7 +23,7 @@ func TestSimpleTypes(t *testing.T) {
 
 	tp := typesList[0]
 	name := "Test"
-	if name != tp.Name {
+	if name != tp.Name.Local {
 		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name)
 	}
 
@@ -52,9 +52,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Fatalf("Type should be simple")
 // 	}
 //
-// 	typeName := "minRange"
-// 	if cType.Name != typeName {
-// 		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
+// 	name := "minRange"
+// 	if cType.Name != name {
+// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
 // 	}
 //
 // 	if cType.BaseType == nil {
@@ -87,9 +87,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Fatalf("Type should be complex type")
 // 	}
 //
-// 	typeName := "Session"
-// 	if cType.Name != typeName {
-// 		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
+// 	name := "Session"
+// 	if cType.Name != name {
+// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
 // 	}
 //
 // 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
@@ -136,9 +136,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Fatalf("Type should be complex type")
 // 	}
 //
-// 	typeName := "AMA_SecurityHostedUser"
-// 	if cType.Name != typeName {
-// 		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
+// 	name := "AMA_SecurityHostedUser"
+// 	if cType.Name != name {
+// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
 // 	}
 //
 // 	ns := "http://xml.amadeus.com/2010/06/Security_v1"
@@ -172,9 +172,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Fatalf("Type should be complex type")
 // 	}
 //
-// 	typeName := "Session"
-// 	if cType.Name != typeName {
-// 		t.Errorf("TypeName elemName should be %q, got %q", typeName, cType.Name)
+// 	name := "Session"
+// 	if cType.Name != name {
+// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
 // 	}
 //
 // 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
@@ -217,9 +217,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Fatalf("Type should be complex type")
 // 	}
 //
-// 	typeName := "PNR_AddMultiElements"
-// 	if firstType.Name != typeName {
-// 		t.Errorf("TypeName elemName should be %q, got %q", typeName, firstType.Name)
+// 	name := "PNR_AddMultiElements"
+// 	if firstType.Name != name {
+// 		t.Errorf("TypeName elemName should be %q, got %q", name, firstType.Name)
 // 	}
 //
 // 	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
@@ -227,9 +227,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Namespace)
 // 	}
 //
-// 	typeName = "travellerInfo"
-// 	if secType.Name != typeName {
-// 		t.Errorf("TypeName elemName should be %q, got %q", typeName, secType.Name)
+// 	name = "travellerInfo"
+// 	if secType.Name != name {
+// 		t.Errorf("TypeName elemName should be %q, got %q", name, secType.Name)
 // 	}
 //
 // 	if secType.Namespace != ns {
@@ -394,9 +394,9 @@ func TestSimpleTypes(t *testing.T) {
 // 		t.Errorf("Type should be complex type")
 // 	}
 //
-// 	typeName := "AddressWithModeType"
-// 	if cType.Name != typeName {
-// 		t.Errorf("TypeName name should be %q, got %q instead", typeName, cType.Name)
+// 	name := "AddressWithModeType"
+// 	if cType.Name != name {
+// 		t.Errorf("TypeName name should be %q, got %q instead", name, cType.Name)
 // 	}
 //
 // 	if cType.BaseType == nil {
