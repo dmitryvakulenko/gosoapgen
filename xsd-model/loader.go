@@ -6,8 +6,8 @@ import (
     "container/list"
 )
 
-func newNode(e *xml.StartElement) *node {
-    return &node{
+func newNode(e *xml.StartElement) *Node {
+    return &Node{
         name:      e.Name.Local,
         startElem: e}
 }
@@ -16,7 +16,7 @@ func newNode(e *xml.StartElement) *node {
 
 func newSchema(e *xml.StartElement) *Schema {
     s := &Schema{
-        node: *newNode(e),
+        Node:    *newNode(e),
         nsAlias: make(map[string]string)}
 
     s.TargetNamespace = s.AttributeValue("targetNamespace")

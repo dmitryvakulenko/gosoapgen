@@ -5,24 +5,28 @@ import (
 )
 
 type parent interface {
-    addChild(*node)
+    addChild(*Node)
 }
 
-type node struct {
+type Node struct {
     name      string
     startElem *xml.StartElement
-    children  []*node
+    children  []*Node
 }
 
-func (n *node) addChild(e *node) {
+func (n *Node) Name() string {
+    return n.name
+}
+
+func (n *Node) addChild(e *Node) {
     n.children = append(n.children, e)
 }
 
-func (n *node) Children() []*node {
+func (n *Node) Children() []*Node {
     return n.children
 }
 
-func (n *node) Attribute(name string) *xml.Attr {
+func (n *Node) Attribute(name string) *xml.Attr {
     for _, a := range n.startElem.Attr {
         if a.Name.Local == name {
             return &a
@@ -32,7 +36,7 @@ func (n *node) Attribute(name string) *xml.Attr {
     return nil
 }
 
-func (n *node) AllAttributesByName(name string) []*xml.Attr {
+func (n *Node) AllAttributesByName(name string) []*xml.Attr {
     var ret []*xml.Attr
     for _, a := range n.startElem.Attr {
         if a.Name.Space == name {
@@ -43,7 +47,7 @@ func (n *node) AllAttributesByName(name string) []*xml.Attr {
     return ret
 }
 
-func (n *node) AttributeValue(name string) string {
+func (n *Node) AttributeValue(name string) string {
     a := n.Attribute(name)
     if a != nil {
         return a.Value
@@ -52,8 +56,8 @@ func (n *node) AttributeValue(name string) string {
     }
 }
 
-func (n *node) ElementsByName(name string) []*node {
-    var res []*node
+func (n *Node) ElementsByName(name string) []*Node {
+    var res []*Node
     for _, v := range n.children {
         if v.name == name {
             res = append(res, v)
@@ -65,7 +69,7 @@ func (n *node) ElementsByName(name string) []*node {
 
 
 type Schema struct {
-    node
+    Node
     TargetNamespace string
     nsAlias map[string]string
 }

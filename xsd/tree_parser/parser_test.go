@@ -40,40 +40,29 @@ func TestEmptySchema(t *testing.T) {
 //     }
 // }
 
-// func TestSimpleElements(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-// 	if !cType.IsSimpleContent {
-// 		t.Fatalf("Type should be simple")
-// 	}
-//
-// 	name := "minRange"
-// 	if cType.Name != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
-// 	}
-//
-// 	if cType.BaseType == nil {
-// 		t.Errorf("Type should has base type, %q exist", cType.BaseType.Name)
-// 	}
-//
-// 	if cType.BaseType.Name != "decimal" {
-// 		t.Errorf("Base type should be 'decimal', %q exist", cType.BaseType.Name)
-// 	}
-//
-// 	ns := "http://xml.amadeus.com/2010/06/Types_v1"
-// 	if cType.Namespace != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
-// 	}
-//
-// 	if cType.BaseTypeName.Name != "decimal" {
-// 		t.Errorf("Type should be decimal, got %q", cType.BaseTypeName.Name)
-// 	}
-// }
+func TestSimpleElements(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	name := "minRange"
+	if cType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Types_v1"
+	if cType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
+	}
+
+	fields := cType.Fields
+	if len(fields) != 2 {
+        t.Fatalf("Fields amount should be 2, got %d", len(fields))
+    }
+}
 //
 // func TestComplexType(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())

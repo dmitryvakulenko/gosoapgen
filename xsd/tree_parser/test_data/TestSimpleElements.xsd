@@ -7,11 +7,7 @@
            attributeFormDefault="unqualified" version="1.002" id="AMA2011Y">
     <xs:element name="minRange">
         <xs:simpleType>
-            <xs:restriction base="xs:decimal">
-                <xs:annotation>
-                    <xs:documentation xml:lang="en">Format limitations: n..2</xs:documentation>
-                </xs:annotation>
-            </xs:restriction>
+            <xs:restriction base="xs:decimal"/>
         </xs:simpleType>
     </xs:element>
 </xs:schema>

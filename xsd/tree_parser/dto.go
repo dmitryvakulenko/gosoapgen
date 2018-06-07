@@ -1,6 +1,9 @@
 package tree_parser
 
-import "encoding/xml"
+import (
+    "encoding/xml"
+    xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
+)
 
 // Абстрактное представление элемента схемы
 type node struct {
@@ -57,7 +60,7 @@ func newNode(startElem *xml.StartElement) *node {
 type Type struct {
     xml.Name
     Fields     []*Field
-    SourceNode *node
+    SourceNode *xsd.Node
 
     // Only for simple types
     BaseType     *Type
@@ -72,9 +75,10 @@ func (t *Type) Hash() {
     // надо реализовать и учитывать при проверке дублей
 }
 
-func newType(n *node) *Type {
+func newType(n *xsd.Node) *Type {
+    name := n.AttributeValue("name")
     return &Type{
-        Name:       n.name,
+        Name:       xml.Name{Local: name, Space: curSchema.TargetNamespace},
         SourceNode: n}
 }
 

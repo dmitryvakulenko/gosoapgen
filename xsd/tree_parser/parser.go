@@ -9,10 +9,11 @@ import (
     "encoding/xml"
     "strings"
     "strconv"
-    xml2 "github.com/dmitryvakulenko/gosoapgen/xsd-model"
+    xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
 )
 
 var (
+    curSchema *xsd.Schema
     stringQName = xml.Name{Local: "string", Space: "http://www.w3.org/2001/XMLSchema"}
 )
 
@@ -34,7 +35,8 @@ type parser struct {
     nsStack  *stringsStack
     curNs    map[string]string
     rootNode *node
-    schemas  []*xml2.Schema
+
+    schemas   []*xsd.Schema
     // basePath string
 }
 
@@ -55,9 +57,9 @@ func (p *parser) loadSchema(inputFile string, ns string) {
     reader, err := p.loader.Load(inputFile)
     defer reader.Close()
 
-    var s *xml2.Schema
+    var s *xsd.Schema
     if err == nil {
-        s = xml2.Load(reader)
+        s = xsd.Load(reader)
         // to processing include
         if ns != "" {
             s.TargetNamespace = ns
@@ -164,7 +166,7 @@ func (p *parser) schemaStarted(elem *xml.StartElement) {
 }
 
 func (p *parser) GetTypes() []*Type {
-    l := p.parseTypesImpl(p.rootNode)
+    l := p.generateTypes()
     p.linkTypes(l)
     p.renameDuplicatedTypes(l)
     p.foldSimpleTypes(l)
@@ -173,34 +175,47 @@ func (p *parser) GetTypes() []*Type {
 }
 
 // Generate types list according to previously built tree
-func (p *parser) parseTypesImpl(node *node) []*Type {
+func (p *parser) generateTypes() []*Type {
     var res []*Type
-    for _, n := range node.children {
-        f := newField(n)
-
-        if node != p.rootNode {
-            node.genType.addField(f)
-        }
-
-        if node == p.rootNode || len(n.children) > 0 {
-            t := newType(n)
-            t.BaseTypeName = n.name
-            n.genType, f.Type = t, t
-            res = append(res, t)
-        }
-
-        res = append(res, p.parseTypesImpl(n)...)
-    }
-
-    // простое содержимое с атрибутами
-    if len(node.children) > 0 && node != p.rootNode {
-        f := &Field{
-            Name:     "Value",
-            TypeName: node.name}
-        node.genType.addField(f)
+    for _, sc := range p.schemas {
+        curSchema = sc
+        res = append(res, p.processNode(&sc.Node)...)
     }
 
     return res
+}
+
+func (p *parser) processNode(n *xsd.Node) []*Type {
+    switch n.Name() {
+    case "schema":
+        return p.schemaNode(n)
+    case "simpleType":
+        p.endSimpleType()
+    case "extension", "restriction":
+        p.endExtensionRestriction()
+    case "complexType":
+        p.endComplexType()
+    case "sequence":
+        p.endSequence()
+    case "node":
+        p.endElement()
+    case "attribute":
+        p.endAttribute()
+    case "attributeGroup":
+        p.endAttributeGroup()
+    case "element":
+        return p.elementNode(n)
+    case "union":
+        p.endUnion()
+    case "simpleContent":
+        p.endSimpleContent()
+    case "complexContent":
+        p.endComplexContent()
+    case "choice":
+        p.endChoice()
+    }
+
+    return []*Type{}
 }
 
 // связать все типы
@@ -452,11 +467,24 @@ func (p *parser) removeUnusedTypes(types []*Type) []*Type {
 
     // remove unused types
     var res []*Type
-    for _, t := range types {
-        if _, ok := usedTypes[t.Name]; ok || t.SourceNode.elemName != "element" {
-            res = append(res, t)
-        }
-    }
+    // for _, t := range types {
+    //     if _, ok := usedTypes[t.Name]; ok || t.SourceNode.elemName != "element" {
+    //         res = append(res, t)
+    //     }
+    // }
 
     return res
+}
+
+func (p *parser) schemaNode(n *xsd.Node) []*Type {
+    var res []*Type
+    for _, ch := range n.Children() {
+        res = append(res, p.processNode(ch)...)
+    }
+    return res
+}
+
+func (p *parser) elementNode(n *xsd.Node) []*Type {
+    tp := newType(n)
+    return []*Type{tp}
 }
