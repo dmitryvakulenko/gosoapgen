@@ -3,15 +3,6 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.iata.org/IATA/EDIST" targetNamespace="http://www.iata.org/IATA/EDIST" elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
     <xsd:include schemaLocation="include_inner.xsd"/>
     <xsd:element name="AirShoppingRQ">
-        <xsd:annotation>
-            <xsd:documentation source="description" xml:lang="en">The AirShopping transaction set supports both demanding and flexible shopping experiences for anonymous or personalized shopping.
-
-                The combination of functionally-rich attribute and affinity shopping support date range or specific month (calendar) shopping as an example.
-
-                The response returns offers which may include branded offers or itinerary-priced offers with or without ancillary services. It also returns applicable rules for the integrated fares as well as for each service.
-
-                The message also returns multi-media content at message level as well as media references at the individual offer level.</xsd:documentation>
-        </xsd:annotation>
         <xsd:complexType>
             <xsd:sequence>
                 <xsd:element ref="PointOfSale" minOccurs="0"/>

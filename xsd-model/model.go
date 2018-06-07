@@ -52,15 +52,26 @@ func (n *node) AttributeValue(name string) string {
     }
 }
 
+func (n *node) ElementsByName(name string) []*node {
+    var res []*node
+    for _, v := range n.children {
+        if v.name == name {
+            res = append(res, v)
+        }
+    }
 
-type schema struct {
+    return res
+}
+
+
+type Schema struct {
     node
     TargetNamespace string
     nsAlias map[string]string
 }
 
 
-func (s *schema) ResolveSpace(prefix string) string {
+func (s *Schema) ResolveSpace(prefix string) string {
     return s.nsAlias[prefix]
 }
 

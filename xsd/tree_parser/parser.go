@@ -34,6 +34,7 @@ type parser struct {
     nsStack  *stringsStack
     curNs    map[string]string
     rootNode *node
+    schemas  []*xml2.Schema
     // basePath string
 }
 
@@ -47,18 +48,32 @@ func NewParser(l Loader) *parser {
 }
 
 func (p *parser) Load(inputFile string) {
+    p.loadSchema(inputFile, "")
+}
+
+func (p *parser) loadSchema(inputFile string, ns string) {
     reader, err := p.loader.Load(inputFile)
     defer reader.Close()
-    if err != nil {
-        if p.loader.IsAlreadyLoadedError(err) {
-            return
-        } else {
-            panic(err)
+
+    var s *xml2.Schema
+    if err == nil {
+        s = xml2.Load(reader)
+        // to processing include
+        if ns != "" {
+            s.TargetNamespace = ns
         }
+    } else if !p.loader.IsAlreadyLoadedError(err) {
+        panic(err)
+    }
+    p.schemas = append(p.schemas, s)
+
+    for _, i := range s.ElementsByName("include") {
+        p.loadSchema(i.AttributeValue("schemaLocation"), s.TargetNamespace)
     }
 
-    decoder := xml2.Load(reader)
-    p.decodeXsd(decoder)
+    for _, i := range s.ElementsByName("import") {
+        p.loadSchema(i.AttributeValue("schemaLocation"), "")
+    }
 }
 
 func (p *parser) decodeXsd(decoder *xml.Decoder) {

@@ -14,8 +14,8 @@ func newNode(e *xml.StartElement) *node {
 
 
 
-func newSchema(e *xml.StartElement) *schema {
-    s := &schema{
+func newSchema(e *xml.StartElement) *Schema {
+    s := &Schema{
         node: *newNode(e),
         nsAlias: make(map[string]string)}
 
@@ -29,12 +29,12 @@ func newSchema(e *xml.StartElement) *schema {
     return s
 }
 
-func Load(r io.ReadCloser) *schema {
+func Load(r io.ReadCloser) *Schema {
     defer r.Close()
     decoder := xml.NewDecoder(r)
 
     nodes := list.New()
-    var rootNode *schema
+    var rootNode *Schema
     for {
         token, err := decoder.Token()
         if err == io.EOF {
