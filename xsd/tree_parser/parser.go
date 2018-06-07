@@ -9,6 +9,7 @@ import (
     "encoding/xml"
     "strings"
     "strconv"
+    xml2 "github.com/dmitryvakulenko/gosoapgen/xsd-model"
 )
 
 var (
@@ -56,7 +57,7 @@ func (p *parser) Load(inputFile string) {
         }
     }
 
-    decoder := xml.NewDecoder(reader)
+    decoder := xml2.Load(reader)
     p.decodeXsd(decoder)
 }
 
