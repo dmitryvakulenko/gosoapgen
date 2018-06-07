@@ -35,6 +35,17 @@ func (n *Node) Attribute(name string) *xml.Attr {
     return nil
 }
 
+func (n *Node) AllAttributesByName(name string) []*xml.Attr {
+    var ret []*xml.Attr
+    for _, a := range n.startElem.Attr {
+        if a.Name.Local == name {
+            ret = append(ret, &a)
+        }
+    }
+
+    return ret
+}
+
 func (n *Node) AttributeValue(name string) string {
     a := n.Attribute(name)
     if a != nil {
