@@ -24,7 +24,7 @@ func TestSimpleTypes(t *testing.T) {
 	tp := typesList[0]
 	name := "Test"
 	if name != tp.Name.Local {
-		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name)
+		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name.Local)
 	}
 
     if len(tp.Fields) != 2 {

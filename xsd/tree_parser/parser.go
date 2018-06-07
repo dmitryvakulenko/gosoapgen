@@ -42,7 +42,7 @@ func NewParser(l Loader) *parser {
         elStack:  &elementsStack{},
         nsStack:  &stringsStack{},
         curNs:    make(map[string]string),
-        rootNode: &node{}}
+        rootNode: &node{elemName: "schema"}}
 }
 
 func (p *parser) Load(inputFile string) {
@@ -77,14 +77,13 @@ func (p *parser) decodeXsd(decoder *xml.Decoder) {
         case xml.EndElement:
             p.parseEndElement(&elem)
         }
-
     }
 }
 
 func (p *parser) parseStartElement(elem *xml.StartElement) {
     switch elem.Name.Local {
     case "schema":
-        p.parseSchema(elem)
+        p.schemaStarted(elem)
     case "node", "simpleType", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
         "simpleContent", "complexContent", "choice":
         p.elementStarted(elem)
@@ -129,7 +128,7 @@ func (p *parser) parseEndElement(elem *xml.EndElement) {
     }
 }
 
-func (p *parser) parseSchema(elem *xml.StartElement) {
+func (p *parser) schemaStarted(elem *xml.StartElement) {
     ns := findAttributeByName(elem.Attr, "targetNamespace")
     if ns != nil {
         p.nsStack.Push(ns.Value)
@@ -145,7 +144,7 @@ func (p *parser) parseSchema(elem *xml.StartElement) {
         }
     }
 
-    p.elStack.Push(newNode(elem))
+    p.elStack.Push(p.rootNode)
 }
 
 func (p *parser) GetTypes() []*Type {
@@ -153,10 +152,11 @@ func (p *parser) GetTypes() []*Type {
     p.linkTypes(l)
     p.renameDuplicatedTypes(l)
     p.foldSimpleTypes(l)
+    // l = p.removeUnusedTypes(l)
     return l
 }
 
-// Сгенерировать список типов по построенному дереву
+// Generate types list according to previously built tree
 func (p *parser) parseTypesImpl(node *node) []*Type {
     var res []*Type
     for _, n := range node.children {
@@ -177,12 +177,11 @@ func (p *parser) parseTypesImpl(node *node) []*Type {
     }
 
     // простое содержимое с атрибутами
-    if len(node.children) > 0 && node.isSimpleContent {
+    if len(node.children) > 0 && node != p.rootNode {
         f := &Field{
             Name:     "Value",
             TypeName: node.name}
         node.genType.addField(f)
-        // node.genType.BaseTypeName = nil
     }
 
     return res
@@ -264,27 +263,16 @@ func (p *parser) endElement() {
 
     typeAttr := findAttributeByName(e.startElem.Attr, "type")
     if typeAttr != nil {
-        e.name = p.createQName(typeAttr.Value)
+        e.typeName = p.createQName(typeAttr.Value)
     }
 
     refAttr := findAttributeByName(e.startElem.Attr, "ref")
     if refAttr != nil {
-        e.name = p.createQName(refAttr.Value)
+        e.typeName = p.createQName(refAttr.Value)
     }
 
     context := p.elStack.GetLast()
-
-    if context.elemName == "schema" {
-        nameAttr := findAttributeByName(e.startElem.Attr, "name")
-        // значит предок у нас - schema, т.е. это глобальный тип
-        if nameAttr == nil {
-            panic("Element should has elemName attribute")
-        }
-
-        p.rootNode.addChild(e)
-    } else if context.elemName == "sequence" || context.elemName == "choice" {
-        context.children = append(context.children, e)
-    }
+    context.children = append(context.children, e)
 
     if e.name.Local == "" && len(e.children) == 0 {
         e.name = stringQName
@@ -350,20 +338,14 @@ func (p *parser) endSimpleType() {
     e := p.elStack.Pop()
     e.name.Space = p.nsStack.GetLast()
     e.isSimpleContent = true
+    context := p.elStack.GetLast()
     nameAttr := findAttributeByName(e.startElem.Attr, "name")
     if nameAttr != nil {
         e.name.Local = nameAttr.Value
-    }
-
-    context := p.elStack.GetLast()
-    if context.elemName == "schema" {
-        p.rootNode.addChild(e)
     } else {
-        // анонимный тип, встраиваем в контейнер
-        context := p.elStack.GetLast()
-        context.name = e.name
         context.isSimpleContent = e.isSimpleContent
     }
+    context.addChild(e)
 }
 
 func (p *parser) endExtensionRestriction() {
@@ -440,4 +422,25 @@ func (p *parser) endChoice() {
     e := p.elStack.Pop()
     context := p.elStack.GetLast()
     context.children = append(context.children, e.children...)
+}
+
+// Remove type that made not from elements
+func (p *parser) removeUnusedTypes(types []*Type) []*Type {
+    // build dependencies
+    usedTypes := make(map[xml.Name]bool)
+    for _, t := range types {
+        for _, f := range t.Fields {
+            usedTypes[f.TypeName] = true
+        }
+    }
+
+    // remove unused types
+    var res []*Type
+    for _, t := range types {
+        if _, ok := usedTypes[t.Name]; ok || t.SourceNode.elemName != "element" {
+            res = append(res, t)
+        }
+    }
+
+    return res
 }

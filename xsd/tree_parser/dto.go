@@ -8,8 +8,11 @@ type node struct {
     // чисто для сокращения, поскольку вся эта информация содержится в startElem
     elemName string
 
-    // имя элемента, по сути, значение атрибута name
+    // elements name, value of a "name" attribute
     name xml.Name
+
+    // element type name
+    typeName xml.Name
 
     // сам элемент, из которого создавался node
     startElem       *xml.StartElement
@@ -53,9 +56,10 @@ func newNode(startElem *xml.StartElement) *node {
 
 type Type struct {
     xml.Name
-    Fields []*Field
+    Fields     []*Field
+    SourceNode *node
 
-    // Если это не simpleType, значит создано из extension/restriction
+    // Only for simple types
     BaseType     *Type
     BaseTypeName xml.Name
 }
@@ -70,7 +74,8 @@ func (t *Type) Hash() {
 
 func newType(n *node) *Type {
     return &Type{
-        Name: n.name}
+        Name:       n.name,
+        SourceNode: n}
 }
 
 type Field struct {
