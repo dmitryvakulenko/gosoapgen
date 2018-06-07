@@ -5,11 +5,41 @@ import (
 )
 
 type Node struct {
-    ElementName string
-    StartElem   *xml.StartElement
-    Children    []*Node
+    name      string
+    startElem *xml.StartElement
+    children  []*Node
 }
 
 func (n *Node) addChild(e *Node) {
-    n.Children = append(n.Children, e)
+    n.children = append(n.children, e)
+}
+
+func (n *Node) Children() []*Node {
+    return n.children
+}
+
+func (n *Node) FirstChild() *Node {
+    if len(n.children) == 0 {
+        return nil
+    }
+    return n.children[0]
+}
+
+func (n *Node) Attribute(name string) *xml.Attr {
+    for _, a := range n.startElem.Attr {
+        if a.Name.Local == name {
+            return &a
+        }
+    }
+
+    return nil
+}
+
+func (n *Node) AttributeValue(name string) string {
+    a := n.Attribute(name)
+    if a != nil {
+        return a.Value
+    } else {
+        return ""
+    }
 }

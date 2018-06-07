@@ -8,8 +8,8 @@ import (
 
 func newNode(e *xml.StartElement) *Node {
     return &Node{
-        ElementName: e.Name.Local,
-        StartElem: e}
+        name:      e.Name.Local,
+        startElem: e}
 }
 
 func Load(r io.ReadCloser) *Node {

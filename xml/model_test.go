@@ -13,11 +13,11 @@ func TestSimple(t *testing.T) {
         t.Fatalf("No tree")
     }
 
-    if n.ElementName != "note" {
+    if n.name != "note" {
         t.Errorf("Element name should be note")
     }
 
-    if len(n.Children) != 4 {
-        t.Errorf("Children amount should be 4< %d got", len(n.Children))
+    if len(n.Children()) != 4 {
+        t.Errorf("children amount should be 4< %d got", len(n.Children()))
     }
 }
