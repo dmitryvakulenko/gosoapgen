@@ -75,10 +75,10 @@ func (t *Type) Hash() {
     // надо реализовать и учитывать при проверке дублей
 }
 
-func newType(n *xsd.Node) *Type {
+func newType(n *xsd.Node, ns string) *Type {
     name := n.AttributeValue("name")
     return &Type{
-        Name:       xml.Name{Local: name, Space: curSchema.TargetNamespace},
+        Name:       xml.Name{Local: name, Space: ns},
         SourceNode: n}
 }
 
@@ -91,10 +91,10 @@ type Field struct {
     Comment  string
 }
 
-func newField(n *node) *Field {
+func newField(n *xsd.Node, typ xml.Name) *Field {
     return &Field{
-        Name:     n.name.Local,
-        TypeName: n.name,
-        IsAttr:   n.isAttr,
-        IsArray:  n.isArray}
+        Name:     n.AttributeValue("name"),
+        TypeName: typ}
+        // IsAttr:   n.isAttr,
+        // IsArray:  n.isArray}
 }

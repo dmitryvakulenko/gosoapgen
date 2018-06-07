@@ -36,11 +36,11 @@ func (n *Node) Attribute(name string) *xml.Attr {
     return nil
 }
 
-func (n *Node) AllAttributesByName(name string) []*xml.Attr {
-    var ret []*xml.Attr
+func (n *Node) AllAttributesByName(name string) []xml.Attr {
+    var ret []xml.Attr
     for _, a := range n.startElem.Attr {
         if a.Name.Space == name {
-            ret = append(ret, &a)
+            ret = append(ret, a)
         }
     }
 
@@ -56,7 +56,17 @@ func (n *Node) AttributeValue(name string) string {
     }
 }
 
-func (n *Node) ElementsByName(name string) []*Node {
+func (n *Node) ChildByName(name string) *Node {
+    for _, v := range n.children {
+        if v.name == name {
+            return v
+        }
+    }
+
+    return nil
+}
+
+func (n *Node) ChildrenByName(name string) []*Node {
     var res []*Node
     for _, v := range n.children {
         if v.name == name {
