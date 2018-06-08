@@ -65,6 +65,8 @@ type Type struct {
     // Only for simple types
     BaseType     *Type
     BaseTypeName xml.Name
+
+    isSimpleContent bool
 }
 
 func (t *Type) addField(f *Field) {
@@ -95,6 +97,18 @@ func newField(n *xsd.Node, typ xml.Name) *Field {
     return &Field{
         Name:     n.AttributeValue("name"),
         TypeName: typ}
-        // IsAttr:   n.isAttr,
-        // IsArray:  n.isArray}
+    // IsAttr:   n.isAttr,
+    // IsArray:  n.isArray}
+}
+
+func newXMLNameField() *Field {
+    return &Field{
+        Name:     "XMLName",
+        TypeName: stringQName}
+}
+
+func newValueField(typeName xml.Name) *Field {
+    return &Field{
+        Name:     "Value",
+        TypeName: typeName}
 }

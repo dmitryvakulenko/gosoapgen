@@ -62,6 +62,14 @@ func TestSimpleElements(t *testing.T) {
 	if len(fields) != 2 {
         t.Fatalf("Fields amount should be 2, got %d", len(fields))
     }
+
+    if fields[0].Name != "XMLName" {
+        t.Errorf(`Field name should be XMLName, %q got`, fields[0].Name)
+    }
+
+    if fields[1].Name != "Value" {
+        t.Errorf(`Field name should be XMLName, %q got`, fields[1].Name)
+    }
 }
 //
 // func TestComplexType(t *testing.T) {

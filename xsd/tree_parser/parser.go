@@ -175,7 +175,8 @@ func (p *parser) GetTypes() []*Type {
     p.generateTypes()
     p.linkTypes()
     p.renameDuplicatedTypes()
-    p.foldSimpleTypes()
+    foldSimpleTypes()
+    embedFields()
     // l = p.removeUnusedTypes(l)
 
     var res []*Type
@@ -258,7 +259,7 @@ func (p *parser) renameDuplicatedTypes() {
     }
 }
 
-func (p *parser) foldSimpleTypes() {
+func foldSimpleTypes() {
     for _, t := range typesCache {
         for _, f := range t.Fields {
             if len(f.Type.Fields) == 0 {
@@ -459,14 +460,6 @@ func (p *parser) endChoice() {
 
 // Remove type that made not from elements
 func (p *parser) removeUnusedTypes(types []*Type) []*Type {
-    // build dependencies
-    usedTypes := make(map[xml.Name]bool)
-    for _, t := range types {
-        for _, f := range t.Fields {
-            usedTypes[f.TypeName] = true
-        }
-    }
-
     // remove unused types
     var res []*Type
     // for _, t := range types {
@@ -501,6 +494,7 @@ func (p *parser) elementNode(n *xsd.Node) []*Type {
     if st != nil {
         restr := st.ChildByName("restriction")
         tp.BaseTypeName = p.restrictionNode(restr)
+        tp.isSimpleContent = true
     }
     // com := n.ChildrenByName("complexType")
 
@@ -517,3 +511,37 @@ func (p *parser) restrictionNode(n *xsd.Node) xml.Name {
 
     return p.createQName(base)
 }
+
+// Made embedding ref, attributeGroup fields
+// also adding XMLName and Value fields
+func embedFields() {
+    dep := buildDependencies()
+    for _, t := range typesCache {
+        // adding XMLName field
+        if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" {
+            t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
+        }
+
+        if t.isSimpleContent {
+            t.Fields = append(t.Fields, newValueField(t.BaseTypeName))
+        }
+    }
+}
+
+// build dependencies
+func buildDependencies() map[xml.Name][]*Type {
+    usedTypes := make(map[xml.Name][]*Type)
+    for _, t := range typesCache {
+        for _, f := range t.Fields {
+            if _, ok := usedTypes[f.TypeName]; !ok {
+                usedTypes[f.TypeName] = []*Type{f.Type}
+            } else {
+                usedTypes[f.TypeName] = append(usedTypes[f.TypeName], f.Type)
+            }
+        }
+    }
+
+    return usedTypes
+}
+
+
