@@ -41,7 +41,7 @@ type parser struct {
     curNs    map[string]string
     rootNode *node
 
-    schemas   []*xsd.Schema
+    schemas []*xsd.Schema
     // basePath string
 }
 
@@ -107,7 +107,7 @@ func (p *parser) parseStartElement(elem *xml.StartElement) {
     switch elem.Name.Local {
     case "schema":
         p.schemaStarted(elem)
-    case "node", "simpleType", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
+    case "node", "simpleTypeNode", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
         "simpleContent", "complexContent", "choice":
         p.elementStarted(elem)
     case "include", "import":
@@ -121,34 +121,34 @@ func (p *parser) elementStarted(e *xml.StartElement) {
 }
 
 func (p *parser) parseEndElement(elem *xml.EndElement) {
-    switch elem.Name.Local {
-    case "schema":
-        p.nsStack.Pop()
-    case "simpleType":
-        p.endSimpleType()
-    case "extension", "restriction":
-        p.endExtensionRestriction()
-    case "complexType":
-        p.endComplexType()
-    case "sequence":
-        p.endSequence()
-    case "node":
-        p.endElement()
-    case "attribute":
-        p.endAttribute()
-    case "attributeGroup":
-        p.endAttributeGroup()
-    case "element":
-        p.endElement()
-    case "union":
-        p.endUnion()
-    case "simpleContent":
-        p.endSimpleContent()
-    case "complexContent":
-        p.endComplexContent()
-    case "choice":
-        p.endChoice()
-    }
+    // switch elem.Name.Local {
+    // case "schema":
+    //     p.nsStack.Pop()
+    // case "simpleTypeNode":
+    //     p.simpleTypeNode()
+    // case "extension", "restriction":
+    //     p.endExtensionRestriction()
+    // case "complexType":
+    //     p.endComplexType()
+    // case "sequence":
+    //     p.endSequence()
+    // case "node":
+    //     p.endElement()
+    // case "attribute":
+    //     p.endAttribute()
+    // case "attributeGroup":
+    //     p.endAttributeGroup()
+    // case "element":
+    //     p.endElement()
+    // case "union":
+    //     p.endUnion()
+    // case "simpleContent":
+    //     p.endSimpleContent()
+    // case "complexContent":
+    //     p.endComplexContent()
+    // case "choice":
+    //     p.endChoice()
+    // }
 }
 
 func (p *parser) schemaStarted(elem *xml.StartElement) {
@@ -175,16 +175,11 @@ func (p *parser) GetTypes() []*Type {
     p.generateTypes()
     p.linkTypes()
     p.renameDuplicatedTypes()
-    foldSimpleTypes()
-    embedFields()
-    // l = p.removeUnusedTypes(l)
+    resolveBaseTypes()
+    l := filterUnusedTypes()
+    embedFields(l)
 
-    var res []*Type
-    for _, t := range typesCache {
-        res = append(res, t)
-    }
-
-    return res
+    return l
 }
 
 // Generate types list according to previously built tree
@@ -199,8 +194,8 @@ func (p *parser) processNode(n *xsd.Node) {
     switch n.Name() {
     case "schema":
         p.schemaNode(n)
-    case "simpleType":
-        p.endSimpleType()
+    case "simpleTypeNode":
+        p.simpleTypeNode(n)
     case "extension", "restriction":
         p.endExtensionRestriction()
     case "complexType":
@@ -229,20 +224,20 @@ func (p *parser) processNode(n *xsd.Node) {
 // связать все типы
 func (p *parser) linkTypes() {
     for _, t := range typesCache {
-        // if t.BaseTypeName.Local != "" {
-        //     t.BaseType = p.findGlobalTypeNode(t.BaseTypeName).genType
-        // }
+        if t.baseTypeName.Local != "" {
+            t.baseType = p.findTypeByName(t.baseTypeName)
+        }
 
         for _, f := range t.Fields {
             if f.Type != nil {
                 continue
             }
 
-            fTypeNode := p.findGlobalTypeNode(f.TypeName)
-            if fTypeNode.elemName == "attributeGroup" {
-                f.Name = fTypeNode.name.Local
-            }
-            f.Type = fTypeNode.genType
+            fType := p.findTypeByName(f.TypeName)
+            // if fType.SourceNode.Name() == "attributeGroup" {
+            //     f.Name = fType.So
+            // }
+            f.Type = fType
         }
     }
 }
@@ -270,22 +265,20 @@ func foldSimpleTypes() {
 }
 
 func getLastType(t *Type) *Type {
-    if t.BaseType == nil || len(t.Fields) != 0 {
+    if t.baseType == nil || len(t.Fields) != 0 {
         return t
     } else {
-        return getLastType(t.BaseType)
+        return getLastType(t.baseType)
     }
 }
 
-func (p *parser) findGlobalTypeNode(name xml.Name) *node {
+func (p *parser) findTypeByName(name xml.Name) *Type {
     if name.Space == "http://www.w3.org/2001/XMLSchema" {
-        return &node{genType: &Type{Name: name}}
+        return &Type{Name: name}
     }
 
-    for _, t := range p.rootNode.children {
-        if t.name == name {
-            return t
-        }
+    if t, ok := typesCache[name]; ok {
+        return t
     }
 
     panic("Can't find type " + name.Local)
@@ -368,18 +361,20 @@ func (p *parser) endComplexType() {
     }
 }
 
-func (p *parser) endSimpleType() {
-    e := p.elStack.Pop()
-    e.name.Space = p.nsStack.GetLast()
-    e.isSimpleContent = true
-    context := p.elStack.GetLast()
-    nameAttr := findAttributeByName(e.startElem.Attr, "name")
-    if nameAttr != nil {
-        e.name.Local = nameAttr.Value
-    } else {
-        context.isSimpleContent = e.isSimpleContent
+func (p *parser) simpleTypeNode(n *xsd.Node) xml.Name {
+    var tp *Type
+    name := n.AttributeValue("name")
+    if name != "" {
+        tp = createAndAddType(n)
+        tp.isSimpleContent = true
     }
-    context.addChild(e)
+
+    restr := n.ChildByName("restriction")
+    if restr != nil {
+        p.restrictionNode(restr)
+    }
+
+    return tp.Name
 }
 
 func (p *parser) endExtensionRestriction() {
@@ -459,14 +454,14 @@ func (p *parser) endChoice() {
 }
 
 // Remove type that made not from elements
-func (p *parser) removeUnusedTypes(types []*Type) []*Type {
-    // remove unused types
+func filterUnusedTypes() []*Type {
     var res []*Type
-    // for _, t := range types {
-    //     if _, ok := usedTypes[t.Name]; ok || t.SourceNode.elemName != "element" {
-    //         res = append(res, t)
-    //     }
-    // }
+    dep := buildDependencies()
+    for _, t := range typesCache {
+        if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" {
+            res = append(res, t)
+        }
+    }
 
     return res
 }
@@ -487,21 +482,21 @@ func (p *parser) schemaNode(n *xsd.Node) {
     }
 }
 
-func (p *parser) elementNode(n *xsd.Node) []*Type {
+func (p *parser) elementNode(n *xsd.Node) {
     tp := createAndAddType(n)
 
     st := n.ChildByName("simpleType")
     if st != nil {
-        restr := st.ChildByName("restriction")
-        tp.BaseTypeName = p.restrictionNode(restr)
-        tp.isSimpleContent = true
+        tp.baseTypeName = p.simpleTypeNode(st)
     }
+
+    base := n.AttributeValue("type")
+    if base != "" {
+        tp.baseTypeName = p.createQName(base)
+    }
+
     // com := n.ChildrenByName("complexType")
-
-
-    return []*Type{tp}
 }
-
 
 func (p *parser) restrictionNode(n *xsd.Node) xml.Name {
     base := n.AttributeValue("base")
@@ -514,16 +509,16 @@ func (p *parser) restrictionNode(n *xsd.Node) xml.Name {
 
 // Made embedding ref, attributeGroup fields
 // also adding XMLName and Value fields
-func embedFields() {
+func embedFields(typs []*Type) {
     dep := buildDependencies()
-    for _, t := range typesCache {
+    for _, t := range typs {
         // adding XMLName field
         if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" {
             t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
         }
 
         if t.isSimpleContent {
-            t.Fields = append(t.Fields, newValueField(t.BaseTypeName))
+            t.Fields = append(t.Fields, newValueField(t.baseTypeName))
         }
     }
 }
@@ -532,16 +527,42 @@ func embedFields() {
 func buildDependencies() map[xml.Name][]*Type {
     usedTypes := make(map[xml.Name][]*Type)
     for _, t := range typesCache {
+        var typeDep []*Type
+        if t.baseType != nil {
+            typeDep = append(typeDep, t.baseType)
+        }
+
         for _, f := range t.Fields {
-            if _, ok := usedTypes[f.TypeName]; !ok {
-                usedTypes[f.TypeName] = []*Type{f.Type}
-            } else {
-                usedTypes[f.TypeName] = append(usedTypes[f.TypeName], f.Type)
+            typeDep = append(typeDep, f.Type)
+        }
+
+        for _, tp := range typeDep {
+            if _, ok := usedTypes[tp.Name]; !ok {
+                usedTypes[tp.Name] = []*Type{}
             }
+            usedTypes[tp.Name] = append(usedTypes[tp.Name], tp)
         }
     }
 
     return usedTypes
 }
 
+func resolveBaseTypes() {
+    for _, t := range typesCache {
+        t.Fields = append(collectBaseFields(t), t.Fields...)
+    }
+}
 
+func collectBaseFields(t *Type) []*Field {
+    var res []*Field
+    if t.baseType == nil {
+        return res
+    }
+
+    res = append(res, t.Fields...)
+    res = append(res, collectBaseFields(t.baseType)...)
+    t.isSimpleContent = t.baseType.isSimpleContent
+    t.baseType = nil
+
+    return res
+}

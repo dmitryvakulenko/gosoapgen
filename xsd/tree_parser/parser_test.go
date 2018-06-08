@@ -14,31 +14,31 @@ func TestEmptySchema(t *testing.T) {
 	}
 }
 
-// func TestSimpleTypes(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
-// 	}
-//
-// 	tp := typesList[0]
-// 	name := "Test"
-// 	if name != tp.Name.Local {
-// 		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name.Local)
-// 	}
-//
-//     if len(tp.Fields) != 2 {
-//         t.Fatalf("Wrong number of type fields. 2 expected, but got %d", len(tp.Fields))
-//     }
-//
-//     if tp.Fields[0].Name != "XMLName" {
-//         t.Errorf(`First field name should be "XMLName", %q got`, tp.Fields[0].Name)
-//     }
-//
-//     if tp.Fields[1].Name != "XMLValue" {
-//         t.Errorf(`First field name should be "XMLValue", %q got`, tp.Fields[1].Name)
-//     }
-// }
+func TestSimpleTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
+	}
+
+	tp := typesList[0]
+	name := "Test"
+	if name != tp.Name.Local {
+		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name.Local)
+	}
+
+    if len(tp.Fields) != 2 {
+        t.Fatalf("Wrong number of type fields. 2 expected, but got %d", len(tp.Fields))
+    }
+
+    if tp.Fields[0].Name != "XMLName" {
+        t.Errorf(`First field name should be "XMLName", %q got`, tp.Fields[0].Name)
+    }
+
+    if tp.Fields[1].Name != "XMLValue" {
+        t.Errorf(`First field name should be "XMLValue", %q got`, tp.Fields[1].Name)
+    }
+}
 
 func TestSimpleElements(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
@@ -67,7 +67,7 @@ func TestSimpleElements(t *testing.T) {
         t.Errorf(`Field name should be XMLName, %q got`, fields[0].Name)
     }
 
-    if fields[1].Name != "Value" {
+    if fields[1].Name != "XMLValue" {
         t.Errorf(`Field name should be XMLName, %q got`, fields[1].Name)
     }
 }
@@ -94,7 +94,7 @@ func TestSimpleElements(t *testing.T) {
 // 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
 // 	}
 //
-// 	if cType.BaseType != nil {
+// 	if cType.baseType != nil {
 // 		t.Errorf("Type should has no base type")
 // 	}
 //
@@ -340,8 +340,8 @@ func TestSimpleElements(t *testing.T) {
 // 		t.Errorf("Type name shoud be 'OwnerSimpleType', %q given", typesList[0].Name)
 // 	}
 //
-// 	if typesList[0].BaseTypeName.Name != "string" {
-// 		t.Errorf("Type base type shoud be 'string', %q given", typesList[0].BaseTypeName.Name)
+// 	if typesList[0].baseTypeName.Name != "string" {
+// 		t.Errorf("Type base type shoud be 'string', %q given", typesList[0].baseTypeName.Name)
 // 	}
 // }
 //
@@ -396,7 +396,7 @@ func TestSimpleElements(t *testing.T) {
 // 		t.Errorf("TypeName name should be %q, got %q instead", name, cType.Name)
 // 	}
 //
-// 	if cType.BaseType == nil {
+// 	if cType.baseType == nil {
 // 		t.Fatalf("Type should has base type")
 // 	}
 //
@@ -427,7 +427,7 @@ func TestSimpleElements(t *testing.T) {
 //     }
 //     ct := typesList[0]
 //
-//     if ct.BaseType != nil {
+//     if ct.baseType != nil {
 //         t.Fatalf("Base type should be nil")
 //     }
 //
@@ -458,12 +458,12 @@ func TestSimpleElements(t *testing.T) {
 // 	}
 //
 // 	tp := typesList[1]
-// 	if tp.BaseType == nil {
+// 	if tp.baseType == nil {
 // 		t.Fatalf("Type should has base type")
 // 	}
 //
-// 	if tp.BaseType.Name != "PointOfSaleType" {
-// 		t.Errorf("Base type name should be 'PointOfSaleType', %q got", tp.BaseType.Name)
+// 	if tp.baseType.Name != "PointOfSaleType" {
+// 		t.Errorf("Base type name should be 'PointOfSaleType', %q got", tp.baseType.Name)
 // 	}
 // }
 //
@@ -496,11 +496,11 @@ func TestSimpleElements(t *testing.T) {
 //         t.Errorf("Wrong type fields amount. 0 expected, %d got", len(ct.Fields))
 //     }
 //
-//     if ct.BaseType == nil {
+//     if ct.baseType == nil {
 //         t.Fatalf("Type should has base type")
 //     }
 //
-//     fields := ct.BaseType.Fields
+//     fields := ct.baseType.Fields
 //     if len(fields) != 2 {
 //         t.Errorf("Wrong type fields amount. 2 expected, %d got", len(fields))
 //     }

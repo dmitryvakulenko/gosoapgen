@@ -62,9 +62,8 @@ type Type struct {
     Fields     []*Field
     SourceNode *xsd.Node
 
-    // Only for simple types
-    BaseType     *Type
-    BaseTypeName xml.Name
+    baseType     *Type
+    baseTypeName xml.Name
 
     isSimpleContent bool
 }
@@ -109,6 +108,6 @@ func newXMLNameField() *Field {
 
 func newValueField(typeName xml.Name) *Field {
     return &Field{
-        Name:     "Value",
+        Name:     "XMLValue",
         TypeName: typeName}
 }

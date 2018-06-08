@@ -16,14 +16,14 @@ var innerTypes = []string{
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
     for _, curType := range typesList {
         if curType.IsSimpleContent && len(curType.Fields) == 0 {
-            typeName := mapStandardType(curType.BaseType.Name)
+            typeName := mapStandardType(curType.baseType.Name)
             writer.Write([]byte("type " + curType.Name + " " + firstUp(typeName) + "\n\n"))
             continue
         }
 
         writer.Write([]byte("type " + firstUp(curType.Name) + " struct {\n"))
-        if curType.BaseType != nil {
-            writer.Write([]byte(firstUp(curType.BaseType.Name) + "\n"))
+        if curType.baseType != nil {
+            writer.Write([]byte(firstUp(curType.baseType.Name) + "\n"))
         }
         for _, f := range curType.Fields {
             writeField(f, curType.Namespace, writer)
