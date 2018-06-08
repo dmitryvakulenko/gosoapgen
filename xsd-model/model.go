@@ -26,6 +26,13 @@ func (n *Node) Children() []*Node {
     return n.children
 }
 
+func (n *Node) FirstChild() *Node {
+    if len(n.children) > 0 {
+        return n.children[0]
+    }
+    return nil
+}
+
 func (n *Node) Attribute(name string) *xml.Attr {
     for _, a := range n.startElem.Attr {
         if a.Name.Local == name {
@@ -77,15 +84,13 @@ func (n *Node) ChildrenByName(name string) []*Node {
     return res
 }
 
-
 type Schema struct {
     Node
     TargetNamespace string
-    nsAlias map[string]string
+    ChildSchemas    []*Schema
+    nsAlias         map[string]string
 }
-
 
 func (s *Schema) ResolveSpace(prefix string) string {
     return s.nsAlias[prefix]
 }
-

@@ -62,8 +62,8 @@ type Type struct {
     Fields     []*Field
     SourceNode *xsd.Node
 
-    baseType     *Type
-    baseTypeName xml.Name
+    baseType *Type
+    // baseTypeName xml.Name
 
     isSimpleContent bool
 }
@@ -83,31 +83,35 @@ func newType(n *xsd.Node, ns string) *Type {
         SourceNode: n}
 }
 
+func newStandardType(name string) *Type {
+    return &Type{Name: xml.Name{Local: name, Space: "http://www.w3.org/2001/XMLSchema"}}
+}
+
 type Field struct {
-    Name     string
-    Type     *Type
-    TypeName xml.Name
-    IsArray  bool
-    IsAttr   bool
-    Comment  string
+    Name string
+    Type *Type
+    // TypeName xml.Name
+    IsArray bool
+    IsAttr  bool
+    Comment string
 }
 
 func newField(n *xsd.Node, typ xml.Name) *Field {
     return &Field{
-        Name:     n.AttributeValue("name"),
-        TypeName: typ}
+        Name: n.AttributeValue("name")}
+    // TypeName: typ}
     // IsAttr:   n.isAttr,
     // IsArray:  n.isArray}
 }
 
 func newXMLNameField() *Field {
     return &Field{
-        Name:     "XMLName",
-        TypeName: stringQName}
+        Name: "XMLName",
+        Type: newStandardType("string")}
 }
 
-func newValueField(typeName xml.Name) *Field {
+func newValueField(baseType string) *Field {
     return &Field{
-        Name:     "XMLValue",
-        TypeName: typeName}
+        Name: "XMLValue",
+        Type: newStandardType(baseType)}
 }
