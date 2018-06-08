@@ -94,3 +94,22 @@ type Schema struct {
 func (s *Schema) ResolveSpace(prefix string) string {
     return s.nsAlias[prefix]
 }
+
+func (s *Schema) FindGlobalTypeByName(typeName xml.Name) *Node {
+    if s.TargetNamespace == typeName.Space {
+        for _, n := range s.children {
+            if n.AttributeValue("name") == typeName.Local {
+                return n
+            }
+        }
+    }
+
+    for _, sc := range s.ChildSchemas {
+        n := sc.FindGlobalTypeByName(typeName)
+        if n != nil {
+            return n
+        }
+    }
+
+    return nil
+}

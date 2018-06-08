@@ -1,7 +1,3 @@
-/*
-Парсер схемы xsd.
-Использует ручной обход всего дерева, вместо загрузки его с помощь Unmarshal.
- */
 package tree_parser
 
 import (
@@ -85,74 +81,6 @@ func (p *parser) loadSchema(inputFile string, ns string) *xsd.Schema {
     return s
 }
 
-func (p *parser) decodeXsd(decoder *xml.Decoder) {
-    for {
-        token, err := decoder.Token()
-        if err == io.EOF {
-            break
-        }
-
-        if err != nil {
-            panic(err)
-        }
-
-        switch elem := token.(type) {
-        case xml.StartElement:
-            p.parseStartElement(&elem)
-        case xml.EndElement:
-            p.parseEndElement(&elem)
-        }
-    }
-}
-
-func (p *parser) parseStartElement(elem *xml.StartElement) {
-    switch elem.Name.Local {
-    case "schema":
-        p.schemaStarted(elem)
-    case "node", "simpleTypeNode", "complexType", "extension", "restriction", "sequence", "attribute", "attributeGroup", "element", "union",
-        "simpleContent", "complexContent", "choice":
-        p.elementStarted(elem)
-    case "include", "import":
-        p.includeStarted(elem)
-    }
-}
-
-// Начало элемента, любого, а не только node
-func (p *parser) elementStarted(e *xml.StartElement) {
-    p.elStack.Push(newNode(e))
-}
-
-func (p *parser) parseEndElement(elem *xml.EndElement) {
-    // switch elem.Name.Local {
-    // case "schema":
-    //     p.nsStack.Pop()
-    // case "simpleTypeNode":
-    //     p.simpleTypeNode()
-    // case "extension", "restriction":
-    //     p.endExtensionRestriction()
-    // case "complexType":
-    //     p.endComplexType()
-    // case "sequence":
-    //     p.endSequence()
-    // case "node":
-    //     p.endElement()
-    // case "attribute":
-    //     p.endAttribute()
-    // case "attributeGroup":
-    //     p.endAttributeGroup()
-    // case "element":
-    //     p.endElement()
-    // case "union":
-    //     p.endUnion()
-    // case "simpleContent":
-    //     p.endSimpleContent()
-    // case "complexContent":
-    //     p.endComplexContent()
-    // case "choice":
-    //     p.endChoice()
-    // }
-}
-
 func (p *parser) schemaStarted(elem *xml.StartElement) {
     ns := findAttributeByName(elem.Attr, "targetNamespace")
     if ns != nil {
@@ -175,27 +103,42 @@ func (p *parser) schemaStarted(elem *xml.StartElement) {
 func (p *parser) GetTypes() []*Type {
     globalTypesCache = make(map[xml.Name]*Type)
     p.generateTypes(p.rootSchemas)
-    // p.linkTypes()
-    p.renameDuplicatedTypes()
     resolveBaseTypes()
-    l := filterUnusedTypes()
+
+    var types []*Type
+    for _, t := range globalTypesCache {
+        types = append(types, t)
+        types = append(types, extractInnerTypes(t, 0)...)
+    }
+
+    // renameDuplicatedTypes()
+    l := filterUnusedTypes(types)
     embedFields(l)
 
     return l
+}
+
+func extractInnerTypes(t *Type, deep int) []*Type {
+    var types []*Type
+    for _, f := range t.Fields {
+        if (!f.Type.isSimpleContent || len(f.Type.Fields) > 0) && deep > 0 {
+            types = append(types, extractInnerTypes(f.Type, deep + 1)...)
+        }
+    }
+
+    return types
 }
 
 // Generate types list according to previously built tree
 func (p *parser) generateTypes(schemas []*xsd.Schema) {
     for _, sc := range schemas {
         e := p.schemasStack.PushBack(sc)
-        for _, n := range sc.Children() {
-            p.schemaNode(n)
-        }
+        p.schemaNode(&sc.Node)
         p.schemasStack.Remove(e)
     }
 }
 
-func (p *parser) renameDuplicatedTypes() {
+func renameDuplicatedTypes() {
     names := make(map[string]int)
     for _, t := range globalTypesCache {
         if _, exist := names[t.Name.Local]; exist {
@@ -225,16 +168,36 @@ func getLastType(t *Type) *Type {
     }
 }
 
-func (p *parser) findTypeByName(name xml.Name) *Type {
+// Find type by name. If type not found, try to find node and create type
+func (p *parser) findGlobalTypeByName(name xml.Name) *Type {
     if name.Space == "http://www.w3.org/2001/XMLSchema" {
-        return &Type{Name: name}
+        return &Type{Name: name, isSimpleContent: true}
     }
 
     if t, ok := globalTypesCache[name]; ok {
         return t
     }
 
+    node := p.findGlobalNode(name)
+    if node != nil {
+        t := p.parseSomeRootNode(name, node)
+        globalTypesCache[name] = t
+        return t
+    }
+
     panic("Can't find type " + name.Local)
+}
+
+// Find schema node by name and element
+func (p *parser) findGlobalNode(name xml.Name) *xsd.Node {
+    for _, s := range p.rootSchemas {
+        n := s.FindGlobalTypeByName(name)
+        if n != nil {
+            return n
+        }
+    }
+
+    return nil
 }
 
 func (p *parser) endElement() {
@@ -267,12 +230,12 @@ func (p *parser) endElement() {
 func (p *parser) createQName(qName string) xml.Name {
     var name, namespace string
     typesParts := strings.Split(qName, ":")
-
+    sc := p.schemasStack.Back().Value.(*xsd.Schema)
     if len(typesParts) == 1 {
         name = typesParts[0]
-        // namespace = curSchema.TargetNamespace
+        namespace = sc.TargetNamespace
     } else {
-        // namespace = curSchema.ResolveSpace(typesParts[0])
+        namespace = sc.ResolveSpace(typesParts[0])
         name = typesParts[1]
     }
 
@@ -315,16 +278,12 @@ func (p *parser) endComplexType() {
 }
 
 func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
-    var tp *Type
-    name := n.AttributeValue("name")
-    if name != "" {
-        tp = p.createAndAddType(n)
-        tp.isSimpleContent = true
-    }
+    tp := p.createType(n)
+    tp.isSimpleContent = true
 
     restr := n.ChildByName("restriction")
     if restr != nil {
-        p.restrictionNode(restr)
+        tp.baseType = p.restrictionNode(restr)
     }
 
     return tp
@@ -407,10 +366,10 @@ func (p *parser) endChoice() {
 }
 
 // Remove type that made not from elements
-func filterUnusedTypes() []*Type {
+func filterUnusedTypes(types []*Type) []*Type {
     var res []*Type
-    dep := buildDependencies()
-    for _, t := range globalTypesCache {
+    dep := buildDependencies(types)
+    for _, t := range types {
         if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" {
             res = append(res, t)
         }
@@ -419,9 +378,15 @@ func filterUnusedTypes() []*Type {
     return res
 }
 
-func (p *parser) createAndAddType(n *xsd.Node) *Type {
+func (p *parser) createType(n *xsd.Node) *Type {
     sc := p.schemasStack.Back().Value.(*xsd.Schema)
     t := newType(n, sc.TargetNamespace)
+
+    // this not global, internal type with no name
+    if t.Local == "" {
+        return t
+    }
+
     if _, ok := globalTypesCache[t.Name]; ok {
         log.Fatalf("Duplicated types %+v", t)
     }
@@ -432,29 +397,45 @@ func (p *parser) createAndAddType(n *xsd.Node) *Type {
 
 func (p *parser) schemaNode(n *xsd.Node) {
     for _, ch := range n.Children() {
-        var tp *Type
-        switch ch.Name() {
-        case "element":
-            tp = p.elementNode(n)
-        case "simpleType":
-            tp = p.simpleTypeNode(n)
-        }
-
+        ns := p.schemasStack.Back().Value.(*xsd.Schema).TargetNamespace
+        name := ch.AttributeValue("name")
+        tp := p.parseSomeRootNode(xml.Name{Local: name, Space: ns}, ch)
         if tp != nil {
             globalTypesCache[tp.Name] = tp
         }
     }
 }
 
-func (p *parser) elementNode(n *xsd.Node) *Type {
-    switch ch := n.FirstChild(); ch.Name() {
-    case "simpleType":
-        // name := ch.AttributeValue("name")
+func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
+    if name.Local == "" {
+        panic("Root node without name")
+    }
 
+    if _, ok := globalTypesCache[name]; ok {
+        return nil
+    }
+
+    switch n.Name() {
+    case "element":
+        return p.elementNode(n)
+    case "simpleType":
+        return p.simpleTypeNode(n)
+    }
+
+    return nil
+}
+
+func (p *parser) elementNode(n *xsd.Node) *Type {
+    ch := n.FirstChild()
+    tp := p.createType(n)
+
+    switch ch.Name() {
+    case "simpleType":
+        tp.baseType = p.simpleTypeNode(ch)
     case "complexType":
     }
     // if st != nil {
-    //     tp := createAndAddType(n)
+    //     tp := createType(n)
     //     tp.baseTypeName = p.simpleTypeNode(st)
     // }
     //
@@ -464,38 +445,35 @@ func (p *parser) elementNode(n *xsd.Node) *Type {
     // }
 
     // com := n.ChildrenByName("complexType")
-    return nil
+    return tp
 }
 
-func (p *parser) restrictionNode(n *xsd.Node) xml.Name {
+func (p *parser) restrictionNode(n *xsd.Node) *Type {
     base := n.AttributeValue("base")
     if base == "" {
         panic("Restriction element without base")
     }
+    nm := p.createQName(base)
 
-    return p.createQName(base)
+    return p.findGlobalTypeByName(nm)
 }
 
 // Made embedding ref, attributeGroup fields
 // also adding XMLName and Value fields
 func embedFields(typs []*Type) {
-    dep := buildDependencies()
+    dep := buildDependencies(typs)
     for _, t := range typs {
         // adding XMLName field
         if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" {
             t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
         }
-
-        // if t.isSimpleContent {
-            // t.Fields = append(t.Fields, newValueField(t.baseTypeName))
-        // }
     }
 }
 
 // build dependencies
-func buildDependencies() map[xml.Name][]*Type {
+func buildDependencies(types []*Type) map[xml.Name][]*Type {
     usedTypes := make(map[xml.Name][]*Type)
-    for _, t := range globalTypesCache {
+    for _, t := range types {
         var typeDep []*Type
         if t.baseType != nil {
             typeDep = append(typeDep, t.baseType)
@@ -525,6 +503,9 @@ func resolveBaseTypes() {
 func collectBaseFields(t *Type) []*Field {
     var res []*Field
     if t.baseType == nil {
+        if t.isSimpleContent {
+            res = append(res, newValueField(t.Name.Space))
+        }
         return res
     }
 

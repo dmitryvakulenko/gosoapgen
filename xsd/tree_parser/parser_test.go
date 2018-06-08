@@ -40,38 +40,38 @@ func TestEmptySchema(t *testing.T) {
 //     }
 // }
 
-// func TestSimpleElements(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-// 	name := "minRange"
-// 	if cType.Local != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
-// 	}
-//
-// 	ns := "http://xml.amadeus.com/2010/06/Types_v1"
-// 	if cType.Space != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
-// 	}
-//
-// 	fields := cType.Fields
-// 	if len(fields) != 2 {
-//         t.Fatalf("Fields amount should be 2, got %d", len(fields))
-//     }
-//
-//     if fields[0].Name != "XMLName" {
-//         t.Errorf(`Field name should be XMLName, %q got`, fields[0].Name)
-//     }
-//
-//     if fields[1].Name != "XMLValue" {
-//         t.Errorf(`Field name should be XMLName, %q got`, fields[1].Name)
-//     }
-// }
-//
+func TestSimpleElements(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	name := "minRange"
+	if cType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Types_v1"
+	if cType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
+	}
+
+	fields := cType.Fields
+	if len(fields) != 2 {
+        t.Fatalf("Fields amount should be 2, got %d", len(fields))
+    }
+
+    if fields[0].Name != "XMLName" {
+        t.Errorf(`Field name should be XMLName, %q got`, fields[0].Name)
+    }
+
+    if fields[1].Name != "XMLValue" {
+        t.Errorf(`Field name should be XMLName, %q got`, fields[1].Name)
+    }
+}
+
 // func TestComplexType(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
