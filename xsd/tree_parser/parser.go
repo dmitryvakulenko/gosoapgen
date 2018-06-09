@@ -426,26 +426,33 @@ func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
 }
 
 func (p *parser) elementNode(n *xsd.Node) *Type {
-    ch := n.FirstChild()
-    tp := p.createType(n)
-
-    switch ch.Name() {
-    case "simpleType":
-        tp.baseType = p.simpleTypeNode(ch)
-    case "complexType":
+    t := p.createType(n)
+    typeName := n.AttributeValue("type")
+    if typeName != "" {
+        nm := p.createQName(typeName)
+        t.baseType = p.findGlobalTypeByName(nm)
+    } else {
+        ch := n.FirstChild()
+        switch ch.Name() {
+        case "simpleType":
+            t.baseType = p.simpleTypeNode(ch)
+        case "complexType":
+        }
     }
+
+
     // if st != nil {
-    //     tp := createType(n)
-    //     tp.baseTypeName = p.simpleTypeNode(st)
+    //     t := createType(n)
+    //     t.baseTypeName = p.simpleTypeNode(st)
     // }
     //
     // base := n.AttributeValue("type")
     // if base != "" {
-    //     tp.baseTypeName = p.createQName(base)
+    //     t.baseTypeName = p.createQName(base)
     // }
 
     // com := n.ChildrenByName("complexType")
-    return tp
+    return t
 }
 
 func (p *parser) restrictionNode(n *xsd.Node) *Type {
