@@ -96,10 +96,10 @@ type Field struct {
     Comment string
 }
 
-func newField(n *xsd.Node, typ xml.Name) *Field {
+func newField(n *xsd.Node, typ *Type) *Field {
     return &Field{
-        Name: n.AttributeValue("name")}
-    // TypeName: typ}
+        Name: n.AttributeValue("name"),
+        Type: typ}
     // IsAttr:   n.isAttr,
     // IsArray:  n.isArray}
 }

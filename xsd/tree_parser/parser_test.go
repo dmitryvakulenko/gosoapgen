@@ -72,55 +72,52 @@ func TestSimpleElements(t *testing.T) {
     }
 }
 
-// func TestComplexType(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-// 	if cType.IsSimpleContent {
-// 		t.Fatalf("Type should be complex type")
-// 	}
-//
-// 	name := "Session"
-// 	if cType.Name != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
-// 	}
-//
-// 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
-// 	if cType.Namespace != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
-// 	}
-//
-// 	if cType.baseType != nil {
-// 		t.Errorf("Type should has no base type")
-// 	}
-//
-// 	if len(cType.Fields) != 4 {
-// 		t.Fatalf("Should be 4 fields, %d getting", len(cType.Fields))
-// 	}
-//
-// 	field := cType.Fields[1]
-// 	if field.Name != "sequenceNumber" {
-// 		t.Errorf("Field elemName should be 'sequenceNumber', %q instead", field.Name)
-// 	}
-//
-// 	if field.TypeName.Name != "string" {
-// 		t.Errorf("Field type should be 'string' %q instead", field.Type.Name)
-// 	}
-//
-// 	field = cType.Fields[3]
-// 	if field.Name != "TransactionStatusCode" {
-// 		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
-// 	}
-//
-// 	if !field.IsAttr {
-// 		t.Errorf("TransactionStatusCode should be attribute")
-// 	}
-// }
-//
+func TestComplexType(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+
+	name := "Session"
+	if cType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Session_v3"
+	if cType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
+	}
+
+	if cType.baseType != nil {
+		t.Errorf("Type should has no base type")
+	}
+
+	if len(cType.Fields) != 5 {
+		t.Fatalf("Should be 5 fields, %d getting", len(cType.Fields))
+	}
+
+	field := cType.Fields[2]
+	if field.Name != "sequenceNumber" {
+		t.Errorf("Field elemName should be 'sequenceNumber', %q instead", field.Name)
+	}
+
+	if field.Type.Local != "string" {
+		t.Errorf("Field type should be 'string' %q instead", field.Type.Local)
+	}
+
+	field = cType.Fields[4]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if !field.IsAttr {
+		t.Errorf("TransactionStatusCode should be attribute")
+	}
+}
+
 // func TestSchemaComplexTypes(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
