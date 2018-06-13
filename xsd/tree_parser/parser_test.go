@@ -150,42 +150,42 @@ func TestSchemaComplexTypes(t *testing.T) {
 	}
 }
 
-// func TestComplexTypeWithAttributes(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-//
-// 	name := "Session"
-// 	if cType.Local != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
-// 	}
-//
-// 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
-// 	if cType.Space != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
-// 	}
-//
-// 	if len(cType.Fields) != 1 {
-// 		t.Fatalf("Should be 1 fields, %d getting", len(cType.Fields))
-// 	}
-//
-// 	field := cType.Fields[0]
-// 	if field.Name != "TransactionStatusCode" {
-// 		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
-// 	}
-//
-// 	if field.Type.Local != "NMTOKEN" {
-// 		t.Errorf("Field type should be 'string' %s instead", field.Type.Local)
-// 	}
-//
-// 	if !field.IsAttr {
-// 		t.Errorf("TransactionStatusCode should be attribute")
-// 	}
-// }
+func TestComplexTypeWithAttributes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+
+	name := "Session"
+	if cType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Session_v3"
+	if cType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
+	}
+
+	if len(cType.Fields) != 2 {
+		t.Fatalf("Should be 1 fields, %d getting", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "TransactionStatusCode" {
+		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
+	}
+
+	if field.Type.Local != "NMTOKEN" {
+		t.Errorf("Field type should be 'string' %s instead", field.Type.Local)
+	}
+
+	if !field.IsAttr {
+		t.Errorf("TransactionStatusCode should be attribute")
+	}
+}
 
 // func TestInnerComplexTypes(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
