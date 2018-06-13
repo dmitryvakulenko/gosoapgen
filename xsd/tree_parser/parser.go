@@ -104,6 +104,7 @@ func (p *parser) GetTypes() []*Type {
     globalTypesCache = make(map[xml.Name]*Type)
     p.generateTypes(p.rootSchemas)
     resolveBaseTypes()
+    foldSimpleTypes()
 
     var types []*Type
     for _, t := range globalTypesCache {
@@ -153,18 +154,10 @@ func renameDuplicatedTypes() {
 func foldSimpleTypes() {
     for _, t := range globalTypesCache {
         for _, f := range t.Fields {
-            if len(f.Type.Fields) == 0 {
-                f.Type = getLastType(f.Type)
+            if f.Type.isSimpleContent && len(f.Type.Fields) == 1 {
+                f.Type = f.Type.Fields[0].Type
             }
         }
-    }
-}
-
-func getLastType(t *Type) *Type {
-    if t.baseType == nil || len(t.Fields) != 0 {
-        return t
-    } else {
-        return getLastType(t.baseType)
     }
 }
 
@@ -513,7 +506,7 @@ func collectBaseFields(t *Type) []*Field {
 
     if t.baseType == nil {
         if t.isSimpleContent {
-            res = append(res, newValueField(t.Name.Space))
+            res = append(res, newValueField(t.Name.Local))
         }
         return res
     }

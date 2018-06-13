@@ -118,42 +118,38 @@ func TestComplexType(t *testing.T) {
 	}
 }
 
-// func TestSchemaComplexTypes(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 2 {
-// 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-// 	if cType.IsSimpleContent {
-// 		t.Fatalf("Type should be complex type")
-// 	}
-//
-// 	name := "AMA_SecurityHostedUser"
-// 	if cType.Name != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
-// 	}
-//
-// 	ns := "http://xml.amadeus.com/2010/06/Security_v1"
-// 	if cType.Namespace != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
-// 	}
-//
-// 	if len(cType.Fields) != 4 {
-// 		t.Errorf("TypeName should Has 4 fields, %d getting", len(cType.Fields))
-// 	}
-//
-// 	field := cType.Fields[2]
-// 	if field.Type == nil {
-// 		t.Fatalf("Field should has type")
-// 	}
-//
-// 	if field.Type.Name != "string" {
-// 		t.Fatalf("Field type name shoud be 'string', %q got", field.Type.Name)
-// 	}
-// }
-//
+func TestSchemaComplexTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	name := "AMA_SecurityHostedUser"
+	if cType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
+	}
+
+	ns := "http://xml.amadeus.com/2010/06/Security_v1"
+	if cType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
+	}
+
+	if len(cType.Fields) != 5 {
+		t.Errorf("TypeName should Has 4 fields, %d getting", len(cType.Fields))
+	}
+
+	field := cType.Fields[3]
+	if field.Type == nil {
+		t.Fatalf("Field should has type")
+	}
+
+	if field.Type.Local != "string" {
+		t.Fatalf("Field type name shoud be 'string', %q got", field.Type.Local)
+	}
+}
+
 // func TestComplexTypeWithAttributes(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
@@ -162,18 +158,15 @@ func TestComplexType(t *testing.T) {
 // 	}
 //
 // 	cType := typesList[0]
-// 	if cType.IsSimpleContent {
-// 		t.Fatalf("Type should be complex type")
-// 	}
 //
 // 	name := "Session"
-// 	if cType.Name != name {
+// 	if cType.Local != name {
 // 		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Name)
 // 	}
 //
 // 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
-// 	if cType.Namespace != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Namespace)
+// 	if cType.Space != ns {
+// 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
 // 	}
 //
 // 	if len(cType.Fields) != 1 {
@@ -185,15 +178,15 @@ func TestComplexType(t *testing.T) {
 // 		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
 // 	}
 //
-// 	if field.TypeName.Name != "NMTOKEN" {
-// 		t.Errorf("Field type should be 'string' %s instead", field.TypeName.Name)
+// 	if field.Type.Local != "NMTOKEN" {
+// 		t.Errorf("Field type should be 'string' %s instead", field.Type.Local)
 // 	}
 //
 // 	if !field.IsAttr {
 // 		t.Errorf("TransactionStatusCode should be attribute")
 // 	}
 // }
-//
+
 // func TestInnerComplexTypes(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
