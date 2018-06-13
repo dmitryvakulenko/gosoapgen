@@ -247,39 +247,33 @@ func TestInnerComplexTypes(t *testing.T) {
 	}
 }
 
-// func TestAttributeGroup(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	// вообще-то, строго говоря, attributeGroup - это не совсем тип, он встраивается
-// 	// но для простоты пусть будет так
-// 	if len(typesList) != 2 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-// 	if cType.IsSimpleContent {
-// 		t.Fatalf("Type should be complex type")
-// 	}
-//
-// 	name := "CodeType"
-// 	if cType.Name != "CodeType" {
-// 		t.Fatalf("TypeName elemName should be %q, got %q instead", name, cType.Name)
-// 	}
-//
-// 	if len(cType.Fields) != 1 {
-// 		t.Fatalf("Fields amount should be 5, %d instead", len(cType.Fields))
-// 	}
-//
-// 	field := cType.Fields[0]
-// 	if field.Name != "CodeGroup" {
-// 		t.Fatalf("Field elemName should be 'CodeGroup', %q instead", field.Name)
-// 	}
-//
-// 	if !field.IsAttr {
-// 		t.Fatalf("Owner should be attribute")
-// 	}
-// }
-//
+func TestAttributeGroup(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	name := "Test"
+	if cType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q instead", name, cType.Local)
+	}
+
+	if len(cType.Fields) != 6 {
+		t.Fatalf("Fields amount should be 6, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	if field.Name != "Code" {
+		t.Errorf("Field elemName should be 'Code', %q instead", field.Name)
+	}
+
+	if !field.IsAttr {
+		t.Errorf("Owner should be attribute")
+	}
+}
+
 // func TestParseElementRef(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //

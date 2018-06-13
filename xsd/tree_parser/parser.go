@@ -201,6 +201,8 @@ func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
         return p.simpleTypeNode(n)
     case "complexType":
         return p.complexTypeNode(n)
+    case "attributeGroup":
+        return p.attributeGroupNode(n)
     }
 
     panic("Can't find root node " + name.Local)
@@ -318,6 +320,8 @@ func (p *parser) complexTypeNode(n *xsd.Node) *Type {
         case "attribute":
             a := p.attributeNode(ch)
             t.addField(a)
+        case "attributeGroup":
+            t.baseType = p.attributeGroupNode(ch)
         }
     }
 
@@ -352,23 +356,25 @@ func (p *parser) attributeNode(n *xsd.Node) *Field {
     return res
 }
 
-func (p *parser) endAttributeGroup() {
-    e := p.elStack.Pop()
-    e.isAttr = true
-    e.name.Space = p.nsStack.GetLast()
-
-    context := p.elStack.GetLast()
-    nameAttr := findAttributeByName(e.startElem.Attr, "name")
-    refAttr := findAttributeByName(e.startElem.Attr, "ref")
-    if context.elemName == "schema" {
-        e.name.Local = nameAttr.Value
-        p.rootNode.addChild(e)
-    } else if refAttr != nil {
-        e.name = p.createQName(refAttr.Value)
-        context.addChild(e)
+func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
+    tp := p.createType(n)
+    name := n.AttributeValue("name")
+    ref := n.AttributeValue("ref")
+    if name != "" {
+        for _, ch := range n.Children() {
+            switch ch.Name() {
+            case "attribute":
+                f := p.attributeNode(ch)
+                tp.addField(f)
+            }
+        }
+    } else if ref != "" {
+        tp.baseType = p.findOrCreateGlobalType(ref)
     } else {
         panic("No elemName and no ref for attribute group")
     }
+
+    return tp
 }
 
 func (p *parser) includeStarted(e *xml.StartElement) {

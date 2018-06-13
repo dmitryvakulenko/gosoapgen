@@ -1,40 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSpy v2007 rel. 3 (http://www.altova.com) by Amadeus s.a.s. (Amadeus s.a.s.) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.amadeus.com/2010/06/Types_v1" targetNamespace="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iata="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:ota="http://www.opentravel.org/OTA/2003/05/OTA2010B" elementFormDefault="qualified" attributeFormDefault="unqualified"  version="1.002" id="AMA2011Y">
+    <xs:element name="Test" type="CodeType"/>
     <xs:complexType name="CodeType">
-        <xs:annotation>
-            <xs:documentation xml:lang="en">Used to convey any code. It may contain merely codes or integer codes associated to a value in AMA_CodeTable.xls</xs:documentation>
-        </xs:annotation>
         <xs:attributeGroup ref="CodeGroup" />
     </xs:complexType>
     <xs:attributeGroup name="CodeGroup">
-        <xs:annotation>
-            <xs:documentation>Used for codes. It may contain merely codes or integer codes associated to a value in AMA_CodeTable.xls</xs:documentation>
-        </xs:annotation>
         <xs:attribute name="Code" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>The code value - Sample: 21</xs:documentation>
-            </xs:annotation>
         </xs:attribute>
         <xs:attribute name="Owner" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Which owner defined this code, may be one of OTA, IATA or AMA</xs:documentation>
-            </xs:annotation>
         </xs:attribute>
         <xs:attribute name="ListName" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>The name of the code list this code refers too - sample: Transportation Code</xs:documentation>
-            </xs:annotation>
         </xs:attribute>
         <xs:attribute name="ListCode" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>The code of the code list this code refers too - sample: TRP</xs:documentation>
-            </xs:annotation>
         </xs:attribute>
         <xs:attribute name="Desc" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>The textual value that describes the code - Sample: Train</xs:documentation>
-            </xs:annotation>
         </xs:attribute>
     </xs:attributeGroup>
 </xs:schema>
