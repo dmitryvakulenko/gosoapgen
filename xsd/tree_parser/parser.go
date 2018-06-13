@@ -199,9 +199,11 @@ func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
         return p.elementNode(n)
     case "simpleType":
         return p.simpleTypeNode(n)
+    case "complexType":
+        return p.complexTypeNode(n)
     }
 
-    return nil
+    panic("Can't find root node " + name.Local)
 }
 
 
@@ -293,7 +295,12 @@ func (p *parser) sequenceNode(n *xsd.Node) *Type {
     for _, ch := range n.Children() {
         switch ch.Name() {
         case "element":
-            tp := p.findOrCreateGlobalType(ch.AttributeValue("type"))
+            var tp *Type
+            if typName := ch.AttributeValue("type"); typName != "" {
+                tp = p.findOrCreateGlobalType(typName)
+            } else {
+                tp = p.elementNode(ch)
+            }
             f := newField(ch, tp)
             t.addField(f)
         }
@@ -436,17 +443,6 @@ func (p *parser) elementNode(n *xsd.Node) *Type {
         }
     }
 
-    // if st != nil {
-    //     t := createType(n)
-    //     t.baseTypeName = p.simpleTypeNode(st)
-    // }
-    //
-    // base := n.AttributeValue("type")
-    // if base != "" {
-    //     t.baseTypeName = p.createQName(base)
-    // }
-
-    // com := n.ChildrenByName("complexType")
     return t
 }
 

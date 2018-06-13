@@ -187,74 +187,66 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 }
 
-// func TestInnerComplexTypes(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 3 {
-// 		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-// 	}
-//
-// 	firstType := typesList[0]
-// 	if firstType.IsSimpleContent {
-// 		t.Fatalf("Type should be complex type")
-// 	}
-//
-// 	secType := typesList[1]
-// 	if secType.IsSimpleContent {
-// 		t.Fatalf("Type should be complex type")
-// 	}
-//
-// 	name := "PNR_AddMultiElements"
-// 	if firstType.Name != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, firstType.Name)
-// 	}
-//
-// 	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
-// 	if firstType.Namespace != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Namespace)
-// 	}
-//
-// 	name = "travellerInfo"
-// 	if secType.Name != name {
-// 		t.Errorf("TypeName elemName should be %q, got %q", name, secType.Name)
-// 	}
-//
-// 	if secType.Namespace != ns {
-// 		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Namespace)
-// 	}
-//
-// 	if len(firstType.Fields) != 1 {
-// 		t.Fatalf("Should be 1 fields, %d getting", len(firstType.Fields))
-// 	}
-//
-// 	field := firstType.Fields[0]
-// 	if field.Name != "travellerInfo" {
-// 		t.Errorf("Field elemName should be 'travellerInfo', %q instead", field.Name)
-// 	}
-//
-// 	if field.Type.Name != "travellerInfo" {
-// 		t.Errorf("Field type should be 'travellerInfo', %q instead", field.Type.Name)
-// 	}
-//
-// 	if len(secType.Fields) != 1 {
-// 		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
-// 	}
-//
-// 	if secType.Fields[0].Name != "elementManagementPassenger" {
-// 		t.Errorf("Second type elemName shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
-// 	}
-//
-// 	thirdType := typesList[2]
-// 	field = thirdType.Fields[0]
-// 	if field.Name != "reference" {
-// 		t.Errorf("Field elemName should be 'reference', %q instead", field.Name)
-// 	}
-//
-// 	if field.Type.Name != "string" {
-// 		t.Errorf("Field type should be 'string', %q instead", field.Type.Name)
-// 	}
-// }
-//
+func TestInnerComplexTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 3 {
+		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
+	}
+
+	firstType, secType := typesList[0], typesList[1]
+
+	name := "PNR_AddMultiElements"
+	if firstType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, firstType.Local)
+	}
+
+	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
+	if firstType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Space)
+	}
+
+	name = "travellerInfo"
+	if secType.Local != name {
+		t.Errorf("TypeName elemName should be %q, got %q", name, secType.Local)
+	}
+
+	if secType.Space != ns {
+		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Space)
+	}
+
+	if len(firstType.Fields) != 2 {
+		t.Fatalf("Should be 2 fields, %d getting", len(firstType.Fields))
+	}
+
+	field := firstType.Fields[1]
+	if field.Name != "travellerInfo" {
+		t.Errorf("Field elemName should be 'travellerInfo', %q instead", field.Name)
+	}
+
+	if field.Type.Local != "travellerInfo" {
+		t.Errorf("Field type should be 'travellerInfo', %q instead", field.Type.Local)
+	}
+
+	if len(secType.Fields) != 1 {
+		t.Fatalf("Second type fields amount should be 1, got %d instead", len(secType.Fields))
+	}
+
+	if secType.Fields[0].Name != "elementManagementPassenger" {
+		t.Errorf("Second type elemName shoud be 'ElementManagementPassenger', %q instead", secType.Fields[0].Name)
+	}
+
+	thirdType := typesList[2]
+	field = thirdType.Fields[0]
+	if field.Name != "reference" {
+		t.Errorf("Field elemName should be 'reference', %q instead", field.Name)
+	}
+
+	if field.Type.Local != "string" {
+		t.Errorf("Field type should be 'string', %q instead", field.Type.Local)
+	}
+}
+
 // func TestAttributeGroup(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
