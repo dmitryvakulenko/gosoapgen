@@ -415,7 +415,7 @@ func filterUnusedTypes(types []*Type) []*Type {
     var res []*Type
     dep := buildDependencies(types)
     for _, t := range types {
-        if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" {
+        if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" && !t.referenced {
             res = append(res, t)
         }
     }
@@ -437,8 +437,12 @@ func (p *parser) schemaNode(n *xsd.Node) {
 func (p *parser) elementNode(n *xsd.Node) *Type {
     t := p.createType(n)
     elType := n.AttributeValue("type")
+    ref := n.AttributeValue("ref")
     if elType != "" {
         t.baseType = p.findOrCreateGlobalType(elType)
+    } else if ref != "" {
+        t.baseType = p.findOrCreateGlobalType(ref)
+        t.baseType.referenced = true
     } else {
         ch := n.FirstChild()
         switch ch.Name() {
