@@ -335,20 +335,24 @@ func TestSimpleTypeAttribute(t *testing.T) {
     }
 }
 
-// func TestUnion(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	if typesList[0].Name != "OwnerSimpleType" {
-// 		t.Errorf("Type name shoud be 'OwnerSimpleType', %q given", typesList[0].Name)
-// 	}
-//
-// 	if typesList[0].baseTypeName.Name != "string" {
-// 		t.Errorf("Type base type shoud be 'string', %q given", typesList[0].baseTypeName.Name)
-// 	}
-// }
+func TestUnion(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	if typesList[0].Local != "Test" {
+		t.Errorf("Type name shoud be 'Test', %q given", typesList[0].Local)
+	}
+
+	if len(typesList[0].Fields) != 2 {
+		t.Fatalf("Fields amount should be 2, %d given", len(typesList[0].Fields))
+	}
+
+    if typesList[0].Fields[1].Type.Local != "string" {
+        t.Errorf("Type base type shoud be 'string', %q given", typesList[0].Fields[1].Type.Local)
+    }
+}
 
 // func TestSimpleContent(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())

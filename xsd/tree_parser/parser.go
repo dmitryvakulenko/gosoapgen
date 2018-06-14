@@ -315,9 +315,12 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
     tp := p.createType(n)
     tp.isSimpleContent = true
 
-    restr := n.ChildByName("restriction")
-    if restr != nil {
-        tp.baseType = p.restrictionNode(restr)
+    ch := n.FirstChild()
+    switch ch.Name() {
+    case "restriction":
+        tp.baseType = p.restrictionNode(ch)
+    case "union":
+        tp.baseType = newStandardType("string")
     }
 
     return tp

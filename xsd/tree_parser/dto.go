@@ -83,7 +83,7 @@ func newType(n *xsd.Node, ns string) *Type {
 }
 
 func newStandardType(name string) *Type {
-    return &Type{Name: xml.Name{Local: name, Space: "http://www.w3.org/2001/XMLSchema"}}
+    return &Type{Name: xml.Name{Local: name, Space: "http://www.w3.org/2001/XMLSchema"}, isSimpleContent: true}
 }
 
 type Field struct {
