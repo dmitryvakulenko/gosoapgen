@@ -455,23 +455,27 @@ func TestChoice(t *testing.T) {
 	}
 }
 
-// func TestElementRefWithType(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 3 {
-// 		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-// 	}
-//
-// 	tp := typesList[1]
-// 	if tp.baseType == nil {
-// 		t.Fatalf("Type should has base type")
-// 	}
-//
-// 	if tp.baseType.Name != "PointOfSaleType" {
-// 		t.Errorf("Base type name should be 'PointOfSaleType', %q got", tp.baseType.Name)
-// 	}
-// }
-//
+func TestElementRefWithType(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 2 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+    if len(typesList[0].Fields) != 2 {
+        t.Fatalf("Wrong type fields amount. 2 expected, %d got", len(typesList[0].Fields))
+    }
+
+    if len(typesList[1].Fields) != 1 {
+        t.Fatalf("Wrong type fields amount. 1 expected, %d got", len(typesList[0].Fields))
+    }
+
+    f := typesList[0].Fields[1]
+    if f.Name != "PointOfSale" {
+        t.Errorf(`Wrong field name. "PointOfSale" expected, %q got`, f.Name)
+    }
+}
+
 // func TestComplexChoice(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
