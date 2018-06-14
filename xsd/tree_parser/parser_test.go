@@ -281,7 +281,7 @@ func TestAttributeGroup(t *testing.T) {
 func TestParseElementRef(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
+	if len(typesList) != 2 {
 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
 	}
 
@@ -302,7 +302,17 @@ func TestInclude(t *testing.T) {
 		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
 	}
 
-	f := typesList[0].Fields[1]
+	tp := typesList[1]
+
+	if tp.Local != "AirShoppingRQ" {
+        t.Errorf(`Type name shoud be "AirShoppingRQ", %q`, tp.Local)
+    }
+
+    if len(tp.Fields) != 2 {
+        t.Fatalf("Wrong fields amount. 2 expected, %d got", len(tp.Fields))
+    }
+
+	f := tp.Fields[1]
 	if f.Name != "PointOfSale" {
         t.Errorf("Field name shoud be 'PointOfSale', %q got", f.Name)
     }

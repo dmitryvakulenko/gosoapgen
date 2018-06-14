@@ -141,7 +141,7 @@ func upFieldsTypes(types []*Type) {
 }
 
 func lastType(t *Type) *Type {
-    if t.isSimpleContent && len(t.Fields) == 1 && t.baseType != nil {
+    if (len(t.Fields) == 0 || t.isSimpleContent && len(t.Fields) == 1) && t.baseType != nil {
         return lastType(t.baseType)
     } else {
         return t
