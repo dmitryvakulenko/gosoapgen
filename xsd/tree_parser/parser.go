@@ -400,6 +400,7 @@ func (p *parser) endUnion() {
 
 func (p *parser) simpleContentNode(n *xsd.Node) *Type {
     tp := p.createType(n)
+    tp.isSimpleContent = true
     for _, ch := range n.Children() {
         switch ch.Name() {
         case "restriction":

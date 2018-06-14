@@ -5,10 +5,8 @@
         <xsd:complexType>
             <xsd:simpleContent>
                 <xsd:extension base="xsd:IDREF">
-                    <xsd:attribute name="ON_Point" type="xsd:string" use="optional">
-                    </xsd:attribute>
-                    <xsd:attribute name="OFF_Point" type="xsd:string" use="optional">
-                    </xsd:attribute>
+                    <xsd:attribute name="ON_Point" type="xsd:string" use="optional"/>
+                    <xsd:attribute name="OFF_Point" type="xsd:string" use="optional"/>
                 </xsd:extension>
             </xsd:simpleContent>
         </xsd:complexType>
