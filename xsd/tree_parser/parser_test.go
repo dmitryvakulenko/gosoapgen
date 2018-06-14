@@ -38,6 +38,14 @@ func TestSimpleTypes(t *testing.T) {
     if tp.Fields[1].Name != "XMLValue" {
         t.Errorf(`First field name should be "XMLValue", %q got`, tp.Fields[1].Name)
     }
+
+    if tp.Fields[1].Type == nil {
+        t.Fatalf(`First field should has type`)
+    }
+
+    if tp.Fields[1].Type.Local != "string" {
+        t.Errorf(`First field type should be "string", %q given`, tp.Fields[1].Type.Local)
+    }
 }
 
 func TestSimpleElements(t *testing.T) {
@@ -89,10 +97,6 @@ func TestComplexType(t *testing.T) {
 	ns := "http://xml.amadeus.com/2010/06/Session_v3"
 	if cType.Space != ns {
 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
-	}
-
-	if cType.baseType != nil {
-		t.Errorf("Type should has no base type")
 	}
 
 	if len(cType.Fields) != 5 {
@@ -291,14 +295,19 @@ func TestParseElementRef(t *testing.T) {
 	}
 }
 
-// func TestInclude(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 3 {
-// 		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-// 	}
-// }
-//
+func TestInclude(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 2 {
+		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
+	}
+
+	f := typesList[0].Fields[1]
+	if f.Name != "PointOfSale" {
+        t.Errorf("Field name shoud be 'PointOfSale', %q got", f.Name)
+    }
+}
+
 // func TestSimpleTypeAttribute(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 // 	if len(typesList) != 1 {

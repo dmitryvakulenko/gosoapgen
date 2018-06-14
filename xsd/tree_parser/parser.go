@@ -4,15 +4,12 @@ import (
     "io"
     "encoding/xml"
     "strings"
-    "strconv"
     xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
     "log"
     "container/list"
 )
 
 var (
-    globalTypesCache map[xml.Name]*Type
-
     stringQName = xml.Name{Local: "string", Space: "http://www.w3.org/2001/XMLSchema"}
 )
 
@@ -33,10 +30,10 @@ type parser struct {
     elStack  *elementsStack
     nsStack  *stringsStack
     curNs    map[string]string
-    rootNode *node
 
     rootSchemas  []*xsd.Schema
     schemasStack *list.List
+    resultTypes  *typesList
 }
 
 func NewParser(l Loader) *parser {
@@ -45,8 +42,8 @@ func NewParser(l Loader) *parser {
         elStack:      &elementsStack{},
         nsStack:      &stringsStack{},
         curNs:        make(map[string]string),
-        rootNode:     &node{elemName: "schema"},
-        schemasStack: list.New()}
+        schemasStack: list.New(),
+        resultTypes: newTypesList()}
 }
 
 func (p *parser) Load(inputFile string) {
@@ -81,36 +78,19 @@ func (p *parser) loadSchema(inputFile string, ns string) *xsd.Schema {
     return s
 }
 
-func (p *parser) schemaStarted(elem *xml.StartElement) {
-    ns := findAttributeByName(elem.Attr, "targetNamespace")
-    if ns != nil {
-        p.nsStack.Push(ns.Value)
-    } else {
-        // Используем родительский ns. А правильно ли?
-        p.nsStack.Push(p.nsStack.GetLast())
-    }
-
-    // p.curNs = make(map[string]string)
-    for _, attr := range elem.Attr {
-        if attr.Name.Space == "xmlns" && attr.Name.Local != "" {
-            p.curNs[attr.Name.Local] = attr.Value
-        }
-    }
-
-    p.elStack.Push(p.rootNode)
-}
-
 func (p *parser) GetTypes() []*Type {
-    globalTypesCache = make(map[xml.Name]*Type)
+    p.resultTypes.Reset()
+
     p.generateTypes(p.rootSchemas)
-    resolveBaseTypes()
-    foldSimpleTypes()
 
     var types []*Type
-    for _, t := range globalTypesCache {
+    for _, t := range p.resultTypes.Iterate() {
         types = append(types, t)
         types = append(types, extractInnerTypes(t, 0)...)
     }
+
+    resolveBaseTypes(types)
+    upFieldsTypes(types)
 
     // renameDuplicatedTypes()
     l := filterUnusedTypes(types)
@@ -133,31 +113,38 @@ func extractInnerTypes(t *Type, deep int) []*Type {
 // Generate types list according to previously built tree
 func (p *parser) generateTypes(schemas []*xsd.Schema) {
     for _, sc := range schemas {
+        p.generateTypes(sc.ChildSchemas)
         e := p.schemasStack.PushBack(sc)
         p.schemaNode(&sc.Node)
         p.schemasStack.Remove(e)
     }
 }
 
-func renameDuplicatedTypes() {
-    names := make(map[string]int)
-    for _, t := range globalTypesCache {
-        if _, exist := names[t.Name.Local]; exist {
-            names[t.Name.Local]++
-            t.Name.Local = t.Name.Local + "_" + strconv.Itoa(names[t.Name.Local])
-        } else {
-            names[t.Name.Local] = 0
+// func renameDuplicatedTypes() {
+//     names := make(map[string]int)
+//     for _, t := range globalTypesCache {
+//         if _, exist := names[t.Name.Local]; exist {
+//             names[t.Name.Local]++
+//             t.Name.Local = t.Name.Local + "_" + strconv.Itoa(names[t.Name.Local])
+//         } else {
+//             names[t.Name.Local] = 0
+//         }
+//     }
+// }
+
+func upFieldsTypes(types []*Type) {
+    for _, t := range types {
+        for _, f := range t.Fields {
+            f.Type = lastType(f.Type)
         }
     }
 }
 
-func foldSimpleTypes() {
-    for _, t := range globalTypesCache {
-        for _, f := range t.Fields {
-            if f.Type.isSimpleContent && len(f.Type.Fields) == 1 {
-                f.Type = f.Type.Fields[0].Type
-            }
-        }
+func lastType(t *Type) *Type {
+    if t.isSimpleContent && len(t.Fields) == 1 && t.baseType != nil {
+        return lastType(t.baseType)
+    } else {
+        return t
     }
 }
 
@@ -171,43 +158,37 @@ func (p *parser) findOrCreateGlobalType(name string) *Type {
         return &Type{Name: qName, isSimpleContent: true}
     }
 
-    if t, ok := globalTypesCache[qName]; ok {
-        return t
+    if p.resultTypes.Has(qName) {
+        return p.resultTypes.Get(qName)
     }
 
     node := p.findGlobalNode(qName)
     if node != nil {
-        t := p.parseSomeRootNode(qName, node)
-        globalTypesCache[qName] = t
-        return t
+        return p.parseSomeRootNode(qName, node)
     }
 
     panic("Can't find type " + name)
 }
 
 func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
-    if name.Local == "" {
-        panic("Root node without name")
+    if p.resultTypes.Has(name) {
+        return p.resultTypes.Get(name)
     }
 
-    if _, ok := globalTypesCache[name]; ok {
-        return nil
-    }
-
+    var tp *Type
     switch n.Name() {
     case "element":
-        return p.elementNode(n)
+        tp = p.elementNode(n)
     case "simpleType":
-        return p.simpleTypeNode(n)
+        tp =  p.simpleTypeNode(n)
     case "complexType":
-        return p.complexTypeNode(n)
+        tp =  p.complexTypeNode(n)
     case "attributeGroup":
-        return p.attributeGroupNode(n)
+        tp =  p.attributeGroupNode(n)
     }
 
-    panic("Can't find root node " + name.Local)
+    return tp
 }
-
 
 func (p *parser) createType(n *xsd.Node) *Type {
     sc := p.schemasStack.Back().Value.(*xsd.Schema)
@@ -218,11 +199,11 @@ func (p *parser) createType(n *xsd.Node) *Type {
         return t
     }
 
-    if _, ok := globalTypesCache[t.Name]; ok {
+    if p.resultTypes.Has(t.Name) {
         log.Fatalf("Duplicated types %+v", t)
     }
 
-    globalTypesCache[t.Name] = t
+    p.resultTypes.Add(t)
     return t
 }
 
@@ -377,11 +358,6 @@ func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) includeStarted(e *xml.StartElement) {
-    l := findAttributeByName(e.Attr, "schemaLocation")
-    p.Load(l.Value)
-}
-
 func (p *parser) endUnion() {
     p.elStack.Pop()
     context := p.elStack.GetLast()
@@ -425,12 +401,12 @@ func filterUnusedTypes(types []*Type) []*Type {
 
 func (p *parser) schemaNode(n *xsd.Node) {
     for _, ch := range n.Children() {
+        if ch.Name() == "include" || ch.Name() == "import" {
+            continue
+        }
         ns := p.schemasStack.Back().Value.(*xsd.Schema).TargetNamespace
         name := ch.AttributeValue("name")
-        tp := p.parseSomeRootNode(xml.Name{Local: name, Space: ns}, ch)
-        if tp != nil {
-            globalTypesCache[tp.Name] = tp
-        }
+        p.parseSomeRootNode(xml.Name{Local: name, Space: ns}, ch)
     }
 }
 
@@ -481,9 +457,6 @@ func buildDependencies(types []*Type) map[xml.Name][]*Type {
     usedTypes := make(map[xml.Name][]*Type)
     for _, t := range types {
         var typeDep []*Type
-        if t.baseType != nil {
-            typeDep = append(typeDep, t.baseType)
-        }
 
         for _, f := range t.Fields {
             typeDep = append(typeDep, f.Type)
@@ -500,8 +473,9 @@ func buildDependencies(types []*Type) map[xml.Name][]*Type {
     return usedTypes
 }
 
-func resolveBaseTypes() {
-    for _, t := range globalTypesCache {
+// move fields from base type to current for inheritance avoiding
+func resolveBaseTypes(types []*Type) {
+    for _, t := range types {
         t.Fields = collectBaseFields(t)
     }
 }
@@ -520,7 +494,6 @@ func collectBaseFields(t *Type) []*Field {
     baseFields := collectBaseFields(t.baseType)
     res = append(baseFields, res...)
     t.isSimpleContent = t.baseType.isSimpleContent
-    t.baseType = nil
 
     return res
 }
