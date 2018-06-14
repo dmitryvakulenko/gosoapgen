@@ -366,7 +366,7 @@ func TestSimpleContent(t *testing.T) {
 		t.Fatalf(`TypeName name should be "Test", got %q instead`, cType.Local)
 	}
 
-	if len(cType.Fields) != 3 {
+	if len(cType.Fields) != 4 {
 		t.Fatalf("Test should has 4 field, %d instead", len(cType.Fields))
 	}
 
@@ -379,7 +379,7 @@ func TestSimpleContent(t *testing.T) {
 
 	fType := "string"
 	if field.Type.Local != fType {
-		t.Errorf("Field type should be %q, got %q instead", fType, field.Type.Name)
+		t.Errorf("Field type should be %q, got %q instead", fType, field.Type.Local)
 	}
 }
 

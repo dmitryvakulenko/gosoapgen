@@ -71,6 +71,11 @@ func (t *Type) addField(f *Field) {
     t.Fields = append(t.Fields, f)
 }
 
+func (t *Type) append(addType *Type) {
+    t.Fields = append(t.Fields, addType.Fields...)
+    t.isSimpleContent = addType.isSimpleContent
+}
+
 func (t *Type) Hash() {
     // надо реализовать и учитывать при проверке дублей
 }

@@ -330,12 +330,25 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) endExtensionRestriction() {
-    e := p.elStack.Pop()
-    context := p.elStack.GetLast()
-    baseType := findAttributeByName(e.startElem.Attr, "base")
-    context.name = p.createQName(baseType.Value)
-    context.children = append(context.children, e.children...)
+func (p *parser) extensionNode(n *xsd.Node) *Type {
+    tp := p.createType(n)
+    base := n.AttributeValue("base")
+    tp.baseType = p.findOrCreateGlobalType(base)
+
+    for _, ch := range n.Children() {
+        switch ch.Name() {
+        case "sequence", "all":
+            s := p.sequenceNode(ch)
+            tp.append(s)
+        case "attribute":
+            f := p.attributeNode(ch)
+            tp.addField(f)
+        case "attributeGroup":
+            tp.append(p.attributeGroupNode(ch))
+        }
+    }
+
+    return tp
 }
 
 func (p *parser) attributeNode(n *xsd.Node) *Field {
@@ -369,7 +382,7 @@ func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
             }
         }
     } else if ref != "" {
-        tp.baseType = p.findOrCreateGlobalType(ref)
+        tp.append(p.findOrCreateGlobalType(ref))
     } else {
         panic("No elemName and no ref for attribute group")
     }
@@ -384,7 +397,17 @@ func (p *parser) endUnion() {
 }
 
 func (p *parser) simpleContentNode(n *xsd.Node) *Type {
-    return nil
+    tp := p.createType(n)
+    for _, ch := range n.Children() {
+        switch ch.Name() {
+        case "restriction":
+            tp.baseType = p.restrictionNode(ch)
+        case "extension":
+            tp.baseType = p.extensionNode(ch)
+        }
+    }
+
+    return tp
 }
 
 func (p *parser) endComplexContent() {
@@ -492,24 +515,25 @@ func buildDependencies(types []*Type) map[xml.Name][]*Type {
 // move fields from base type to current for inheritance avoiding
 func resolveBaseTypes(types []*Type) {
     for _, t := range types {
-        t.Fields = collectBaseFields(t)
+        var baseType string
+        t.Fields, baseType = collectBaseFields(t)
+        if t.isSimpleContent {
+            t.Fields = append(t.Fields, newValueField(baseType))
+        }
     }
 }
 
-func collectBaseFields(t *Type) []*Field {
+func collectBaseFields(t *Type) ([]*Field, string) {
     res := make([]*Field, len(t.Fields))
     copy(res, t.Fields)
 
     if t.baseType == nil {
-        if t.isSimpleContent {
-            res = append(res, newValueField(t.Name.Local))
-        }
-        return res
+        return res, t.Local
     }
 
-    baseFields := collectBaseFields(t.baseType)
+    baseFields, baseType := collectBaseFields(t.baseType)
     res = append(baseFields, res...)
     t.isSimpleContent = t.baseType.isSimpleContent
 
-    return res
+    return res, baseType
 }
