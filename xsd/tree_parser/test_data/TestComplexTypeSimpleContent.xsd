@@ -2,6 +2,7 @@
 <!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
             elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+    <xsd:element name="Test" type="PaymentAddrType"/>
     <xsd:complexType name="PaymentAddrType">
         <xsd:sequence>
             <xsd:element name="City" minOccurs="0">
