@@ -307,6 +307,8 @@ func (p *parser) complexTypeNode(n *xsd.Node) *Type {
             t.baseType = p.attributeGroupNode(ch)
         case "simpleContent":
             t.baseType = p.simpleContentNode(ch)
+        case "complexContent":
+            t.baseType = p.complexContentNode(ch)
         }
     }
 
@@ -410,12 +412,18 @@ func (p *parser) simpleContentNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) endComplexContent() {
-    e := p.elStack.Pop()
-    context := p.elStack.GetLast()
-    context.isSimpleContent = false
-    context.name = e.name
-    context.children = append(context.children, e.children...)
+func (p *parser) complexContentNode(n *xsd.Node) *Type {
+    tp := p.createType(n)
+    for _, ch := range n.Children() {
+        switch ch.Name() {
+        case "restriction":
+            tp.baseType = p.restrictionNode(ch)
+        case "extension":
+            tp.baseType = p.extensionNode(ch)
+        }
+    }
+
+    return tp
 }
 
 func (p *parser) endChoice() {

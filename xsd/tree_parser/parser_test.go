@@ -383,38 +383,31 @@ func TestSimpleContent(t *testing.T) {
 	}
 }
 
-// func TestComplexContent(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 4 {
-// 		t.Fatalf("Wrong types amount. 4 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[3]
-// 	if cType.IsSimpleContent {
-// 		t.Errorf("Type should be complex type")
-// 	}
-//
-// 	name := "AddressWithModeType"
-// 	if cType.Name != name {
-// 		t.Errorf("TypeName name should be %q, got %q instead", name, cType.Name)
-// 	}
-//
-// 	if cType.baseType == nil {
-// 		t.Fatalf("Type should has base type")
-// 	}
-//
-// 	if len(cType.Fields) != 1 {
-// 		t.Fatalf("Fields amount should be 1, got %d instead", len(cType.Fields))
-// 	}
-//
-// 	field := cType.Fields[0]
-// 	fieldName := "Mode"
-// 	if field.Name != fieldName {
-// 		t.Fatalf("TypeName name should be %q, got %q instead", fieldName, field.Name)
-// 	}
-// }
-//
+func TestComplexContent(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+
+	name := "Test"
+	if cType.Local != name {
+		t.Errorf("TypeName name should be %q, got %q instead", name, cType.Name)
+	}
+
+	if len(cType.Fields) != 4 {
+		t.Fatalf("Fields amount should be 4, got %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[1]
+	fieldName := "Format"
+	if field.Name != fieldName {
+		t.Fatalf("TypeName name should be %q, got %q instead", fieldName, field.Name)
+	}
+}
+
 // func TestComplexTypeSimpleContent(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
