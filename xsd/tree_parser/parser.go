@@ -488,7 +488,7 @@ func embedFields(typs []*Type) {
     dep := buildDependencies(typs)
     for _, t := range typs {
         // adding XMLName field
-        if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" {
+        if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" && !t.referenced {
             t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
         }
     }

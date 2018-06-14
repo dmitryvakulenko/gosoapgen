@@ -10,6 +10,7 @@
                     <xsd:simpleContent>
                         <xsd:extension base="xsd:string"/>
                     </xsd:simpleContent>
+                    <xsd:attribute name="Test" type="xsd:string"/>
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>

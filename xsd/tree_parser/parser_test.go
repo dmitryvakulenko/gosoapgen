@@ -423,6 +423,10 @@ func TestComplexTypeSimpleContent(t *testing.T) {
     if f.Name != "City" {
         t.Errorf(`Wrong field name. Expected "City", got %q`, f.Name)
     }
+
+    if len(typesList[1].Fields) != 2 {
+        t.Fatalf("Wrong fields amount. 1 expected, %d got", len(typesList))
+    }
 }
 
 func TestComplexTypeWithSimpleContent(t *testing.T) {
