@@ -286,6 +286,8 @@ func (p *parser) sequenceNode(n *xsd.Node) *Type {
             }
             f := newField(ch, tp)
             t.addField(f)
+        case "attribute":
+            t.addField(p.attributeNode(ch))
         }
     }
 
@@ -330,7 +332,17 @@ func (p *parser) endExtensionRestriction() {
 }
 
 func (p *parser) attributeNode(n *xsd.Node) *Field {
-    tp := p.findOrCreateGlobalType(n.AttributeValue("type"))
+    typName := n.AttributeValue("type")
+    ch := n.FirstChild()
+    var tp *Type
+    if typName != "" {
+        tp = p.findOrCreateGlobalType(typName)
+    } else if ch.Name() == "simpleType" {
+        tp = p.simpleTypeNode(ch)
+    } else {
+        panic("Unknown attribute definition")
+    }
+
     res := newField(n, tp)
     res.IsAttr = true
 

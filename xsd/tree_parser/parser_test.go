@@ -318,13 +318,23 @@ func TestInclude(t *testing.T) {
     }
 }
 
-// func TestSimpleTypeAttribute(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-// }
-//
+func TestSimpleTypeAttribute(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	if len(typesList[0].Fields) != 2 {
+        t.Fatalf("Wrong fields amount. 2 expected, %d got", len(typesList[0].Fields))
+    }
+
+    f := typesList[0].Fields[1]
+    if f.Name != "PieceAllowanceCombination" {
+        t.Errorf(`Wrong field name. "PieceAllowanceCombination" expected, %q got`, f.Name)
+    }
+}
+
 // func TestUnion(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 // 	if len(typesList) != 1 {
@@ -339,7 +349,7 @@ func TestInclude(t *testing.T) {
 // 		t.Errorf("Type base type shoud be 'string', %q given", typesList[0].baseTypeName.Name)
 // 	}
 // }
-//
+
 // func TestSimpleContent(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //
