@@ -298,7 +298,7 @@ func (p *parser) complexTypeNode(n *xsd.Node) *Type {
     var t = p.createType(n)
     for _, ch := range n.Children() {
         switch ch.Name() {
-        case "sequence":
+        case "sequence", "all", "choice":
             t.baseType = p.sequenceNode(ch)
         case "attribute":
             a := p.attributeNode(ch)
@@ -339,7 +339,7 @@ func (p *parser) extensionNode(n *xsd.Node) *Type {
 
     for _, ch := range n.Children() {
         switch ch.Name() {
-        case "sequence", "all":
+        case "sequence", "all", "choice":
             s := p.sequenceNode(ch)
             tp.append(s)
         case "attribute":
@@ -425,12 +425,6 @@ func (p *parser) complexContentNode(n *xsd.Node) *Type {
     }
 
     return tp
-}
-
-func (p *parser) endChoice() {
-    e := p.elStack.Pop()
-    context := p.elStack.GetLast()
-    context.children = append(context.children, e.children...)
 }
 
 // Remove type that made not from elements
