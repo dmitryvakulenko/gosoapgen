@@ -305,6 +305,8 @@ func (p *parser) complexTypeNode(n *xsd.Node) *Type {
             t.addField(a)
         case "attributeGroup":
             t.baseType = p.attributeGroupNode(ch)
+        case "simpleContent":
+            t.baseType = p.simpleContentNode(ch)
         }
     }
 
@@ -315,13 +317,15 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
     tp := p.createType(n)
     tp.isSimpleContent = true
 
-    ch := n.FirstChild()
-    switch ch.Name() {
-    case "restriction":
-        tp.baseType = p.restrictionNode(ch)
-    case "union":
-        tp.baseType = newStandardType("string")
+    for _, ch := range n.Children() {
+        switch ch.Name() {
+        case "restriction":
+            tp.baseType = p.restrictionNode(ch)
+        case "union":
+            tp.baseType = newStandardType("string")
+        }
     }
+
 
     return tp
 }
@@ -336,11 +340,11 @@ func (p *parser) endExtensionRestriction() {
 
 func (p *parser) attributeNode(n *xsd.Node) *Field {
     typName := n.AttributeValue("type")
-    ch := n.FirstChild()
+    ch := n.ChildByName("simpleType")
     var tp *Type
     if typName != "" {
         tp = p.findOrCreateGlobalType(typName)
-    } else if ch.Name() == "simpleType" {
+    } else if ch != nil {
         tp = p.simpleTypeNode(ch)
     } else {
         panic("Unknown attribute definition")
@@ -379,12 +383,8 @@ func (p *parser) endUnion() {
     context.name = stringQName
 }
 
-func (p *parser) endSimpleContent() {
-    e := p.elStack.Pop()
-    context := p.elStack.GetLast()
-    context.isSimpleContent = true
-    context.name = e.name
-    context.children = append(context.children, e.children...)
+func (p *parser) simpleContentNode(n *xsd.Node) *Type {
+    return nil
 }
 
 func (p *parser) endComplexContent() {
@@ -435,12 +435,13 @@ func (p *parser) elementNode(n *xsd.Node) *Type {
         t.baseType = p.findOrCreateGlobalType(ref)
         t.baseType.referenced = true
     } else {
-        ch := n.FirstChild()
-        switch ch.Name() {
-        case "simpleType":
-            t.baseType = p.simpleTypeNode(ch)
-        case "complexType":
-            t.baseType = p.complexTypeNode(ch)
+        for _, ch := range n.Children() {
+            switch ch.Name() {
+            case "simpleType":
+                t.baseType = p.simpleTypeNode(ch)
+            case "complexType":
+                t.baseType = p.complexTypeNode(ch)
+            }
         }
     }
 

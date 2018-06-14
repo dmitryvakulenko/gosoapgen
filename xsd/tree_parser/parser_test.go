@@ -354,40 +354,35 @@ func TestUnion(t *testing.T) {
     }
 }
 
-// func TestSimpleContent(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 3 {
-// 		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[1]
-// 	if !cType.IsSimpleContent {
-// 		t.Errorf("Type should be simple content")
-// 	}
-//
-// 	name := "CompanyNameType"
-// 	if cType.Name != name {
-// 		t.Fatalf("TypeName name should be %q, got %q instead", name, cType.Name)
-// 	}
-//
-// 	if len(cType.Fields) != 3 {
-// 		t.Fatalf("CompanyNameType should has 3 field, %d instead", len(cType.Fields))
-// 	}
-//
-// 	field := cType.Fields[2]
-//
-// 	name = "Value"
-// 	if field.Name != name {
-// 		t.Errorf("Field name should be %q, got %q instead", name, field.Name)
-// 	}
-//
-// 	fType := "string"
-// 	if field.Type.Name != fType {
-// 		t.Errorf("Field type should be %q, got %q instead", fType, field.Type.Name)
-// 	}
-// }
-//
+func TestSimpleContent(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if cType.Local != "Test" {
+		t.Fatalf(`TypeName name should be "Test", got %q instead`, cType.Local)
+	}
+
+	if len(cType.Fields) != 3 {
+		t.Fatalf("Test should has 4 field, %d instead", len(cType.Fields))
+	}
+
+	field := cType.Fields[3]
+
+	name := "XMLValue"
+	if field.Name != name {
+		t.Errorf("Field name should be %q, got %q instead", name, field.Name)
+	}
+
+	fType := "string"
+	if field.Type.Local != fType {
+		t.Errorf("Field type should be %q, got %q instead", fType, field.Type.Name)
+	}
+}
+
 // func TestComplexContent(t *testing.T) {
 // 	typesList := parseTypesFrom(t.Name())
 //

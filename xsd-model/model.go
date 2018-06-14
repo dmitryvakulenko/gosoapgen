@@ -26,13 +26,6 @@ func (n *Node) Children() []*Node {
     return n.children
 }
 
-func (n *Node) FirstChild() *Node {
-    if len(n.children) > 0 {
-        return n.children[0]
-    }
-    return nil
-}
-
 func (n *Node) Attribute(name string) *xml.Attr {
     for _, a := range n.startElem.Attr {
         if a.Name.Local == name {
