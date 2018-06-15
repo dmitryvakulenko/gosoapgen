@@ -26,10 +26,10 @@ type Loader interface {
 }
 
 type parser struct {
-    loader   Loader
-    elStack  *elementsStack
-    nsStack  *stringsStack
-    curNs    map[string]string
+    loader  Loader
+    elStack *elementsStack
+    nsStack *stringsStack
+    curNs   map[string]string
 
     rootSchemas  []*xsd.Schema
     schemasStack *list.List
@@ -43,7 +43,7 @@ func NewParser(l Loader) *parser {
         nsStack:      &stringsStack{},
         curNs:        make(map[string]string),
         schemasStack: list.New(),
-        resultTypes: newTypesList()}
+        resultTypes:  newTypesList()}
 }
 
 func (p *parser) Load(inputFile string) {
@@ -180,11 +180,11 @@ func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
     case "element":
         tp = p.elementNode(n)
     case "simpleType":
-        tp =  p.simpleTypeNode(n)
+        tp = p.simpleTypeNode(n)
     case "complexType":
-        tp =  p.complexTypeNode(n)
+        tp = p.complexTypeNode(n)
     case "attributeGroup":
-        tp =  p.attributeGroupNode(n)
+        tp = p.attributeGroupNode(n)
     }
 
     return tp
@@ -330,7 +330,6 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
             tp.baseType = newStandardType("string")
         }
     }
-
 
     return tp
 }

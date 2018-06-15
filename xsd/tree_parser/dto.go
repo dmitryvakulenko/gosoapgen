@@ -3,6 +3,7 @@ package tree_parser
 import (
     "encoding/xml"
     xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
+    "strconv"
 )
 
 // Абстрактное представление элемента схемы
@@ -95,9 +96,10 @@ type Field struct {
     Name string
     Type *Type
     // TypeName xml.Name
-    IsArray bool
-    IsAttr  bool
-    Comment string
+    MinOccurs int
+    MaxOccurs int
+    IsAttr    bool
+    Comment   string
 }
 
 func newField(n *xsd.Node, typ *Type) *Field {
@@ -105,11 +107,28 @@ func newField(n *xsd.Node, typ *Type) *Field {
     if name == "" {
         name = n.AttributeValue("ref")
     }
+
+    var min int
+    switch m := n.AttributeValue("minOccurs"); m {
+    case "unqualified":
+        min = 0
+    default:
+        min, _ = strconv.Atoi(m)
+    }
+
+    var max int
+    switch m := n.AttributeValue("minOccurs"); m {
+    case "unbounded":
+        max = 1000
+    default:
+        max, _ = strconv.Atoi(m)
+    }
+
     return &Field{
         Name: name,
-        Type: typ}
-    // IsAttr:   n.isAttr,
-    // IsArray:  n.isArray}
+        Type: typ,
+        MinOccurs: min,
+        MaxOccurs: max}
 }
 
 func newXMLNameField() *Field {

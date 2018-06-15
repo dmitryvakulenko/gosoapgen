@@ -36,12 +36,12 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
     if field.IsAttr && len(field.Type.Fields) != 0 {
         // обработка attributeGroup
         for _, f := range field.Type.Fields {
-            writeField(f, field.Type.Namespace, writer)
+            writeField(f, field.Type.Space, writer)
         }
     } else {
         // обработка обычного поля
         writer.Write([]byte(firstUp(field.Name) + " "))
-        if field.IsArray {
+        if field.MaxOccurs > field.MinOccurs {
             writer.Write([]byte("[]"))
         }
 
