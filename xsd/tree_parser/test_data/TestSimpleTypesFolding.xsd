@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
             elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+
     <xsd:element name="CountryCode">
         <xsd:complexType>
             <xsd:complexContent>
@@ -9,6 +9,7 @@
             </xsd:complexContent>
         </xsd:complexType>
     </xsd:element>
+
     <xsd:complexType name="CountryCodeType">
         <xsd:simpleContent>
             <xsd:extension base="CountrySimpleType">
@@ -16,6 +17,7 @@
             </xsd:extension>
         </xsd:simpleContent>
     </xsd:complexType>
+
     <xsd:simpleType name="CountrySimpleType">
         <xsd:restriction base="xsd:string">
             <xsd:pattern value="[A-Z]{2}"/>
