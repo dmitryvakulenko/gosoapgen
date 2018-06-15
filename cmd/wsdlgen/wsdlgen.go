@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"encoding/xml"
 	"path"
-	"github.com/dmitryvakulenko/gosoapgen/xsd"
 	"github.com/dmitryvakulenko/gosoapgen/generate"
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"flag"
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/internal/pkg/xsdloader"
+    "github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
 )
 
 func main() {
@@ -60,12 +60,13 @@ func wsdlProcessing(wsdlName string, out io.Writer) {
 	err = xml.Unmarshal(xmlData, &def)
 	xmlFile.Close()
 
-	basePath := path.Dir(wsdlName)
-	parser := xsd.NewDecoder(xsdloader.NewXsdLoader(basePath))
+	basePath := path.Dir(wsdlName) + "/"
+	parser := tree_parser.NewParser(xsdloader.NewXsdLoader())
 	for _, attr := range def.Import {
-		parser.Decode(attr.SchemaLocation)
+		parser.Load(basePath + attr.SchemaLocation)
 	}
 
-	generate.Types(parser, out)
+    typesList := parser.GetTypes()
+	generate.Types(typesList, out)
 	generate.Client(&def, out)
 }

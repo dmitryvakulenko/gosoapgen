@@ -36,11 +36,15 @@ func writeField(t *tree_parser.Type, field *tree_parser.Field, writer io.Writer)
             fieldType = firstUp(field.Type.Local)
         }
 
+    if fieldType == "" {
+        fieldType = "string"
+    }
+
         if !isInnerType(fieldType) {
             writer.Write([]byte("*"))
         }
 
-        writer.Write([]byte(fieldType + " `xml:\""))
+        writer.Write([]byte(firstUp(fieldType) + " `xml:\""))
         if field.IsAttr {
             writer.Write([]byte(field.Name + ",attr,omitempty"))
         } else if  field.Name == "XMLName" {
