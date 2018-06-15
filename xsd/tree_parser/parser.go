@@ -261,7 +261,7 @@ func (p *parser) sequenceNode(n *xsd.Node) *Type {
             t.addField(f)
         case "attribute":
             t.addField(p.attributeNode(ch))
-        case "sequence":
+        case "sequence", "choice":
             t.append(p.sequenceNode(ch))
         }
     }
@@ -274,7 +274,7 @@ func (p *parser) complexTypeNode(n *xsd.Node) *Type {
     for _, ch := range n.Children() {
         switch ch.Name() {
         case "sequence", "all", "choice":
-            t.baseType = p.sequenceNode(ch)
+            t.append(p.sequenceNode(ch))
         case "attribute":
             a := p.attributeNode(ch)
             t.addField(a)

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+
+    <xsd:element name="Test" type="FlightInfoAssocType"/>
+
+    <xsd:complexType name="FlightInfoAssocType">
+        <xsd:annotation>
+            <xsd:documentation>Flight that the offer applies to.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:choice>
+                <xsd:element name="AllSegmentInd" type="xsd:boolean" minOccurs="0"/>
+                <xsd:element name="FlightSegmentReference" type="xsd:boolean" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:choice>
+            <xsd:choice>
+                <xsd:element name="AllSegmentInd2" type="xsd:boolean" minOccurs="0"/>
+                <xsd:element name="FlightSegmentReference2" type="xsd:boolean" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>

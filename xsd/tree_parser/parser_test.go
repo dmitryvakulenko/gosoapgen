@@ -554,6 +554,23 @@ func TestFieldsDuplication(t *testing.T) {
     }
 }
 
+func TestSequenceChoice(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    if len(typesList) != 1 {
+        t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+    }
+
+    ct := typesList[0]
+    if len(ct.Fields) != 5 {
+        t.Fatalf("Wrong fields amount. 5 expected, %d got", len(ct.Fields))
+    }
+
+    if ct.Fields[4].Name != "FlightSegmentReference2" {
+        t.Errorf(`Last field should be "FlightSegmentReference2", %q given`, ct.Fields[1].Name)
+    }
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Load(name + ".xsd")
