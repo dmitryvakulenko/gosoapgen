@@ -512,7 +512,7 @@ func TestSimpleTypesFolding(t *testing.T) {
     }
 
     if fields[2].Name != "XMLValue" {
-        t.Errorf(`Last field should be XMLValue, %q given`, fields[2].Name)
+        t.Errorf(`Last field should be "XMLValue", %q given`, fields[2].Name)
     }
 
     if fields[2].Type.Local != "string" {
@@ -520,18 +520,22 @@ func TestSimpleTypesFolding(t *testing.T) {
     }
 }
 
-// func TestTwoLevelSimpleContent(t *testing.T) {
-//     typesList := parseTypesFrom(t.Name())
-//
-//     if len(typesList) != 3 {
-//         t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-//     }
-//
-//     ct := typesList[0]
-//     if len(ct.Fields) != 3 {
-//         t.Fatalf("Wrong type fields amount. 3 expected, %d got", len(ct.Fields))
-//     }
-// }
+func TestTwoLevelSimpleContent(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    if len(typesList) != 1 {
+        t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+    }
+
+    ct := typesList[0]
+    if len(ct.Fields) != 4 {
+        t.Fatalf("Wrong fields amount. 4 expected, %d got", len(ct.Fields))
+    }
+
+    if ct.Fields[1].Name != "Language" {
+        t.Errorf(`Last field should be "Language", %q given`, ct.Fields[2].Name)
+    }
+}
 
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})

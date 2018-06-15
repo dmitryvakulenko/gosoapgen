@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
             elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+    <xsd:element name="Test" type="WarningType"/>
 
     <xsd:complexType name="WarningType">
         <xsd:simpleContent>
