@@ -4,12 +4,9 @@
     <xs:element name="AMA_SecurityHostedUser">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="UserID" type="xs:string">
-                </xs:element>
-                <xs:element name="FullLocation" type="xs:string" minOccurs="0">
-                </xs:element>
-                <xs:element name="WorkstationID" type="StringLength1to64" minOccurs="0">
-                </xs:element>
+                <xs:element name="UserID" type="xs:string"/>
+                <xs:element name="FullLocation" type="xs:string" minOccurs="0"/>
+                <xs:element name="WorkstationID" type="StringLength1to64" minOccurs="0"/>
                 <xs:element name="Application" type="xs:string" minOccurs="0"/>
             </xs:sequence>
         </xs:complexType>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+            attributeFormDefault="unqualified" version="3.001" id="IATA2016.2">
+
+    <xsd:simpleType name="DayOfWeekSimpleType">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="[0]{1}[1-7]{1}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="ContextSimpleType">
+        <xsd:restriction base="xsd:string">
+            <xsd:minLength value="1"/>
+            <xsd:maxLength value="35"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="DayRepType">
+        <xsd:simpleContent>
+            <xsd:extension base="DayOfWeekSimpleType">
+                <xsd:attribute name="Name" type="ContextSimpleType" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+
+    <xsd:element name="Day" type="DayRepType"/>
+</xsd:schema>

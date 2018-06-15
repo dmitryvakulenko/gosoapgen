@@ -5,8 +5,8 @@ import (
     "encoding/xml"
     "strings"
     xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
-    "log"
     "container/list"
+    "strconv"
 )
 
 var (
@@ -27,7 +27,6 @@ type Loader interface {
 
 type parser struct {
     loader  Loader
-    elStack *elementsStack
     nsStack *stringsStack
     curNs   map[string]string
 
@@ -39,7 +38,6 @@ type parser struct {
 func NewParser(l Loader) *parser {
     return &parser{
         loader:       l,
-        elStack:      &elementsStack{},
         nsStack:      &stringsStack{},
         curNs:        make(map[string]string),
         schemasStack: list.New(),
@@ -51,28 +49,34 @@ func (p *parser) Load(inputFile string) {
 }
 
 func (p *parser) loadSchema(inputFile string, ns string) *xsd.Schema {
+    var s *xsd.Schema
     reader, err := p.loader.Load(inputFile)
     defer reader.Close()
 
-    var s *xsd.Schema
     if err == nil {
         s = xsd.Load(reader)
         // to processing include
         if ns != "" {
             s.TargetNamespace = ns
         }
-    } else if !p.loader.IsAlreadyLoadedError(err) {
+    } else if p.loader.IsAlreadyLoadedError(err) {
+        return nil
+    } else {
         panic(err)
     }
 
     for _, i := range s.ChildrenByName("include") {
         inc := p.loadSchema(i.AttributeValue("schemaLocation"), s.TargetNamespace)
-        s.ChildSchemas = append(s.ChildSchemas, inc)
+        if inc != nil {
+            s.ChildSchemas = append(s.ChildSchemas, inc)
+        }
     }
 
     for _, i := range s.ChildrenByName("import") {
         inc := p.loadSchema(i.AttributeValue("schemaLocation"), "")
-        s.ChildSchemas = append(s.ChildSchemas, inc)
+        if inc != nil {
+            s.ChildSchemas = append(s.ChildSchemas, inc)
+        }
     }
 
     return s
@@ -90,7 +94,7 @@ func (p *parser) GetTypes() []*Type {
     }
 
     resolveBaseTypes(types)
-    upFieldsTypes(types)
+    foldFieldsTypes(types)
 
     // renameDuplicatedTypes()
     l := filterUnusedTypes(types)
@@ -132,7 +136,7 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
 //     }
 // }
 
-func upFieldsTypes(types []*Type) {
+func foldFieldsTypes(types []*Type) {
     for _, t := range types {
         for _, f := range t.Fields {
             f.Type = lastType(f.Type)
@@ -141,7 +145,7 @@ func upFieldsTypes(types []*Type) {
 }
 
 func lastType(t *Type) *Type {
-    if (len(t.Fields) == 0 || t.isSimpleContent && len(t.Fields) == 1) && t.baseType != nil {
+    if len(t.Fields) == 0 && t.baseType != nil {
         return lastType(t.baseType)
     } else {
         return t
@@ -199,8 +203,13 @@ func (p *parser) createType(n *xsd.Node) *Type {
         return t
     }
 
-    if p.resultTypes.Has(t.Name) {
-        log.Fatalf("Duplicated types %+v", t)
+    sourceName := t.Name
+    exist := p.resultTypes.Has(t.Name)
+    idx := 1
+    for exist {
+        t.Local = sourceName.Local + strconv.Itoa(idx)
+        idx++
+        exist = p.resultTypes.Has(t.Name)
     }
 
     p.resultTypes.Add(t)
@@ -219,33 +228,6 @@ func (p *parser) findGlobalNode(name xml.Name) *xsd.Node {
     return nil
 }
 
-func (p *parser) endElement() {
-    e := p.elStack.Pop()
-    e.name.Space = p.nsStack.GetLast()
-
-    maxAttr := findAttributeByName(e.startElem.Attr, "maxOccurs")
-    if maxAttr != nil {
-        e.isArray = true
-    }
-
-    typeAttr := findAttributeByName(e.startElem.Attr, "type")
-    if typeAttr != nil {
-        e.typeName = p.createQName(typeAttr.Value)
-    }
-
-    refAttr := findAttributeByName(e.startElem.Attr, "ref")
-    if refAttr != nil {
-        e.typeName = p.createQName(refAttr.Value)
-    }
-
-    context := p.elStack.GetLast()
-    context.children = append(context.children, e)
-
-    if e.name.Local == "" && len(e.children) == 0 {
-        e.name = stringQName
-    }
-}
-
 func (p *parser) createQName(qName string) xml.Name {
     var name, namespace string
     typesParts := strings.Split(qName, ":")
@@ -261,16 +243,6 @@ func (p *parser) createQName(qName string) xml.Name {
     return xml.Name{
         Local: name,
         Space: namespace}
-}
-
-func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
-    for _, attr := range attrsList {
-        if attr.Name.Local == name {
-            return &attr
-        }
-    }
-
-    return nil
 }
 
 // Processing sequence, all and choice nodes
@@ -364,7 +336,7 @@ func (p *parser) attributeNode(n *xsd.Node) *Field {
     } else if ch != nil {
         tp = p.simpleTypeNode(ch)
     } else {
-        panic("Unknown attribute definition")
+        tp = newStandardType("string")
     }
 
     res := newField(n, tp)
@@ -392,12 +364,6 @@ func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
     }
 
     return tp
-}
-
-func (p *parser) endUnion() {
-    p.elStack.Pop()
-    context := p.elStack.GetLast()
-    context.name = stringQName
 }
 
 func (p *parser) simpleContentNode(n *xsd.Node) *Type {
@@ -493,6 +459,13 @@ func embedFields(typs []*Type) {
         if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" && !t.referenced {
             t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
         }
+
+        if t.isSimpleContent {
+            if t.simpleContentType == nil {
+                panic("Simple content without type")
+            }
+            t.Fields = append(t.Fields, newValueField(t.simpleContentType.Local))
+        }
     }
 }
 
@@ -520,20 +493,21 @@ func buildDependencies(types []*Type) map[xml.Name][]*Type {
 // move fields from base type to current for inheritance avoiding
 func resolveBaseTypes(types []*Type) {
     for _, t := range types {
-        var baseType string
-        t.Fields, baseType = collectBaseFields(t)
-        if t.isSimpleContent {
-            t.Fields = append(t.Fields, newValueField(baseType))
-        }
+        t.Fields, t.simpleContentType = collectBaseFields(t)
+        t.resolved = true
     }
 }
 
-func collectBaseFields(t *Type) ([]*Field, string) {
+func collectBaseFields(t *Type) ([]*Field, *Type) {
     res := make([]*Field, len(t.Fields))
     copy(res, t.Fields)
 
+    if t.resolved {
+        return res, t.baseType
+    }
+
     if t.baseType == nil {
-        return res, t.Local
+        return res, t
     }
 
     baseFields, baseType := collectBaseFields(t.baseType)

@@ -141,7 +141,7 @@ func TestSchemaComplexTypes(t *testing.T) {
 	}
 
 	if len(cType.Fields) != 5 {
-		t.Errorf("TypeName should Has 4 fields, %d getting", len(cType.Fields))
+		t.Errorf("TypeName should Has 5 fields, %d getting", len(cType.Fields))
 	}
 
 	field := cType.Fields[3]
@@ -174,7 +174,7 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 
 	if len(cType.Fields) != 2 {
-		t.Fatalf("Should be 1 fields, %d getting", len(cType.Fields))
+		t.Fatalf("Should be 2 fields, %d getting", len(cType.Fields))
 	}
 
 	field := cType.Fields[1]
@@ -533,7 +533,24 @@ func TestTwoLevelSimpleContent(t *testing.T) {
     }
 
     if ct.Fields[1].Name != "Language" {
-        t.Errorf(`Last field should be "Language", %q given`, ct.Fields[2].Name)
+        t.Errorf(`Last field should be "Language", %q given`, ct.Fields[1].Name)
+    }
+}
+
+func TestFieldsDuplication(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    if len(typesList) != 1 {
+        t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+    }
+
+    ct := typesList[0]
+    if len(ct.Fields) != 3 {
+        t.Fatalf("Wrong fields amount. 3 expected, %d got", len(ct.Fields))
+    }
+
+    if ct.Fields[1].Name != "Name" {
+        t.Errorf(`Last field should be "Name", %q given`, ct.Fields[1].Name)
     }
 }
 

@@ -60,12 +60,15 @@ func newNode(startElem *xml.StartElement) *node {
 
 type Type struct {
     xml.Name
-    Fields          []*Field
-    SourceNode      *xsd.Node
-    baseType        *Type
-    isSimpleContent bool
+    Fields            []*Field
+    SourceNode        *xsd.Node
+    baseType          *Type
+    isSimpleContent   bool
+    simpleContentType *Type
+    // for this type base type fields was resolved
+    resolved bool
     // on this element has reference
-    referenced      bool
+    referenced bool
 }
 
 func (t *Type) addField(f *Field) {
@@ -125,8 +128,8 @@ func newField(n *xsd.Node, typ *Type) *Field {
     }
 
     return &Field{
-        Name: name,
-        Type: typ,
+        Name:      name,
+        Type:      typ,
         MinOccurs: min,
         MaxOccurs: max}
 }

@@ -8,46 +8,32 @@ import (
 
 var innerTypes = []string{
     "int",
-    "float32",
+    "float64",
     "bool",
     "time.Time",
     "string"}
 
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
     for _, curType := range typesList {
-        if curType.IsSimpleContent && len(curType.Fields) == 0 {
-            typeName := mapStandardType(curType.baseType.Name)
-            writer.Write([]byte("type " + curType.Name + " " + firstUp(typeName) + "\n\n"))
-            continue
-        }
-
-        writer.Write([]byte("type " + firstUp(curType.Name) + " struct {\n"))
-        if curType.baseType != nil {
-            writer.Write([]byte(firstUp(curType.baseType.Name) + "\n"))
-        }
+        writer.Write([]byte("type " + firstUp(curType.Local) + " struct {\n"))
         for _, f := range curType.Fields {
-            writeField(f, curType.Namespace, writer)
+            writeField(curType, f, writer)
         }
         writer.Write([]byte("}\n\n"))
     }
 }
 
-func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
-    if field.IsAttr && len(field.Type.Fields) != 0 {
-        // обработка attributeGroup
-        for _, f := range field.Type.Fields {
-            writeField(f, field.Type.Space, writer)
-        }
-    } else {
+func writeField(t *tree_parser.Type, field *tree_parser.Field, writer io.Writer) {
         // обработка обычного поля
         writer.Write([]byte(firstUp(field.Name) + " "))
+
         if field.MaxOccurs > field.MinOccurs {
             writer.Write([]byte("[]"))
         }
 
-        fieldType := mapStandardType(field.Type.Name)
+        fieldType := mapStandardType(field.Type.Local)
         if fieldType == "" {
-            fieldType = firstUp(field.Type.Name)
+            fieldType = firstUp(field.Type.Local)
         }
 
         if !isInnerType(fieldType) {
@@ -57,13 +43,14 @@ func writeField(field *tree_parser.Field, ns string, writer io.Writer) {
         writer.Write([]byte(fieldType + " `xml:\""))
         if field.IsAttr {
             writer.Write([]byte(field.Name + ",attr,omitempty"))
-        } else if field.Type.IsSimpleContent && field.Name == "Value" {
+        } else if  field.Name == "XMLName" {
+            writer.Write([]byte(t.Space + " " + t.Local))
+        } else if field.Name == "XMLValue" {
             writer.Write([]byte(",chardata"))
         } else {
-            writer.Write([]byte(ns + " " + field.Name + ",omitempty"))
+            writer.Write([]byte(field.Name + ",omitempty"))
         }
         writer.Write([]byte("\"`\n"))
-    }
 }
 
 func extractName(in string) string {
