@@ -273,6 +273,7 @@ func findAttributeByName(attrsList []xml.Attr, name string) *xml.Attr {
     return nil
 }
 
+// Processing sequence, all and choice nodes
 func (p *parser) sequenceNode(n *xsd.Node) *Type {
     t := p.createType(n)
     for _, ch := range n.Children() {
@@ -288,6 +289,8 @@ func (p *parser) sequenceNode(n *xsd.Node) *Type {
             t.addField(f)
         case "attribute":
             t.addField(p.attributeNode(ch))
+        case "sequence":
+            t.append(p.sequenceNode(ch))
         }
     }
 

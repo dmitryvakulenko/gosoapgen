@@ -476,19 +476,23 @@ func TestElementRefWithType(t *testing.T) {
     }
 }
 
-// func TestComplexChoice(t *testing.T) {
-// 	typesList := parseTypesFrom(t.Name())
-//
-// 	if len(typesList) != 1 {
-// 		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-// 	}
-//
-// 	cType := typesList[0]
-// 	if len(cType.Fields) != 3 {
-// 		t.Errorf("Wrong type fields amount. 3 expected, %d got", len(cType.Fields))
-// 	}
-// }
-//
+func TestComplexChoice(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	if len(typesList) != 1 {
+		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
+	}
+
+	cType := typesList[0]
+	if len(cType.Fields) != 4 {
+		t.Fatalf("Wrong type fields amount. 3 expected, %d got", len(cType.Fields))
+	}
+
+	if cType.Fields[3].Name != "Errors" {
+        t.Errorf(`Field name should be "Errors", %q got`, cType.Fields[3].Name)
+    }
+}
+
 // func TestSimpleTypesFolding(t *testing.T) {
 //     typesList := parseTypesFrom(t.Name())
 //
