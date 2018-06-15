@@ -113,16 +113,18 @@ func newField(n *xsd.Node, typ *Type) *Field {
 
     var min int
     switch m := n.AttributeValue("minOccurs"); m {
-    case "unqualified":
+    case "unqualified", "":
         min = 0
     default:
         min, _ = strconv.Atoi(m)
     }
 
     var max int
-    switch m := n.AttributeValue("minOccurs"); m {
+    switch m := n.AttributeValue("maxOccurs"); m {
     case "unbounded":
         max = 1000
+    case "":
+        max = 0
     default:
         max, _ = strconv.Atoi(m)
     }

@@ -27,7 +27,7 @@ func writeField(t *tree_parser.Type, field *tree_parser.Field, writer io.Writer)
         // обработка обычного поля
         writer.Write([]byte(firstUp(field.Name) + " "))
 
-        if field.MaxOccurs > field.MinOccurs {
+        if field.MinOccurs < field.MaxOccurs {
             writer.Write([]byte("[]"))
         }
 
