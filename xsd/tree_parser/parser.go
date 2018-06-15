@@ -298,6 +298,8 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
         switch ch.Name() {
         case "restriction":
             tp.baseType = p.restrictionNode(ch)
+        case "extension":
+            tp.baseType = p.extensionNode(ch)
         case "union":
             tp.baseType = newStandardType("string")
         }
@@ -503,7 +505,7 @@ func collectBaseFields(t *Type) ([]*Field, *Type) {
     copy(res, t.Fields)
 
     if t.resolved {
-        return res, t.baseType
+        return res, t.simpleContentType
     }
 
     if t.baseType == nil {
