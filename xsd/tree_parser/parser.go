@@ -96,7 +96,7 @@ func (p *parser) GetTypes() []*Type {
     resolveBaseTypes(types)
     foldFieldsTypes(types)
 
-    // renameDuplicatedTypes()
+    renameDuplicatedTypes(types)
     l := filterUnusedTypes(types)
     embedFields(l)
 
@@ -124,17 +124,17 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
     }
 }
 
-// func renameDuplicatedTypes() {
-//     names := make(map[string]int)
-//     for _, t := range globalTypesCache {
-//         if _, exist := names[t.Name.Local]; exist {
-//             names[t.Name.Local]++
-//             t.Name.Local = t.Name.Local + "_" + strconv.Itoa(names[t.Name.Local])
-//         } else {
-//             names[t.Name.Local] = 0
-//         }
-//     }
-// }
+func renameDuplicatedTypes(types []*Type) {
+    names := make(map[string]int)
+    for _, t := range types {
+        if _, exist := names[t.Name.Local]; exist {
+            names[t.Name.Local]++
+            t.Name.Local = t.Name.Local + strconv.Itoa(names[t.Name.Local])
+        } else {
+            names[t.Name.Local] = 0
+        }
+    }
+}
 
 func foldFieldsTypes(types []*Type) {
     for _, t := range types {

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"os"
 	"io"
+    "github.com/stretchr/testify/assert"
 )
 
 func TestEmptySchema(t *testing.T) {
@@ -298,9 +299,7 @@ func TestParseElementRef(t *testing.T) {
 func TestInclude(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 2 {
-		t.Fatalf("Wrong types amount. 2 expected, %d got", len(typesList))
-	}
+	assert.Len(t, typesList, 2)
 
 	tp := typesList[1]
 
@@ -569,6 +568,15 @@ func TestSequenceChoice(t *testing.T) {
     if ct.Fields[4].Name != "FlightSegmentReference2" {
         t.Errorf(`Last field should be "FlightSegmentReference2", %q given`, ct.Fields[1].Name)
     }
+}
+
+func TestRenameDuplicatedTypes(t *testing.T) {
+    typesList := parseTypesFrom(t.Name())
+
+    assert.Lenf(t, typesList, 2, "Wrong types amount")
+
+    assert.Equal(t, "PointOfSale", typesList[0].Name.Local)
+    assert.Equal(t, "PointOfSale1", typesList[1].Name.Local)
 }
 
 func parseTypesFrom(name string) []*Type {
