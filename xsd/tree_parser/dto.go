@@ -60,6 +60,7 @@ func newNode(startElem *xml.StartElement) *node {
 
 type Type struct {
     xml.Name
+    GoName            string
     Fields            []*Field
     SourceNode        *xsd.Node
     baseType          *Type
@@ -96,9 +97,8 @@ func newStandardType(name string) *Type {
 }
 
 type Field struct {
-    Name string
-    Type *Type
-    // TypeName xml.Name
+    Name      string
+    Type      *Type
     MinOccurs int
     MaxOccurs int
     IsAttr    bool

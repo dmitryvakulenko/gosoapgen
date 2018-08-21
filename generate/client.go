@@ -23,6 +23,7 @@ func Client(wsdl *wsdl.Definitions, writer io.Writer) {
 type Transporter interface {
 	Send(string, interface{}, interface{}) []byte
 	CreateHeader(string) interface{}
+	GetLastCommunications() (string, string)
 }
 
 type SoapClient struct {
@@ -31,6 +32,10 @@ type SoapClient struct {
 
 func NewSoapClient(t Transporter) SoapClient {
 	return SoapClient{transporter: t}
+}
+
+func (c *SoapClient) GetLastCommunication() (string, string) {
+    return c.transporter.GetLastCommunications()
 }
 `))
 

@@ -3,13 +3,15 @@ package tree_parser
 import "encoding/xml"
 
 type typesList struct {
-    cache    map[xml.Name]int
-    fullList []*Type
+    cache       map[xml.Name]int
+    goNameCache map[string]bool
+    fullList    []*Type
 }
 
 func newTypesList() *typesList {
     return &typesList{
-        cache: make(map[xml.Name]int)}
+        cache:       make(map[xml.Name]int),
+        goNameCache: make(map[string]bool)}
 }
 
 func (t *typesList) Reset() {
@@ -25,6 +27,11 @@ func (t *typesList) Has(name xml.Name) bool {
     return res
 }
 
+func (t *typesList) HasGoName(name string) bool {
+    _, res := t.goNameCache[name]
+    return res
+}
+
 func (t *typesList) Add(newType *Type) {
     if t.Has(newType.Name) {
         panic("Type exist " + newType.Local)
@@ -33,6 +40,7 @@ func (t *typesList) Add(newType *Type) {
     index := len(t.fullList)
     t.fullList = append(t.fullList, newType)
     t.cache[newType.Name] = index
+    t.goNameCache[newType.GoName] = true
 }
 
 func (t *typesList) Get(name xml.Name) *Type {

@@ -575,8 +575,8 @@ func TestRenameDuplicatedTypes(t *testing.T) {
 
     assert.Lenf(t, typesList, 2, "Wrong types amount")
 
-    assert.Equal(t, "PointOfSale", typesList[0].Name.Local)
-    assert.Equal(t, "PointOfSale1", typesList[1].Name.Local)
+    assert.Equal(t, "PointOfSale", typesList[0].GoName)
+    assert.Equal(t, "PointOfSale1", typesList[1].GoName)
 }
 
 func parseTypesFrom(name string) []*Type {

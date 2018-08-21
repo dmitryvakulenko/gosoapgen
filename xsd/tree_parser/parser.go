@@ -96,7 +96,7 @@ func (p *parser) GetTypes() []*Type {
     resolveBaseTypes(types)
     foldFieldsTypes(types)
 
-    renameDuplicatedTypes(types)
+    // renameDuplicatedTypes(types)
     l := filterUnusedTypes(types)
     embedFields(l)
 
@@ -124,17 +124,18 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
     }
 }
 
-func renameDuplicatedTypes(types []*Type) {
-    names := make(map[string]int)
-    for _, t := range types {
-        if _, exist := names[t.Name.Local]; exist {
-            names[t.Name.Local]++
-            t.Name.Local = t.Name.Local + strconv.Itoa(names[t.Name.Local])
-        } else {
-            names[t.Name.Local] = 0
-        }
-    }
-}
+// func renameDuplicatedTypes(types []*Type) {
+//     names := make(map[string]int)
+//     for _, t := range types {
+//         if _, exist := names[t.Name.Local]; exist {
+//             names[t.Name.Local]++
+//             t.GoName = t.Name.Local + strconv.Itoa(names[t.Name.Local])
+//         } else {
+//             names[t.Name.Local] = 0
+//             t.GoName = strings.Title(t.Name.Local)
+//         }
+//     }
+// }
 
 func foldFieldsTypes(types []*Type) {
     for _, t := range types {
@@ -203,13 +204,17 @@ func (p *parser) createType(n *xsd.Node) *Type {
         return t
     }
 
-    sourceName := t.Name
-    exist := p.resultTypes.Has(t.Name)
+    if p.resultTypes.Has(t.Name) {
+        return p.resultTypes.Get(t.Name)
+    }
+
+    t.GoName = strings.Title(t.Local)
+    exist := p.resultTypes.HasGoName(t.GoName)
     idx := 1
     for exist {
-        t.Local = sourceName.Local + strconv.Itoa(idx)
+        t.GoName = strings.Title(t.Local) + strconv.Itoa(idx)
         idx++
-        exist = p.resultTypes.Has(t.Name)
+        exist = p.resultTypes.HasGoName(t.GoName)
     }
 
     p.resultTypes.Add(t)
