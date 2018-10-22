@@ -19,7 +19,6 @@ func TestSimpleTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
 	assert.Len(t, typesList, 2)
-
 	assert.Equal(t, "Test", typesList[0].Name.Local)
 	assert.Equal(t, typesList[1], typesList[0].BaseType)
 	assert.Equal(t, "AlphaString_Length1To2", typesList[1].Name.Local)
@@ -30,33 +29,10 @@ func TestSimpleTypes(t *testing.T) {
 func TestSimpleElements(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
-
-	cType := typesList[0]
-	name := "minRange"
-	if cType.Local != name {
-		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
-	}
-
-	ns := "http://xml.amadeus.com/2010/06/Types_v1"
-	if cType.Space != ns {
-		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
-	}
-
-	fields := cType.Fields
-	if len(fields) != 2 {
-        t.Fatalf("Fields amount should be 2, got %d", len(fields))
-    }
-
-    if fields[0].Name != "XMLName" {
-        t.Errorf(`Field name should be XMLName, %q got`, fields[0].Name)
-    }
-
-    if fields[1].Name != "XMLValue" {
-        t.Errorf(`Field name should be XMLName, %q got`, fields[1].Name)
-    }
+	assert.Len(t, typesList, 1)
+	assert.Equal(t, "minRange", typesList[0].Name.Local)
+	assert.Equal(t, "http://xml.amadeus.com/2010/06/Types_v1", typesList[0].Name.Space)
+	assert.Equal(t, "decimal", typesList[0].BaseType.BaseType.Local)
 }
 
 func TestComplexType(t *testing.T) {
