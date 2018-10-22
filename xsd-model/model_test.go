@@ -31,7 +31,7 @@ func TestSchema(t *testing.T) {
     }
 
     ns := n.ResolveSpace("altova")
-    if ns != "http://www.altova.com/xml-Schema-extensions" {
+    if ns != "http://www.altova.com/xml-schema-extensions" {
         t.Errorf("Error namespace resolving. Got %q", ns)
     }
 }

@@ -88,7 +88,7 @@ func (s *Schema) ResolveSpace(prefix string) string {
     return s.nsAlias[prefix]
 }
 
-func (s *Schema) FindGlobalTypeByName(typeName xml.Name) *Node {
+func (s *Schema) FindRootType(typeName xml.Name) *Node {
     if s.TargetNamespace == typeName.Space {
         for _, n := range s.children {
             if n.AttributeValue("name") == typeName.Local {
@@ -98,7 +98,7 @@ func (s *Schema) FindGlobalTypeByName(typeName xml.Name) *Node {
     }
 
     for _, sc := range s.ChildSchemas {
-        n := sc.FindGlobalTypeByName(typeName)
+        n := sc.FindRootType(typeName)
         if n != nil {
             return n
         }
