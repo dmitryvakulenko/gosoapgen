@@ -18,35 +18,13 @@ func TestEmptySchema(t *testing.T) {
 func TestSimpleTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
-	}
+	assert.Len(t, typesList, 2)
 
-	tp := typesList[0]
-	name := "Test"
-	if name != tp.Name.Local {
-		t.Errorf("Field elemName should be %q, got %q instead", name, tp.Name.Local)
-	}
-
-    if len(tp.Fields) != 2 {
-        t.Fatalf("Wrong number of type fields. 2 expected, but got %d", len(tp.Fields))
-    }
-
-    if tp.Fields[0].Name != "XMLName" {
-        t.Errorf(`First field name should be "XMLName", %q got`, tp.Fields[0].Name)
-    }
-
-    if tp.Fields[1].Name != "XMLValue" {
-        t.Errorf(`First field name should be "XMLValue", %q got`, tp.Fields[1].Name)
-    }
-
-    if tp.Fields[1].Type == nil {
-        t.Fatalf(`First field should has type`)
-    }
-
-    if tp.Fields[1].Type.Local != "string" {
-        t.Errorf(`First field type should be "string", %q given`, tp.Fields[1].Type.Local)
-    }
+	assert.Equal(t, "Test", typesList[0].Name.Local)
+	assert.Equal(t, typesList[1], typesList[0].BaseType)
+	assert.Equal(t, "AlphaString_Length1To2", typesList[1].Name.Local)
+	assert.Len(t, typesList[1].Fields, 0)
+	assert.Equal(t, "string", typesList[1].BaseType.Local)
 }
 
 func TestSimpleElements(t *testing.T) {

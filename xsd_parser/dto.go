@@ -10,7 +10,7 @@ type Type struct {
     xml.Name
     Fields            []*Field
     SourceNode        *xsd_model.Node
-    baseType          *Type
+    BaseType          *Type
     isSimpleContent   bool
     simpleContentType *Type
     // for this type base type fields was resolved
@@ -40,7 +40,7 @@ func newType(n *xsd_model.Node, ns string) *Type {
 }
 
 func newStandardType(name string) *Type {
-    return &Type{Name: xml.Name{Local: name, Space: "http://www.w3.org/2001/XMLSchema"}, isSimpleContent: true}
+    return &Type{Name: xml.Name{Local: name, Space: xsdSpace}, isSimpleContent: true}
 }
 
 type Field struct {

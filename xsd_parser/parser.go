@@ -81,10 +81,10 @@ func (p *parser) GetTypes() []*Type {
     foldFieldsTypes(types)
 
     // renameDuplicatedTypes(types)
-    l := filterUnusedTypes(types)
-    embedFields(l)
+    // l := filterUnusedTypes(types)
+    // embedFields(types)
 
-    return l
+    return types
 }
 
 func extractInnerTypes(t *Type, deep int) []*Type {
@@ -117,8 +117,8 @@ func foldFieldsTypes(types []*Type) {
 }
 
 func lastType(t *Type) *Type {
-    if len(t.Fields) == 0 && t.baseType != nil {
-        return lastType(t.baseType)
+    if len(t.Fields) == 0 && t.BaseType != nil {
+        return lastType(t.BaseType)
     } else {
         return t
     }
@@ -248,11 +248,11 @@ func (p *parser) complexTypeNode(n *xsd_model.Node) *Type {
             a := p.attributeNode(ch)
             t.addField(a)
         case "attributeGroup":
-            t.baseType = p.attributeGroupNode(ch)
+            t.BaseType = p.attributeGroupNode(ch)
         case "simpleContent":
-            t.baseType = p.simpleContentNode(ch)
+            t.BaseType = p.simpleContentNode(ch)
         case "complexContent":
-            t.baseType = p.complexContentNode(ch)
+            t.BaseType = p.complexContentNode(ch)
         }
     }
 
@@ -266,11 +266,11 @@ func (p *parser) simpleTypeNode(n *xsd_model.Node) *Type {
     for _, ch := range n.Children() {
         switch ch.Name() {
         case "restriction":
-            tp.baseType = p.restrictionNode(ch)
+            tp.BaseType = p.restrictionNode(ch)
         case "extension":
-            tp.baseType = p.extensionNode(ch)
+            tp.BaseType = p.extensionNode(ch)
         case "union":
-            tp.baseType = newStandardType("string")
+            tp.BaseType = newStandardType("string")
         }
     }
 
@@ -280,7 +280,7 @@ func (p *parser) simpleTypeNode(n *xsd_model.Node) *Type {
 func (p *parser) extensionNode(n *xsd_model.Node) *Type {
     tp := p.createType(n)
     base := n.AttributeValue("base")
-    tp.baseType = p.findOrCreateGlobalType(base)
+    tp.BaseType = p.findOrCreateGlobalType(base)
 
     for _, ch := range n.Children() {
         switch ch.Name() {
@@ -343,9 +343,9 @@ func (p *parser) simpleContentNode(n *xsd_model.Node) *Type {
     for _, ch := range n.Children() {
         switch ch.Name() {
         case "restriction":
-            tp.baseType = p.restrictionNode(ch)
+            tp.BaseType = p.restrictionNode(ch)
         case "extension":
-            tp.baseType = p.extensionNode(ch)
+            tp.BaseType = p.extensionNode(ch)
         }
     }
 
@@ -357,9 +357,9 @@ func (p *parser) complexContentNode(n *xsd_model.Node) *Type {
     for _, ch := range n.Children() {
         switch ch.Name() {
         case "restriction":
-            tp.baseType = p.restrictionNode(ch)
+            tp.BaseType = p.restrictionNode(ch)
         case "extension":
-            tp.baseType = p.extensionNode(ch)
+            tp.BaseType = p.extensionNode(ch)
         }
     }
 
@@ -367,17 +367,17 @@ func (p *parser) complexContentNode(n *xsd_model.Node) *Type {
 }
 
 // Remove type that made not from elements
-func filterUnusedTypes(types []*Type) []*Type {
-    var res []*Type
-    dep := buildDependencies(types)
-    for _, t := range types {
-        if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" && !t.referenced {
-            res = append(res, t)
-        }
-    }
-
-    return res
-}
+// func filterUnusedTypes(types []*Type) []*Type {
+//     var res []*Type
+//     dep := buildDependencies(types)
+//     for _, t := range types {
+//         if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" && !t.referenced {
+//             res = append(res, t)
+//         }
+//     }
+//
+//     return res
+// }
 
 func (p *parser) schemaNode(n *xsd_model.Node) {
     for _, ch := range n.Children() {
@@ -395,17 +395,17 @@ func (p *parser) elementNode(n *xsd_model.Node) *Type {
     elType := n.AttributeValue("type")
     ref := n.AttributeValue("ref")
     if elType != "" {
-        t.baseType = p.findOrCreateGlobalType(elType)
+        t.BaseType = p.findOrCreateGlobalType(elType)
     } else if ref != "" {
-        t.baseType = p.findOrCreateGlobalType(ref)
-        t.baseType.referenced = true
+        t.BaseType = p.findOrCreateGlobalType(ref)
+        t.BaseType.referenced = true
     } else {
         for _, ch := range n.Children() {
             switch ch.Name() {
             case "simpleType":
-                t.baseType = p.simpleTypeNode(ch)
+                t.BaseType = p.simpleTypeNode(ch)
             case "complexType":
-                t.baseType = p.complexTypeNode(ch)
+                t.BaseType = p.complexTypeNode(ch)
             }
         }
     }
@@ -423,43 +423,37 @@ func (p *parser) restrictionNode(n *xsd_model.Node) *Type {
 
 // Made embedding ref, attributeGroup fields
 // also adding XMLName and Value fields
-func embedFields(typs []*Type) {
-    dep := buildDependencies(typs)
-    for _, t := range typs {
-        // adding XMLName field
-        if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" && !t.referenced {
-            t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
-        }
-
-        if t.isSimpleContent {
-            if t.simpleContentType == nil {
-                panic("Simple content without type")
-            }
-            t.Fields = append(t.Fields, newValueField(t.simpleContentType.Local))
-        }
-    }
-}
+// func embedFields(typs []*Type) {
+//     for _, t := range typs {
+//         if t.isSimpleContent {
+//             if t.simpleContentType == nil {
+//                 panic("Simple content without type")
+//             }
+//             t.Fields = append(t.Fields, newValueField(t.simpleContentType.Local))
+//         }
+//     }
+// }
 
 // build dependencies
-func buildDependencies(types []*Type) map[xml.Name][]*Type {
-    usedTypes := make(map[xml.Name][]*Type)
-    for _, t := range types {
-        var typeDep []*Type
-
-        for _, f := range t.Fields {
-            typeDep = append(typeDep, f.Type)
-        }
-
-        for _, tp := range typeDep {
-            if _, ok := usedTypes[tp.Name]; !ok {
-                usedTypes[tp.Name] = []*Type{}
-            }
-            usedTypes[tp.Name] = append(usedTypes[tp.Name], tp)
-        }
-    }
-
-    return usedTypes
-}
+// func buildDependencies(types []*Type) map[xml.Name][]*Type {
+//     usedTypes := make(map[xml.Name][]*Type)
+//     for _, t := range types {
+//         var typeDep []*Type
+//
+//         for _, f := range t.Fields {
+//             typeDep = append(typeDep, f.Type)
+//         }
+//
+//         for _, tp := range typeDep {
+//             if _, ok := usedTypes[tp.Name]; !ok {
+//                 usedTypes[tp.Name] = []*Type{}
+//             }
+//             usedTypes[tp.Name] = append(usedTypes[tp.Name], tp)
+//         }
+//     }
+//
+//     return usedTypes
+// }
 
 // move fields from base type to current for inheritance avoiding
 func resolveBaseTypes(types []*Type) {
@@ -477,13 +471,13 @@ func collectBaseFields(t *Type) ([]*Field, *Type) {
         return res, t.simpleContentType
     }
 
-    if t.baseType == nil {
+    if t.BaseType == nil {
         return res, t
     }
 
-    baseFields, baseType := collectBaseFields(t.baseType)
+    baseFields, baseType := collectBaseFields(t.BaseType)
     res = append(baseFields, res...)
-    t.isSimpleContent = t.baseType.isSimpleContent
+    t.isSimpleContent = t.BaseType.isSimpleContent
 
     return res, baseType
 }
