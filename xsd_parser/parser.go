@@ -140,13 +140,14 @@ func (p *parser) findOrCreateGlobalType(name string) *Type {
 
     node := p.findGlobalNode(qName)
     if node != nil {
-        return p.parseSomeRootNode(qName, node)
+        return p.parseRootNode(qName, node)
     }
 
     panic("Can't find type " + name)
 }
 
-func (p *parser) parseSomeRootNode(name xml.Name, n *xsd_model.Node) *Type {
+// Parse come kind of node that can be child of schema node
+func (p *parser) parseRootNode(name xml.Name, n *xsd_model.Node) *Type {
     if p.resultTypes.Has(name) {
         return p.resultTypes.Get(name)
     }
@@ -385,7 +386,7 @@ func (p *parser) schemaNode(n *xsd_model.Node) {
         }
         ns := p.schemasStack.Back().Value.(*xsd_model.Schema).TargetNamespace
         name := ch.AttributeValue("name")
-        p.parseSomeRootNode(xml.Name{Local: name, Space: ns}, ch)
+        p.parseRootNode(xml.Name{Local: name, Space: ns}, ch)
     }
 }
 
