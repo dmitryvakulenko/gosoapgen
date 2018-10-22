@@ -1,68 +1,15 @@
-package tree_parser
+package xsd_parser
 
 import (
     "encoding/xml"
-    xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
-    "strconv"
+	"github.com/dmitryvakulenko/gosoapgen/xsd_parser/internal/xsd_model"
+	"strconv"
 )
-
-// Абстрактное представление элемента схемы
-type node struct {
-    // название элемента схемы xsd из которого был создан данный node, complexType и т.д.
-    // чисто для сокращения, поскольку вся эта информация содержится в startElem
-    elemName string
-
-    // elements name, value of a "name" attribute
-    name xml.Name
-
-    // element type name
-    typeName xml.Name
-
-    // сам элемент, из которого создавался node
-    startElem       *xml.StartElement
-    children        []*node
-    isSimpleContent bool
-    isAttr          bool
-    isArray         bool
-
-    // сгенерированный тип
-    genType *Type
-}
-
-func (r *node) find(ns, name string) *node {
-    for _, n := range r.children {
-        if ns == n.name.Space && name == n.name.Local {
-            return n
-        }
-    }
-
-    return nil
-}
-
-func (r *node) addChild(e *node) {
-    r.children = append(r.children, e)
-}
-
-func newNode(startElem *xml.StartElement) *node {
-    name := ""
-    for _, a := range startElem.Attr {
-        if a.Name.Local == "name" {
-            name = a.Value
-            break
-        }
-    }
-
-    return &node{
-        name:      xml.Name{Local: name},
-        elemName:  startElem.Name.Local,
-        startElem: startElem}
-}
 
 type Type struct {
     xml.Name
-    GoName            string
     Fields            []*Field
-    SourceNode        *xsd.Node
+    SourceNode        *xsd_model.Node
     baseType          *Type
     isSimpleContent   bool
     simpleContentType *Type
@@ -85,7 +32,7 @@ func (t *Type) Hash() {
     // надо реализовать и учитывать при проверке дублей
 }
 
-func newType(n *xsd.Node, ns string) *Type {
+func newType(n *xsd_model.Node, ns string) *Type {
     name := n.AttributeValue("name")
     return &Type{
         Name:       xml.Name{Local: name, Space: ns},
@@ -105,7 +52,7 @@ type Field struct {
     Comment   string
 }
 
-func newField(n *xsd.Node, typ *Type) *Field {
+func newField(n *xsd_model.Node, typ *Type) *Field {
     name := n.AttributeValue("name")
     if name == "" {
         name = n.AttributeValue("ref")

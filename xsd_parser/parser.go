@@ -1,36 +1,21 @@
-package tree_parser
+package xsd_parser
 
 import (
-    "io"
-    "encoding/xml"
-    "strings"
-    xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
-    "container/list"
-    "strconv"
+	"container/list"
+	"encoding/xml"
+	"github.com/dmitryvakulenko/gosoapgen/xsd_parser/internal/xsd_model"
+	"strings"
 )
 
-var (
-    stringQName = xml.Name{Local: "string", Space: "http://www.w3.org/2001/XMLSchema"}
+const (
+	xsdSpace = "http://www.w3.org/2001/XMLSchema"
 )
-
-// Интерфейс загрузки xsd
-// должен отслеживать уже загруженные файлы
-// и правильно отрабатывать относительные пути
-type Loader interface {
-    /*
-    Загрузить файл по указанному пути (или url)
-    Второй параметр - ошибка, которую должен уметь анализировать метод IsAlreadyLoadedError
-     */
-    Load(path string) (io.ReadCloser, error)
-    IsAlreadyLoadedError(error) bool
-}
 
 type parser struct {
     loader  Loader
-    nsStack *stringsStack
     curNs   map[string]string
 
-    rootSchemas  []*xsd.Schema
+    rootSchemas  []*xsd_model.Schema
     schemasStack *list.List
     resultTypes  *typesList
 }
@@ -38,7 +23,6 @@ type parser struct {
 func NewParser(l Loader) *parser {
     return &parser{
         loader:       l,
-        nsStack:      &stringsStack{},
         curNs:        make(map[string]string),
         schemasStack: list.New(),
         resultTypes:  newTypesList()}
@@ -48,13 +32,13 @@ func (p *parser) Load(inputFile string) {
     p.rootSchemas = append(p.rootSchemas, p.loadSchema(inputFile, ""))
 }
 
-func (p *parser) loadSchema(inputFile string, ns string) *xsd.Schema {
-    var s *xsd.Schema
+func (p *parser) loadSchema(inputFile string, ns string) *xsd_model.Schema {
+    var s *xsd_model.Schema
     reader, err := p.loader.Load(inputFile)
     defer reader.Close()
 
     if err == nil {
-        s = xsd.Load(reader)
+        s = xsd_model.Load(reader)
         // to processing include
         if ns != "" {
             s.TargetNamespace = ns
@@ -115,7 +99,7 @@ func extractInnerTypes(t *Type, deep int) []*Type {
 }
 
 // Generate types list according to previously built tree
-func (p *parser) generateTypes(schemas []*xsd.Schema) {
+func (p *parser) generateTypes(schemas []*xsd_model.Schema) {
     for _, sc := range schemas {
         p.generateTypes(sc.ChildSchemas)
         e := p.schemasStack.PushBack(sc)
@@ -123,19 +107,6 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
         p.schemasStack.Remove(e)
     }
 }
-
-// func renameDuplicatedTypes(types []*Type) {
-//     names := make(map[string]int)
-//     for _, t := range types {
-//         if _, exist := names[t.Name.Local]; exist {
-//             names[t.Name.Local]++
-//             t.GoName = t.Name.Local + strconv.Itoa(names[t.Name.Local])
-//         } else {
-//             names[t.Name.Local] = 0
-//             t.GoName = strings.Title(t.Name.Local)
-//         }
-//     }
-// }
 
 func foldFieldsTypes(types []*Type) {
     for _, t := range types {
@@ -159,7 +130,7 @@ func (p *parser) findOrCreateGlobalType(name string) *Type {
         panic("Type should has name")
     }
     qName := p.createQName(name)
-    if qName.Space == "http://www.w3.org/2001/XMLSchema" {
+    if qName.Space == xsdSpace {
         return &Type{Name: qName, isSimpleContent: true}
     }
 
@@ -175,7 +146,7 @@ func (p *parser) findOrCreateGlobalType(name string) *Type {
     panic("Can't find type " + name)
 }
 
-func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
+func (p *parser) parseSomeRootNode(name xml.Name, n *xsd_model.Node) *Type {
     if p.resultTypes.Has(name) {
         return p.resultTypes.Get(name)
     }
@@ -195,8 +166,8 @@ func (p *parser) parseSomeRootNode(name xml.Name, n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) createType(n *xsd.Node) *Type {
-    sc := p.schemasStack.Back().Value.(*xsd.Schema)
+func (p *parser) createType(n *xsd_model.Node) *Type {
+    sc := p.schemasStack.Back().Value.(*xsd_model.Schema)
     t := newType(n, sc.TargetNamespace)
 
     // this not global, internal type with no name
@@ -208,23 +179,14 @@ func (p *parser) createType(n *xsd.Node) *Type {
         return p.resultTypes.Get(t.Name)
     }
 
-    t.GoName = strings.Title(t.Local)
-    exist := p.resultTypes.HasGoName(t.GoName)
-    idx := 1
-    for exist {
-        t.GoName = strings.Title(t.Local) + strconv.Itoa(idx)
-        idx++
-        exist = p.resultTypes.HasGoName(t.GoName)
-    }
-
     p.resultTypes.Add(t)
     return t
 }
 
 // Find schema node by name and element
-func (p *parser) findGlobalNode(name xml.Name) *xsd.Node {
+func (p *parser) findGlobalNode(name xml.Name) *xsd_model.Node {
     for _, s := range p.rootSchemas {
-        n := s.FindGlobalTypeByName(name)
+        n := s.FindRootType(name)
         if n != nil {
             return n
         }
@@ -233,10 +195,11 @@ func (p *parser) findGlobalNode(name xml.Name) *xsd.Node {
     return nil
 }
 
+// Made QName from string according current schema
 func (p *parser) createQName(qName string) xml.Name {
     var name, namespace string
     typesParts := strings.Split(qName, ":")
-    sc := p.schemasStack.Back().Value.(*xsd.Schema)
+    sc := p.schemasStack.Back().Value.(*xsd_model.Schema)
     if len(typesParts) == 1 {
         name = typesParts[0]
         namespace = sc.TargetNamespace
@@ -251,7 +214,7 @@ func (p *parser) createQName(qName string) xml.Name {
 }
 
 // Processing sequence, all and choice nodes
-func (p *parser) sequenceNode(n *xsd.Node) *Type {
+func (p *parser) sequenceNode(n *xsd_model.Node) *Type {
     t := p.createType(n)
     for _, ch := range n.Children() {
         switch ch.Name() {
@@ -274,7 +237,7 @@ func (p *parser) sequenceNode(n *xsd.Node) *Type {
     return t
 }
 
-func (p *parser) complexTypeNode(n *xsd.Node) *Type {
+func (p *parser) complexTypeNode(n *xsd_model.Node) *Type {
     var t = p.createType(n)
     for _, ch := range n.Children() {
         switch ch.Name() {
@@ -295,7 +258,7 @@ func (p *parser) complexTypeNode(n *xsd.Node) *Type {
     return t
 }
 
-func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
+func (p *parser) simpleTypeNode(n *xsd_model.Node) *Type {
     tp := p.createType(n)
     tp.isSimpleContent = true
 
@@ -313,7 +276,7 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) extensionNode(n *xsd.Node) *Type {
+func (p *parser) extensionNode(n *xsd_model.Node) *Type {
     tp := p.createType(n)
     base := n.AttributeValue("base")
     tp.baseType = p.findOrCreateGlobalType(base)
@@ -334,7 +297,7 @@ func (p *parser) extensionNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) attributeNode(n *xsd.Node) *Field {
+func (p *parser) attributeNode(n *xsd_model.Node) *Field {
     typName := n.AttributeValue("type")
     ch := n.ChildByName("simpleType")
     var tp *Type
@@ -352,7 +315,7 @@ func (p *parser) attributeNode(n *xsd.Node) *Field {
     return res
 }
 
-func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
+func (p *parser) attributeGroupNode(n *xsd_model.Node) *Type {
     tp := p.createType(n)
     name := n.AttributeValue("name")
     ref := n.AttributeValue("ref")
@@ -373,7 +336,7 @@ func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) simpleContentNode(n *xsd.Node) *Type {
+func (p *parser) simpleContentNode(n *xsd_model.Node) *Type {
     tp := p.createType(n)
     tp.isSimpleContent = true
     for _, ch := range n.Children() {
@@ -388,7 +351,7 @@ func (p *parser) simpleContentNode(n *xsd.Node) *Type {
     return tp
 }
 
-func (p *parser) complexContentNode(n *xsd.Node) *Type {
+func (p *parser) complexContentNode(n *xsd_model.Node) *Type {
     tp := p.createType(n)
     for _, ch := range n.Children() {
         switch ch.Name() {
@@ -415,18 +378,18 @@ func filterUnusedTypes(types []*Type) []*Type {
     return res
 }
 
-func (p *parser) schemaNode(n *xsd.Node) {
+func (p *parser) schemaNode(n *xsd_model.Node) {
     for _, ch := range n.Children() {
         if ch.Name() == "include" || ch.Name() == "import" {
             continue
         }
-        ns := p.schemasStack.Back().Value.(*xsd.Schema).TargetNamespace
+        ns := p.schemasStack.Back().Value.(*xsd_model.Schema).TargetNamespace
         name := ch.AttributeValue("name")
         p.parseSomeRootNode(xml.Name{Local: name, Space: ns}, ch)
     }
 }
 
-func (p *parser) elementNode(n *xsd.Node) *Type {
+func (p *parser) elementNode(n *xsd_model.Node) *Type {
     t := p.createType(n)
     elType := n.AttributeValue("type")
     ref := n.AttributeValue("ref")
@@ -449,7 +412,7 @@ func (p *parser) elementNode(n *xsd.Node) *Type {
     return t
 }
 
-func (p *parser) restrictionNode(n *xsd.Node) *Type {
+func (p *parser) restrictionNode(n *xsd_model.Node) *Type {
     base := n.AttributeValue("base")
     if base == "" {
         panic("Restriction element without base")

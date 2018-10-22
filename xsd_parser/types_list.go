@@ -1,4 +1,4 @@
-package tree_parser
+package xsd_parser
 
 import "encoding/xml"
 
@@ -40,7 +40,6 @@ func (t *typesList) Add(newType *Type) {
     index := len(t.fullList)
     t.fullList = append(t.fullList, newType)
     t.cache[newType.Name] = index
-    t.goNameCache[newType.GoName] = true
 }
 
 func (t *typesList) Get(name xml.Name) *Type {

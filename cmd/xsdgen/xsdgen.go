@@ -6,7 +6,7 @@ import (
 	"flag"
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/internal/pkg/xsdloader"
-	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
+	"github.com/dmitryvakulenko/gosoapgen/xsd_parser/tree_parser"
 	"os"
 	"log"
 )
