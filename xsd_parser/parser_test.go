@@ -38,43 +38,18 @@ func TestSimpleElements(t *testing.T) {
 func TestComplexType(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
+	assert.Len(t, typesList, 1)
+	assert.Equal(t, "Session", typesList[0].Name.Local)
+	assert.Equal(t, "http://xml.amadeus.com/2010/06/Session_v3", typesList[0].Name.Space)
+	assert.Len(t, typesList[0].Fields, 4)
 
-	cType := typesList[0]
+	field := typesList[0].Fields[1]
+	assert.Equal(t, "sequenceNumber", field.Name)
+	assert.Equal(t, "string", field.Type.Local)
 
-	name := "Session"
-	if cType.Local != name {
-		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
-	}
-
-	ns := "http://xml.amadeus.com/2010/06/Session_v3"
-	if cType.Space != ns {
-		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
-	}
-
-	if len(cType.Fields) != 5 {
-		t.Fatalf("Should be 5 fields, %d getting", len(cType.Fields))
-	}
-
-	field := cType.Fields[2]
-	if field.Name != "sequenceNumber" {
-		t.Errorf("Field elemName should be 'sequenceNumber', %q instead", field.Name)
-	}
-
-	if field.Type.Local != "string" {
-		t.Errorf("Field type should be 'string' %q instead", field.Type.Local)
-	}
-
-	field = cType.Fields[4]
-	if field.Name != "TransactionStatusCode" {
-		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
-	}
-
-	if !field.IsAttr {
-		t.Errorf("TransactionStatusCode should be attribute")
-	}
+	field = typesList[0].Fields[3]
+	assert.Equal(t, "TransactionStatusCode", field.Name)
+	assert.True(t, field.IsAttr)
 }
 
 func TestSchemaComplexTypes(t *testing.T) {
