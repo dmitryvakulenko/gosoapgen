@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.amadeus.com/2010/06/Session_v3" targetNamespace="http://xml.amadeus.com/2010/06/Session_v3" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.000" id="AMA2012B">
+    <xs:element name="Session">
+        <xs:complexType>
+            <xs:sequence minOccurs="0">
+                <xs:element name="SessionId" type="xs:string"/>
+                <xs:element name="sequenceNumber" type="xs:string"/>
+                <xs:element name="SecurityToken" type="xs:string"/>
+            </xs:sequence>
+            <xs:attribute name="TransactionStatusCode" type="xs:NMTOKEN" use="required"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

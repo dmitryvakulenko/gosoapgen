@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 rel. 3 (http://www.altova.com) by Amadeus s.a.s. (Amadeus s.a.s.) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.amadeus.com/2010/06/Types_v1" targetNamespace="http://xml.amadeus.com/2010/06/Types_v1" xmlns:iata="http://www.iata.org/IATA/2007/00/IATA2010.1" xmlns:ota="http://www.opentravel.org/OTA/2003/05/OTA2010B" elementFormDefault="qualified" attributeFormDefault="unqualified"  version="1.002" id="AMA2011Y">
+    <xs:element name="Test" type="CodeType"/>
+    <xs:complexType name="CodeType">
+        <xs:attributeGroup ref="CodeGroup" />
+    </xs:complexType>
+    <xs:attributeGroup name="CodeGroup">
+        <xs:attribute name="Code" type="xs:string" use="required">
+        </xs:attribute>
+        <xs:attribute name="Owner" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="ListName" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="ListCode" type="xs:string">
+        </xs:attribute>
+        <xs:attribute name="Desc" type="xs:string">
+        </xs:attribute>
+    </xs:attributeGroup>
+</xs:schema>

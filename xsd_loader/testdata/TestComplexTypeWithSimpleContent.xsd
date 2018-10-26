@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+    <xsd:element name="SegmentReference">
+        <xsd:complexType>
+            <xsd:simpleContent>
+                <xsd:extension base="xsd:IDREF">
+                    <xsd:attribute name="ON_Point" type="xsd:string" use="optional"/>
+                    <xsd:attribute name="OFF_Point" type="xsd:string" use="optional"/>
+                </xsd:extension>
+            </xsd:simpleContent>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

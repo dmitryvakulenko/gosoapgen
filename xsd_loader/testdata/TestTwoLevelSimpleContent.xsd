@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+    <xsd:element name="Test" type="WarningType"/>
+
+    <xsd:complexType name="WarningType">
+        <xsd:simpleContent>
+            <xsd:extension base="FreeTextType">
+                <xsd:attribute name="Type" type="xsd:string"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="FreeTextType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attributeGroup ref="LanguageGroup"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:attributeGroup name="LanguageGroup">
+        <xsd:attribute name="Language" type="xsd:language" use="optional"/>
+    </xsd:attributeGroup>
+</xsd:schema>

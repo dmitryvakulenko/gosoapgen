@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2015 (http://www.altova.com) by I-A.Kotopoulos (JR Technologies, Inc.) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2">
+    <xsd:element name="Test" type="BagAllowancePieceType"/>
+    <xsd:complexType name="BagAllowancePieceType">
+        <xsd:sequence>
+            <xsd:attribute name="PieceAllowanceCombination">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:enumeration value="OR"/>
+                        <xsd:enumeration value="AND"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:attribute>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
