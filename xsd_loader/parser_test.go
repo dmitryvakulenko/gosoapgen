@@ -1,23 +1,31 @@
 package xsd_loader
 
 import (
+	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
+	"testing"
 )
 
+func TestEmptySchema(t *testing.T) {
+	schema := parseTypesFrom(t.Name())
 
+	assert.Empty(t, schema.Elements)
+	assert.Empty(t, schema.Types)
+	assert.Empty(t, schema.Attributes)
+	assert.Empty(t, schema.AttributeGroups)
+}
 
-func parseTypesFrom(name string) []*Type {
+func parseTypesFrom(name string) *Schema {
 	parser := NewParser(&SimpleLoader{})
-	parser.Load(name + ".xsd")
 
-	return parser.GetTypes()
+	return parser.Parse(name)
 }
 
 type SimpleLoader struct{}
 
 func (l *SimpleLoader) Load(path string) (io.ReadCloser, error) {
-	file, _ := os.Open("./test_data/" + path)
+	file, _ := os.Open("./testdata/" + path)
 	return file, nil
 }
 

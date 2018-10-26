@@ -1,10 +1,14 @@
 package xsd_loader
 
-func NewParser(Loa) *Parser {
-	return &Parser{}
+func NewParser(loader Loader) *Parser {
+	return &Parser{loader: loader}
+}
+
+type Parser struct {
+	loader Loader
 }
 
 
-type Parser struct {
-
+func (p *Parser) Parse(fileName string) *Schema {
+	return &Schema{}
 }
