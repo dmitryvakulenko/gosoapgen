@@ -55,33 +55,16 @@ func TestComplexType(t *testing.T) {
 func TestSchemaComplexTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
+	assert.Len(t, typesList, 2)
 
 	cType := typesList[0]
-	name := "AMA_SecurityHostedUser"
-	if cType.Local != name {
-		t.Errorf("TypeName elemName should be %q, got %q", name, cType.Local)
-	}
-
-	ns := "http://xml.amadeus.com/2010/06/Security_v1"
-	if cType.Space != ns {
-		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
-	}
-
-	if len(cType.Fields) != 5 {
-		t.Errorf("TypeName should Has 5 fields, %d getting", len(cType.Fields))
-	}
+	assert.Equal(t, "AMA_SecurityHostedUser", cType.Local)
+	assert.Equal(t, "http://xml.amadeus.com/2010/06/Security_v1", cType.Space)
+	assert.Len(t, cType.Fields, 4)
 
 	field := cType.Fields[3]
-	if field.Type == nil {
-		t.Fatalf("Field should has type")
-	}
-
-	if field.Type.Local != "string" {
-		t.Fatalf("Field type name shoud be 'string', %q got", field.Type.Local)
-	}
+	assert.NotNil(t, field.Type)
+	assert.Equal(t, "string", field.Type.Local)
 }
 
 func TestComplexTypeWithAttributes(t *testing.T) {
@@ -103,11 +86,11 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 		t.Errorf("TypeName namespace should be %q, got %q", ns, cType.Space)
 	}
 
-	if len(cType.Fields) != 2 {
+	if len(cType.Fields) != 1 {
 		t.Fatalf("Should be 2 fields, %d getting", len(cType.Fields))
 	}
 
-	field := cType.Fields[1]
+	field := cType.Fields[0]
 	if field.Name != "TransactionStatusCode" {
 		t.Errorf("Field elemName should be 'TransactionStatusCode' %s instead", field.Name)
 	}
@@ -121,43 +104,21 @@ func TestComplexTypeWithAttributes(t *testing.T) {
 	}
 }
 
-func TestInnerComplexTypes(t *testing.T) {
+func TestNamedElementTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 3 {
-		t.Fatalf("Wrong types amount. 3 expected, %d got", len(typesList))
-	}
+	assert.Len(t, typesList, 3)
 
 	firstType, secType := typesList[0], typesList[1]
+	assert.Equal(t, "PNR_AddMultiElements", firstType.Local)
+	assert.Equal(t, "http://xml.amadeus.com/PNRADD_10_1_1A", firstType.Space)
+	assert.Equal(t, "travellerInfo", secType.Local)
+	assert.Equal(t, "http://xml.amadeus.com/PNRADD_10_1_1A", secType.Space)
 
-	name := "PNR_AddMultiElements"
-	if firstType.Local != name {
-		t.Errorf("TypeName elemName should be %q, got %q", name, firstType.Local)
-	}
+	assert.Len(t, firstType.Fields, 1)
 
-	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
-	if firstType.Space != ns {
-		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Space)
-	}
-
-	name = "travellerInfo"
-	if secType.Local != name {
-		t.Errorf("TypeName elemName should be %q, got %q", name, secType.Local)
-	}
-
-	if secType.Space != ns {
-		t.Errorf("TypeName namespace should be %q, got %q", ns, secType.Space)
-	}
-
-	if len(firstType.Fields) != 2 {
-		t.Fatalf("Should be 2 fields, %d getting", len(firstType.Fields))
-	}
-
-	field := firstType.Fields[1]
-	if field.Name != "travellerInfo" {
-		t.Errorf("Field elemName should be 'travellerInfo', %q instead", field.Name)
-	}
-
+	field := firstType.Fields[0]
+	assert.Equal(t, "travellerInfo", field.Name)
 	if field.Type.Local != "travellerInfo" {
 		t.Errorf("Field type should be 'travellerInfo', %q instead", field.Type.Local)
 	}
@@ -184,9 +145,7 @@ func TestInnerComplexTypes(t *testing.T) {
 func TestAttributeGroup(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
+	assert.Len(t, typesList, 3)
 
 	cType := typesList[0]
 	name := "Test"
@@ -194,18 +153,11 @@ func TestAttributeGroup(t *testing.T) {
 		t.Errorf("TypeName elemName should be %q, got %q instead", name, cType.Local)
 	}
 
-	if len(cType.Fields) != 6 {
-		t.Fatalf("Fields amount should be 6, %d instead", len(cType.Fields))
-	}
+	assert.Len(t, cType.Fields, 5)
 
-	field := cType.Fields[1]
-	if field.Name != "Code" {
-		t.Errorf("Field elemName should be 'Code', %q instead", field.Name)
-	}
-
-	if !field.IsAttr {
-		t.Errorf("Owner should be attribute")
-	}
+	field := cType.Fields[0]
+	assert.Equal(t, "Code", field.Name)
+	assert.True(t, field.IsAttr)
 }
 
 func TestParseElementRef(t *testing.T) {
