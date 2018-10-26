@@ -163,104 +163,49 @@ func TestAttributeGroup(t *testing.T) {
 func TestParseElementRef(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 2 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
-
-	if len(typesList[0].Fields) != 2 {
-		t.Fatalf("Fields amount should be 2, %d got", len(typesList[0].Fields))
-	}
-
-	f := typesList[0].Fields[1]
-	if f.Name != "TPA_Extensions" {
-		t.Errorf("Field name shoud be 'TPA_Extensions', %q got", f.Name)
-	}
+	assert.Len(t, typesList, 2)
+	assert.Len(t, typesList[0].Fields, 1)
+	assert.Equal(t, "TPA_Extensions", typesList[0].Fields[0].Name)
 }
 
 func TestInclude(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	assert.Len(t, typesList, 2)
+	assert.Len(t, typesList, 3)
 
-	tp := typesList[1]
-
-	if tp.Local != "AirShoppingRQ" {
-        t.Errorf(`Type name shoud be "AirShoppingRQ", %q`, tp.Local)
-    }
-
-    if len(tp.Fields) != 2 {
-        t.Fatalf("Wrong fields amount. 2 expected, %d got", len(tp.Fields))
-    }
-
-	f := tp.Fields[1]
-	if f.Name != "PointOfSale" {
-        t.Errorf("Field name shoud be 'PointOfSale', %q got", f.Name)
-    }
+	tp := typesList[2]
+	assert.Equal(t, "AirShoppingRQ", tp.Local)
+	assert.Len(t, tp.Fields, 1)
+	assert.Equal(t, "PointOfSale", tp.Fields[0].Name)
 }
 
 func TestSimpleTypeAttribute(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
-
-	if len(typesList[0].Fields) != 2 {
-        t.Fatalf("Wrong fields amount. 2 expected, %d got", len(typesList[0].Fields))
-    }
-
-    f := typesList[0].Fields[1]
-    if f.Name != "PieceAllowanceCombination" {
-        t.Errorf(`Wrong field name. "PieceAllowanceCombination" expected, %q got`, f.Name)
-    }
+	assert.Len(t, typesList, 2)
+	assert.Len(t, typesList[0].Fields, 1)
+	assert.Equal(t, "PieceAllowanceCombination", typesList[0].Fields[0].Name)
 }
 
 func TestUnion(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
-
-	if typesList[0].Local != "Test" {
-		t.Errorf("Type name shoud be 'Test', %q given", typesList[0].Local)
-	}
-
-	if len(typesList[0].Fields) != 2 {
-		t.Fatalf("Fields amount should be 2, %d given", len(typesList[0].Fields))
-	}
-
-    if typesList[0].Fields[1].Type.Local != "string" {
-        t.Errorf("Type base type shoud be 'string', %q given", typesList[0].Fields[1].Type.Local)
-    }
+	assert.Len(t, typesList, 2)
+	assert.Equal(t, "Test", typesList[0].Local)
+	assert.Empty(t, typesList[0].Fields)
+	assert.Equal(t, "string", typesList[1].BaseType.Local)
 }
 
 func TestSimpleContent(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong types amount. 1 expected, %d got", len(typesList))
-	}
+	assert.Len(t, typesList, 4)
 
 	cType := typesList[0]
 	if cType.Local != "Test" {
 		t.Fatalf(`TypeName name should be "Test", got %q instead`, cType.Local)
 	}
 
-	if len(cType.Fields) != 4 {
-		t.Fatalf("Test should has 4 field, %d instead", len(cType.Fields))
-	}
-
-	field := cType.Fields[3]
-
-	name := "XMLValue"
-	if field.Name != name {
-		t.Errorf("Field name should be %q, got %q instead", name, field.Name)
-	}
-
-	fType := "string"
-	if field.Type.Local != fType {
-		t.Errorf("Field type should be %q, got %q instead", fType, field.Type.Local)
-	}
+	assert.Len(t, cType.Fields, 2)
 }
 
 func TestComplexContent(t *testing.T) {
