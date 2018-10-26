@@ -12,17 +12,17 @@ var (
 	alreadyLoadedErr = errors.New("file already loaded")
 )
 
-type FileLoader struct {
+type FileResolver struct {
 	alreadyLoaded map[string]bool
 	curDir        string
 }
 
-func NewFileLoader() *FileLoader {
-	return &FileLoader{
+func NewFileResolver() *FileResolver {
+	return &FileResolver{
 		alreadyLoaded: make(map[string]bool)}
 }
 
-func (l *FileLoader) Load(xsdFilePath string) (io.ReadCloser, error) {
+func (l *FileResolver) Load(xsdFilePath string) (io.ReadCloser, error) {
 	filePath := l.buildFilePath(xsdFilePath)
 	var loadedErr error = nil
 	if _, exists := l.alreadyLoaded[filePath]; exists {
@@ -39,7 +39,7 @@ func (l *FileLoader) Load(xsdFilePath string) (io.ReadCloser, error) {
 	return res, loadedErr
 }
 
-func (l *FileLoader) buildFilePath(name string) string {
+func (l *FileResolver) buildFilePath(name string) string {
 	fullName, err := filepath.Abs(name)
 	if err != nil {
 		panic(err)
@@ -60,6 +60,6 @@ func (l *FileLoader) buildFilePath(name string) string {
 	return fullName
 }
 
-func (l *FileLoader) IsAlreadyLoadedError(e error) bool {
+func (l *FileResolver) IsAlreadyLoadedError(e error) bool {
 	return e == alreadyLoadedErr
 }

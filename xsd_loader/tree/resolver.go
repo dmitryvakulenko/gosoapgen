@@ -1,11 +1,13 @@
-package xsd_loader
+package tree
 
-import "io"
+import (
+	"io"
+)
 
 // Интерфейс загрузки xsd
 // должен отслеживать уже загруженные файлы
 // и правильно отрабатывать относительные пути
-type Loader interface {
+type Resolver interface {
 	/*
 	Загрузить файл по указанному пути (или url)
 	Второй параметр - ошибка, которую должен уметь анализировать метод IsAlreadyLoadedError
