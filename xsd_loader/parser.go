@@ -1,6 +1,9 @@
 package xsd_loader
 
-import "github.com/dmitryvakulenko/gosoapgen/xsd_loader/tree"
+import (
+	"encoding/xml"
+	"github.com/dmitryvakulenko/gosoapgen/xsd_loader/tree"
+)
 
 func NewParser(l *tree.Loader) *Parser {
 	return &Parser{loader: l}
@@ -60,4 +63,8 @@ func (p *Parser) findType(name string) *Type {
 	}
 
 	panic("Can't find type " + name)
+}
+
+func (p *Parser) buildNameWithNs(name string) xml.Name {
+
 }

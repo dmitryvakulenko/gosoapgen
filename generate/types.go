@@ -1,9 +1,9 @@
 package generate
 
 import (
-    "strings"
-    "io"
-    "github.com/dmitryvakulenko/gosoapgen/xsd_parser/tree_parser"
+	"github.com/dmitryvakulenko/gosoapgen/xsd_parser"
+	"io"
+	"strings"
 )
 
 var innerTypes = []string{
@@ -13,7 +13,7 @@ var innerTypes = []string{
     "time.Time",
     "string"}
 
-func Types(typesList []*tree_parser.Type, writer io.Writer) {
+func Types(typesList []*xsd_parser.Type, writer io.Writer) {
     for _, curType := range typesList {
         writer.Write([]byte("type " + curType.GoName + " struct {\n"))
         for _, f := range curType.Fields {
@@ -23,7 +23,7 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
     }
 }
 
-func writeField(t *tree_parser.Type, field *tree_parser.Field, writer io.Writer) {
+func writeField(t *xsd_parser.Type, field *xsd_parser.Field, writer io.Writer) {
     // обработка обычного поля
     writer.Write([]byte(firstUp(field.Name) + " "))
 

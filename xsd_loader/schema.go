@@ -1,5 +1,7 @@
 package xsd_loader
 
+import "encoding/xml"
+
 type (
 	Schema struct {
 		Elements        []*Element
@@ -9,13 +11,13 @@ type (
 	}
 
 	Element struct {
-		Name     string
+		Name     xml.Name
 		Type     *Type
 		typeName string
 	}
 
 	Type struct {
-		Name         string
+		Name         xml.Name
 		BaseType     *Type
 		baseTypeName string
 	}
