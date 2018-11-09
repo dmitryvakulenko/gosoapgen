@@ -146,7 +146,7 @@ func (p *parser) findOrCreateGlobalType(name string) *Type {
     panic("Can't find type " + name)
 }
 
-// Parse come kind of node that can be child of schema node
+// Load come kind of node that can be child of schema node
 func (p *parser) parseRootNode(name xml.Name, n *xsd_model.Node) *Type {
     if p.resultTypes.Has(name) {
         return p.resultTypes.Get(name)

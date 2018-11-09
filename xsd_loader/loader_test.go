@@ -23,7 +23,8 @@ func TestSimpleTypes(t *testing.T) {
 	assert.Len(t, schema.Elements, 1)
 	assert.Len(t, schema.Types, 1)
 	assert.Equal(t, schema.Elements[0].Type, schema.Types[0])
-	assert.Equal(t, schema.Types[0].BaseType.Name, )
+	assert.NotNil(t, schema.Types[0].BaseType)
+	assert.Equal(t, schema.Types[0].BaseType.Name.Local, "string")
 }
 
 func TestSimpleElements(t *testing.T) {
@@ -31,8 +32,8 @@ func TestSimpleElements(t *testing.T) {
 }
 
 func parseTypesFrom(name string) *Schema {
-	parser := NewParser(tree.NewLoader(&SimpleResolver{}))
-	return parser.Parse(name)
+	loader := NewLoader(tree.NewLoader(&SimpleResolver{}))
+	return loader.Load(name)
 }
 
 type SimpleResolver struct{}

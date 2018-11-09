@@ -13,13 +13,13 @@ type (
 	Element struct {
 		Name     xml.Name
 		Type     *Type
-		typeName string
+		typeName xml.Name
 	}
 
 	Type struct {
 		Name         xml.Name
 		BaseType     *Type
-		baseTypeName string
+		baseTypeName xml.Name
 	}
 
 	Attribute struct {
