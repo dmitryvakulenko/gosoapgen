@@ -123,13 +123,13 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
 }
 
 func removeDuplicatedTypes(types []*Type) []*Type {
-	typesMap := make(map[[md5.Size]byte][]*Type)
-	for _, t := range types {
+	typesMap := make(map[[md5.Size]byte][]int)
+	for idx, t := range types {
 		h := t.Hash()
 		if _, ok := typesMap[h]; !ok {
-			typesMap[h] = make([]*Type, 0)
+			typesMap[h] = make([]int, 0)
 		}
-		typesMap[h] = append(typesMap[h], t)
+		typesMap[h] = append(typesMap[h], idx)
 	}
 
 	fieldsMap := make(map[[md5.Size]byte][]*Field)
@@ -149,7 +149,7 @@ func removeDuplicatedTypes(types []*Type) []*Type {
 
 	var res []*Type
 	for hash, sameTypes := range typesMap {
-		firstType := sameTypes[0]
+		firstType := types[sameTypes[0]]
 		useFields, ok := fieldsMap[hash]
 		if !ok && firstType.sourceNode.Name() != "element" {
 			continue
