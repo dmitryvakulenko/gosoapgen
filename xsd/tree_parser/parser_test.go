@@ -570,15 +570,6 @@ func TestSequenceChoice(t *testing.T) {
     }
 }
 
-func TestRenameDuplicatedTypes(t *testing.T) {
-    typesList := parseTypesFrom(t.Name())
-
-    assert.Lenf(t, typesList, 2, "Wrong types amount")
-
-    assert.Equal(t, "PointOfSale", typesList[0].GoName)
-    assert.Equal(t, "PointOfSale1", typesList[1].GoName)
-}
-
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Load(name + ".xsd")

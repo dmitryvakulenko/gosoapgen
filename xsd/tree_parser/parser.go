@@ -1,12 +1,11 @@
 package tree_parser
 
 import (
-    "io"
-    "encoding/xml"
-    "strings"
-    xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
-    "container/list"
-    "strconv"
+	"container/list"
+	"encoding/xml"
+	xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
+	"io"
+	"strings"
 )
 
 var (
@@ -206,15 +205,6 @@ func (p *parser) createType(n *xsd.Node) *Type {
 
     if p.resultTypes.Has(t.Name) {
         return p.resultTypes.Get(t.Name)
-    }
-
-    t.GoName = strings.Title(t.Local)
-    exist := p.resultTypes.HasGoName(t.GoName)
-    idx := 1
-    for exist {
-        t.GoName = strings.Title(t.Local) + strconv.Itoa(idx)
-        idx++
-        exist = p.resultTypes.HasGoName(t.GoName)
     }
 
     p.resultTypes.Add(t)
