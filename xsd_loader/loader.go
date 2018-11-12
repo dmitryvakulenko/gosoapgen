@@ -81,8 +81,23 @@ func (l *Loader) simpleType(node *tree.Node) *SimpleType {
 }
 
 func (l *Loader) complexType(node *tree.Node) *ComplexType {
-	return nil
+	t := &ComplexType{}
+	t.Name = l.schemaDeep.buildFullName(node.AttributeValue("name"))
+	sec := node.ChildByName("sequence")
+	if sec != nil {
+		for _, e := range sec.ChildrenByName("element") {
+			t.Elements = append(t.Elements, l.element(e))
+		}
+	}
+
+	if t.Name.Local != "" {
+		l.curSchema.addType(t)
+		return nil
+	} else {
+		return t
+	}
 }
+
 
 func (l *Loader) simpleTypeRestriction(t *SimpleType, node *tree.Node) {
 	t.baseTypeName = l.schemaDeep.buildFullName(node.AttributeValue("base"))

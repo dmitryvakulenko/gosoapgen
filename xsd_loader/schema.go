@@ -5,6 +5,7 @@ import "encoding/xml"
 type (
 	Type interface {
 		GetName() xml.Name
+		SetName(xml.Name)
 	}
 
 	Schema struct {
@@ -27,7 +28,8 @@ type (
 	}
 
 	ComplexType struct {
-		Name xml.Name
+		Name     xml.Name
+		Elements []*Element
 	}
 
 	Attribute struct {
@@ -49,6 +51,14 @@ func (s *SimpleType) GetName() xml.Name {
 	return s.Name
 }
 
+func (s *SimpleType) SetName(name xml.Name) {
+	s.Name = name
+}
+
 func (s *ComplexType) GetName() xml.Name {
 	return s.Name
+}
+
+func (s *ComplexType) SetName(name xml.Name) {
+	s.Name = name
 }

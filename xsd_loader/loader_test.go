@@ -39,6 +39,10 @@ func TestSimpleElements(t *testing.T) {
 	assert.Equal(t, base.Name.Local, "decimal")
 }
 
+func TestComplexType(t *testing.T) {
+	schema := parseTypesFrom(t.Name())
+}
+
 func parseTypesFrom(name string) *Schema {
 	loader := NewLoader(tree.NewLoader(&SimpleResolver{}))
 	return loader.Load(name)
