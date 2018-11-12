@@ -18,9 +18,7 @@ func TestEmptySchema(t *testing.T) {
 func TestSimpleTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	if len(typesList) != 1 {
-		t.Fatalf("Wrong number of types. 1 expected, but got %d", len(typesList))
-	}
+	assert.Len(t, typesList, 1)
 
 	tp := typesList[0]
 	name := "Test"
@@ -201,17 +199,14 @@ func TestInnerComplexTypes(t *testing.T) {
 
 	firstType, secType := typesList[0], typesList[1]
 
-	name := "PNR_AddMultiElements"
-	if firstType.Local != name {
-		t.Errorf("TypeName elemName should be %q, got %q", name, firstType.Local)
-	}
+	assert.Equal(t, "PNR_AddMultiElements", firstType.Local)
 
 	ns := "http://xml.amadeus.com/PNRADD_10_1_1A"
 	if firstType.Space != ns {
 		t.Errorf("TypeName namespace should be %q, got %q", ns, firstType.Space)
 	}
 
-	name = "travellerInfo"
+	name := "travellerInfo"
 	if secType.Local != name {
 		t.Errorf("TypeName elemName should be %q, got %q", name, secType.Local)
 	}
@@ -303,10 +298,7 @@ func TestInclude(t *testing.T) {
 
 	tp := typesList[1]
 
-	if tp.Local != "AirShoppingRQ" {
-        t.Errorf(`Type name shoud be "AirShoppingRQ", %q`, tp.Local)
-    }
-
+	assert.Equal(t, "AirShoppingRQ", tp.Local)
     if len(tp.Fields) != 2 {
         t.Fatalf("Wrong fields amount. 2 expected, %d got", len(tp.Fields))
     }
@@ -573,7 +565,7 @@ func TestSequenceChoice(t *testing.T) {
 func TestRemoveDuplicatedTypes(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 
-	assert.Len(t, typesList, 3)
+	assert.Len(t, typesList, 4)
 }
 
 func parseTypesFrom(name string) []*Type {

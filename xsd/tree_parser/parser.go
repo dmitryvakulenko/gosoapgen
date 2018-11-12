@@ -2,14 +2,17 @@ package tree_parser
 
 import (
 	"container/list"
+	"crypto/md5"
 	"encoding/xml"
 	xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
 	"io"
 	"strings"
 )
 
+const xsdSpace = "http://www.w3.org/2001/XMLSchema"
+
 var (
-	stringQName = xml.Name{Local: "string", Space: "http://www.w3.org/2001/XMLSchema"}
+	stringQName = xml.Name{Local: "string", Space: xsdSpace}
 )
 
 // Интерфейс загрузки xsd
@@ -93,9 +96,9 @@ func (p *parser) GetTypes() []*Type {
 	resolveBaseTypes(types)
 	foldFieldsTypes(types)
 
-	l := filterUnusedTypes(types)
-	embedFields(l)
-	return removeDuplicatedTypes(l)
+	// l := filterUnusedTypes(types)
+	embedFields(types)
+	return removeDuplicatedTypes(types)
 }
 
 func extractInnerTypes(t *Type, deep int) []*Type {
@@ -120,7 +123,52 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
 }
 
 func removeDuplicatedTypes(types []*Type) []*Type {
-	return types
+	typesMap := make(map[[md5.Size]byte][]*Type)
+	for _, t := range types {
+		h := t.Hash()
+		if _, ok := typesMap[h]; !ok {
+			typesMap[h] = make([]*Type, 0)
+		}
+		typesMap[h] = append(typesMap[h], t)
+	}
+
+	fieldsMap := make(map[[md5.Size]byte][]*Field)
+	for _, t := range types {
+		for _, f := range t.Fields {
+			if f.Type.Space == xsdSpace {
+				continue
+			}
+
+			hash := f.Type.Hash()
+			if _, ok := fieldsMap[hash]; !ok {
+				fieldsMap[hash] = make([]*Field, 0)
+			}
+			fieldsMap[hash] = append(fieldsMap[hash], f)
+		}
+	}
+
+	var res []*Type
+	for hash, sameTypes := range typesMap {
+		firstType := sameTypes[0]
+		useFields, ok := fieldsMap[hash]
+		if !ok && firstType.sourceNode.Name() != "element" {
+			continue
+		}
+
+		res = append(res, firstType)
+
+		if len(sameTypes) == 1 {
+			continue
+		}
+
+		for _, f := range useFields {
+			f.Type = firstType
+		}
+
+		delete(fieldsMap, hash)
+	}
+
+	return res
 }
 
 func foldFieldsTypes(types []*Type) {
@@ -380,17 +428,17 @@ func (p *parser) complexContentNode(n *xsd.Node) *Type {
 }
 
 // Remove type that made not from elements
-func filterUnusedTypes(types []*Type) []*Type {
-	var res []*Type
-	dep := buildDependencies(types)
-	for _, t := range types {
-		if _, ok := dep[t.Name]; ok || t.SourceNode.Name() == "element" && !t.referenced {
-			res = append(res, t)
-		}
-	}
-
-	return res
-}
+// func filterUnusedTypes(types []*Type) []*Type {
+// 	var res []*Type
+// 	dep := buildDependencies(types)
+// 	for _, t := range types {
+// 		if _, ok := dep[t.Name]; ok || t.sourceNode.Name() == "element" && !t.referenced {
+// 			res = append(res, t)
+// 		}
+// 	}
+//
+// 	return res
+// }
 
 func (p *parser) schemaNode(n *xsd.Node) {
 	for _, ch := range n.Children() {
@@ -440,7 +488,7 @@ func embedFields(typs []*Type) {
 	dep := buildDependencies(typs)
 	for _, t := range typs {
 		// adding XMLName field
-		if _, ok := dep[t.Name]; !ok && t.SourceNode.Name() == "element" && !t.referenced {
+		if _, ok := dep[t.Name]; !ok && t.sourceNode.Name() == "element" && !t.referenced {
 			t.Fields = append([]*Field{newXMLNameField()}, t.Fields...)
 		}
 

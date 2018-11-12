@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:altova="http://www.altova.com/xml-schema-extensions"
+            elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.000" id="IATA2016.2"
+            targetNamespace="http://www.iata.org/IATA/EDIST2">
+    <xsd:complexType name="PointOfSaleType">
+        <xsd:sequence>
+            <xsd:element name="Location" minOccurs="0" type="Test">
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:complexType name="Test">
+        <xsd:sequence>
+            <xsd:element name="Name" type="xsd:string">
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
