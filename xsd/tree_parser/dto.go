@@ -43,24 +43,8 @@ func (r *node) addChild(e *node) {
     r.children = append(r.children, e)
 }
 
-func newNode(startElem *xml.StartElement) *node {
-    name := ""
-    for _, a := range startElem.Attr {
-        if a.Name.Local == "name" {
-            name = a.Value
-            break
-        }
-    }
-
-    return &node{
-        name:      xml.Name{Local: name},
-        elemName:  startElem.Name.Local,
-        startElem: startElem}
-}
-
 type Type struct {
     xml.Name
-    GoName            string
     Fields            []*Field
     SourceNode        *xsd.Node
     baseType          *Type
