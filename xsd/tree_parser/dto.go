@@ -6,43 +6,6 @@ import (
     "strconv"
 )
 
-// Абстрактное представление элемента схемы
-type node struct {
-    // название элемента схемы xsd из которого был создан данный node, complexType и т.д.
-    // чисто для сокращения, поскольку вся эта информация содержится в startElem
-    elemName string
-
-    // elements name, value of a "name" attribute
-    name xml.Name
-
-    // element type name
-    typeName xml.Name
-
-    // сам элемент, из которого создавался node
-    startElem       *xml.StartElement
-    children        []*node
-    isSimpleContent bool
-    isAttr          bool
-    isArray         bool
-
-    // сгенерированный тип
-    genType *Type
-}
-
-func (r *node) find(ns, name string) *node {
-    for _, n := range r.children {
-        if ns == n.name.Space && name == n.name.Local {
-            return n
-        }
-    }
-
-    return nil
-}
-
-func (r *node) addChild(e *node) {
-    r.children = append(r.children, e)
-}
-
 type Type struct {
     xml.Name
     Fields            []*Field

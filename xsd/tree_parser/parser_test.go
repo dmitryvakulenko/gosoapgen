@@ -570,6 +570,12 @@ func TestSequenceChoice(t *testing.T) {
     }
 }
 
+func TestRemoveDuplicatedTypes(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	assert.Len(t, typesList, 3)
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Load(name + ".xsd")
