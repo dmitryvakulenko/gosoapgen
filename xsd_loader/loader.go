@@ -39,7 +39,7 @@ func (l *Loader) schema(schema *tree.Schema) {
 		case "element":
 			l.element(e)
 		case "simpleType":
-			l.xsdType(e)
+			l.simpleType(e)
 		}
 	}
 }
@@ -49,22 +49,42 @@ func (l *Loader) element(node *tree.Node) {
 	e.Name = l.schemaDeep.buildFullName(node.AttributeValue("name"))
 	e.typeName = l.schemaDeep.buildFullName(node.AttributeValue("type"))
 
+	if e.typeName.Local == "" {
+		st := node.ChildByName("simpleType")
+		ct := node.ChildByName("complexType")
+		if st != nil {
+			e.Type = l.simpleType(st)
+		} else if ct != nil {
+			e.Type = l.complexType(ct)
+		}
+	}
+
 	l.curSchema.addElement(e)
 }
 
-func (l *Loader) xsdType(node *tree.Node) {
-	t := &Type{}
+
+func (l *Loader) simpleType(node *tree.Node) *SimpleType {
+	t := &SimpleType{}
 	t.Name = l.schemaDeep.buildFullName(node.AttributeValue("name"))
 	if r := node.ChildByName("restriction"); r != nil {
-		l.restriction(t, r)
+		l.simpleTypeRestriction(t, r)
 	} else if r := node.ChildByName("extension"); r != nil {
 
 	}
 
-	l.curSchema.addType(t)
+	if t.Name.Local != "" {
+		l.curSchema.addType(t)
+		return nil
+	} else {
+		return t
+	}
 }
 
-func (l *Loader) restriction(t *Type, node *tree.Node) {
+func (l *Loader) complexType(node *tree.Node) *ComplexType {
+	return nil
+}
+
+func (l *Loader) simpleTypeRestriction(t *SimpleType, node *tree.Node) {
 	t.baseTypeName = l.schemaDeep.buildFullName(node.AttributeValue("base"))
 }
 
@@ -73,22 +93,41 @@ func (l *Loader) linkTypes() {
 		if e.typeName.Local != "" {
 			e.Type = l.findType(e.typeName)
 		}
+
+		if e.Type != nil {
+			l.linkBaseTypes(e.Type)
+		}
 	}
 
 	for _, t := range l.curSchema.Types {
-		if t.baseTypeName.Local != "" {
-			if t.baseTypeName.Space == xsdSpace {
-				t.BaseType = &Type{Name: t.baseTypeName}
-			} else {
-				t.BaseType = l.findType(t.baseTypeName)
-			}
-		}
+		l.linkBaseTypes(t)
 	}
 }
 
-func (l *Loader) findType(name xml.Name) *Type {
+func (l *Loader) linkBaseTypes(t Type) {
+	switch tp := t.(type) {
+	case *SimpleType:
+		base := l.findType(tp.baseTypeName).(*SimpleType)
+		if base.baseTypeName.Local != "" && base.BaseType == nil {
+			l.linkBaseTypes(base)
+		}
+		tp.BaseType = base
+
+	case *ComplexType:
+	}
+}
+
+func (l *Loader) findType(name xml.Name) Type {
+	if name.Local == "" {
+		return nil
+	}
+
+	if name.Space == xsdSpace {
+		return &SimpleType{Name: name}
+	}
+
 	for _, t := range l.curSchema.Types {
-		if t.Name == name {
+		if t.GetName() == name {
 			return t
 		}
 	}

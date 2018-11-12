@@ -23,12 +23,20 @@ func TestSimpleTypes(t *testing.T) {
 	assert.Len(t, schema.Elements, 1)
 	assert.Len(t, schema.Types, 1)
 	assert.Equal(t, schema.Elements[0].Type, schema.Types[0])
-	assert.NotNil(t, schema.Types[0].BaseType)
-	assert.Equal(t, schema.Types[0].BaseType.Name.Local, "string")
+	base := schema.Types[0].(*SimpleType).BaseType
+	assert.NotNil(t, base)
+	assert.Equal(t, base.Name.Local, "string")
 }
 
 func TestSimpleElements(t *testing.T) {
+	schema := parseTypesFrom(t.Name())
+	assert.Len(t, schema.Elements, 1)
+	assert.Empty(t, schema.Types)
+	assert.NotNil(t, schema.Elements[0].Type)
 
+	base := schema.Elements[0].Type.(*SimpleType).BaseType
+	assert.NotNil(t, base)
+	assert.Equal(t, base.Name.Local, "decimal")
 }
 
 func parseTypesFrom(name string) *Schema {
