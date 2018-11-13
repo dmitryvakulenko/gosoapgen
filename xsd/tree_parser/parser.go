@@ -312,6 +312,8 @@ func (p *parser) simpleTypeNode(n *xsd.Node) *Type {
 			tp.baseType = p.extensionNode(ch)
 		case "union":
 			tp.baseType = newStandardType("string")
+		case "list":
+			tp.baseType = newStandardType("string")
 		}
 	}
 
