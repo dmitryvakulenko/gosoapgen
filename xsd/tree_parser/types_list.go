@@ -15,7 +15,7 @@ func (t *typesList) Reset() {
 	t.cache = make(map[xml.Name]int)
 }
 
-func (t *typesList) Iterate() []*Type {
+func (t *typesList) GetList() []*Type {
 	return t.fullList
 }
 
@@ -42,13 +42,4 @@ func (t *typesList) Get(name xml.Name) *Type {
 	}
 
 	return t.fullList[index]
-}
-
-func (t *typesList) Remove(remType *Type) {
-	if !t.Has(remType.Name) {
-		panic("No such type " + remType.Local)
-	}
-	index, _ := t.cache[remType.Name]
-	delete(t.cache, remType.Name)
-	t.fullList = append(t.fullList[0:index], t.fullList[index+1:]...)
 }

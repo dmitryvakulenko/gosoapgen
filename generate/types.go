@@ -15,7 +15,7 @@ var innerTypes = []string{
 
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
     for _, curType := range typesList {
-        writer.Write([]byte("type " + curType.GoName + " struct {\n"))
+        writer.Write([]byte("type " + curType.Name.Local + " struct {\n"))
         for _, f := range curType.Fields {
             writeField(curType, f, writer)
         }
@@ -33,7 +33,7 @@ func writeField(t *tree_parser.Type, field *tree_parser.Field, writer io.Writer)
 
     fieldType := mapStandardType(field.Type.Local)
     if fieldType == "" {
-        fieldType = field.Type.GoName
+        fieldType = field.Type.Name.Local
     }
 
     if fieldType == "" {

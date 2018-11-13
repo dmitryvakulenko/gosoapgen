@@ -2,7 +2,6 @@ package tree_parser
 
 import (
 	"container/list"
-	"crypto/md5"
 	"encoding/xml"
 	xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
 	"io"
@@ -10,10 +9,6 @@ import (
 )
 
 const xsdSpace = "http://www.w3.org/2001/XMLSchema"
-
-var (
-	stringQName = xml.Name{Local: "string", Space: xsdSpace}
-)
 
 // Интерфейс загрузки xsd
 // должен отслеживать уже загруженные файлы
@@ -87,29 +82,12 @@ func (p *parser) GetTypes() []*Type {
 
 	p.generateTypes(p.rootSchemas)
 
-	var types []*Type
-	for _, t := range p.resultTypes.Iterate() {
-		types = append(types, t)
-		types = append(types, extractInnerTypes(t, 0)...)
-	}
-
+	types := p.resultTypes.GetList()
 	resolveBaseTypes(types)
 	foldFieldsTypes(types)
-
-	// l := filterUnusedTypes(types)
 	embedFields(types)
-	return removeDuplicatedTypes(types)
-}
 
-func extractInnerTypes(t *Type, deep int) []*Type {
-	var types []*Type
-	for _, f := range t.Fields {
-		if (!f.Type.isSimpleContent || len(f.Type.Fields) > 0) && deep > 0 {
-			types = append(types, extractInnerTypes(f.Type, deep+1)...)
-		}
-	}
-
-	return types
+	return removeDuplicatedAndUnusedTypes(types)
 }
 
 // Generate types list according to previously built tree
@@ -122,50 +100,52 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
 	}
 }
 
-func removeDuplicatedTypes(types []*Type) []*Type {
-	typesMap := make(map[[md5.Size]byte][]int)
+// Find types has same name but different spaces
+func removeDuplicatedAndUnusedTypes(types []*Type) []*Type {
+	typesMap := make(map[typeHash][]int)
 	for idx, t := range types {
-		h := t.Hash()
+		h := t.hash()
 		if _, ok := typesMap[h]; !ok {
-			typesMap[h] = make([]int, 0)
+			typesMap[h] = nil
 		}
 		typesMap[h] = append(typesMap[h], idx)
 	}
 
-	fieldsMap := make(map[[md5.Size]byte][]*Field)
+	fieldsMap := make(map[typeHash][]*Field)
 	for _, t := range types {
 		for _, f := range t.Fields {
 			if f.Type.Space == xsdSpace {
 				continue
 			}
 
-			hash := f.Type.Hash()
-			if _, ok := fieldsMap[hash]; !ok {
-				fieldsMap[hash] = make([]*Field, 0)
+			h := f.Type.hash()
+			if _, ok := fieldsMap[h]; !ok {
+				fieldsMap[h] = nil
 			}
-			fieldsMap[hash] = append(fieldsMap[hash], f)
+			fieldsMap[h] = append(fieldsMap[h], f)
 		}
 	}
 
 	var res []*Type
-	for hash, sameTypes := range typesMap {
-		firstType := types[sameTypes[0]]
-		useFields, ok := fieldsMap[hash]
-		if !ok && firstType.sourceNode.Name() != "element" {
+	for _, curType := range types {
+		h := curType.hash()
+		sameTypes := typesMap[h]
+		useFields, ok := fieldsMap[h]
+		if !ok && curType.sourceNode.Name() != "element" {
 			continue
 		}
 
-		res = append(res, firstType)
+		res = append(res, curType)
 
 		if len(sameTypes) == 1 {
 			continue
 		}
 
 		for _, f := range useFields {
-			f.Type = firstType
+			f.Type = curType
 		}
 
-		delete(fieldsMap, hash)
+		delete(fieldsMap, h)
 	}
 
 	return res
@@ -427,19 +407,6 @@ func (p *parser) complexContentNode(n *xsd.Node) *Type {
 	return tp
 }
 
-// Remove type that made not from elements
-// func filterUnusedTypes(types []*Type) []*Type {
-// 	var res []*Type
-// 	dep := buildDependencies(types)
-// 	for _, t := range types {
-// 		if _, ok := dep[t.Name]; ok || t.sourceNode.Name() == "element" && !t.referenced {
-// 			res = append(res, t)
-// 		}
-// 	}
-//
-// 	return res
-// }
-
 func (p *parser) schemaNode(n *xsd.Node) {
 	for _, ch := range n.Children() {
 		if ch.Name() == "include" || ch.Name() == "import" {
@@ -461,6 +428,7 @@ func (p *parser) elementNode(n *xsd.Node) *Type {
 		t.baseType = p.findOrCreateGlobalType(ref)
 		t.baseType.referenced = true
 	} else {
+		// anonymous type
 		for _, ch := range n.Children() {
 			switch ch.Name() {
 			case "simpleType":
@@ -469,6 +437,11 @@ func (p *parser) elementNode(n *xsd.Node) *Type {
 				t.baseType = p.complexTypeNode(ch)
 			}
 		}
+		// if t.baseType == nil {
+		// 	t.baseType = newStandardType("string")
+		// } else {
+		// 	t.baseType.Name = t.Name
+		// }
 	}
 
 	return t
