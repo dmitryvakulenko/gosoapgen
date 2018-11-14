@@ -1,6 +1,9 @@
 package generate
 
-import "io"
+import (
+	"io"
+	"strings"
+)
 import (
 	"github.com/dmitryvakulenko/gosoapgen/wsdl"
 	"text/template"
@@ -63,3 +66,13 @@ func (c *SoapClient) GetLastCommunication() (string, string) {
 		}{op.Name, input, output, action})
 	}
 }
+
+func extractName(in string) string {
+	parts := strings.Split(in, ":")
+	if len(parts) == 2 {
+		return parts[1]
+	} else {
+		return parts[0]
+	}
+}
+

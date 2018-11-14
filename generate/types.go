@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"strconv"
 	"strings"
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
@@ -14,7 +15,6 @@ var innerTypes = []string{
 	"time.Time",
 	"string"}
 
-
 const typeTemplate = `type {{index .TypeNames .Type}} struct {
 	{{- $typeNames := .TypeNames}}
 	{{range $idx, $f := .Type.Fields}}
@@ -22,6 +22,7 @@ const typeTemplate = `type {{index .TypeNames .Type}} struct {
 		{{- $fType := mapType $f.Type.Local}}
 		{{- if eq $fType ""}}
 			{{- $fType = index $typeNames $f.Type}}
+			{{- $fType = print "*" $fType}}
 		{{- end}}
 		{{- if lt .MinOccurs .MaxOccurs}}{{$fType = print "[]" $fType}}{{end}}
 		{{- $xml := ""}}
@@ -46,11 +47,12 @@ type tmplParams struct {
 }
 
 func Types(typesList []*tree_parser.Type, writer io.Writer) {
-	// for anonymous types
+	nameNextIndex := make(map[string]int)
 	goNames := make(map[*tree_parser.Type]string)
 	for _, curType := range typesList {
+		var name string
 		if curType.Local != "" {
-			goNames[curType] = firstUp(curType.Local)
+			name = curType.Local
 		} else {
 			// find field used this type
 			var field *tree_parser.Field
@@ -62,8 +64,19 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 					}
 				}
 			}
-			goNames[curType] = firstUp(field.Name)
+			name = field.Name
 		}
+
+		name = firstUp(name)
+		if idx, ok := nameNextIndex[name]; ok {
+			nameNextIndex[name] = idx + 1
+			name += "_" + strconv.Itoa(idx)
+		} else {
+			nameNextIndex[name] = 1
+		}
+
+		goNames[curType] = name
+
 	}
 
 	funcMap := template.FuncMap{
@@ -73,54 +86,6 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 	for _, curType := range typesList {
 		p := tmplParams{Type: curType, TypeNames: goNames}
 		tmpl.Execute(writer, p)
-		// writer.Write([]byte("type " + curType.Name.Local + " struct {\n"))
-		// for _, f := range curType.Fields {
-		// 	writeField(curType, f, writer)
-		// }
-		// writer.Write([]byte("}\n\n"))
-	}
-}
-
-func writeField(t *tree_parser.Type, field *tree_parser.Field, writer io.Writer) {
-	// обработка обычного поля
-	writer.Write([]byte(firstUp(field.Name) + " "))
-
-	if field.MinOccurs < field.MaxOccurs {
-		writer.Write([]byte("[]"))
-	}
-
-	fieldType := mapStandardType(field.Type.Local)
-	if fieldType == "" {
-		fieldType = field.Type.Local
-	}
-
-	if fieldType == "" {
-		fieldType = "string"
-	}
-
-	if !isInnerType(fieldType) {
-		writer.Write([]byte("*"))
-	}
-
-	writer.Write([]byte(fieldType + " `xml:\""))
-	if field.IsAttr {
-		writer.Write([]byte(field.Name + ",attr,omitempty"))
-	} else if field.Name == "XMLName" {
-		writer.Write([]byte(t.Space + " " + t.Local))
-	} else if field.Name == "XMLValue" {
-		writer.Write([]byte(",chardata"))
-	} else {
-		writer.Write([]byte(field.Name + ",omitempty"))
-	}
-	writer.Write([]byte("\"`\n"))
-}
-
-func extractName(in string) string {
-	parts := strings.Split(in, ":")
-	if len(parts) == 2 {
-		return parts[1]
-	} else {
-		return parts[0]
 	}
 }
 

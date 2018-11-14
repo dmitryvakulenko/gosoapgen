@@ -87,7 +87,13 @@ func (p *parser) GetTypes() []*Type {
 	foldFieldsTypes(types)
 	embedFields(types)
 
-	return removeDuplicatedAndUnusedTypes(types)
+	oldLen := 0
+	for oldLen != len(types) {
+		oldLen = len(types)
+		types = removeDuplicatedAndUnusedTypes(types)
+	}
+
+	return types
 }
 
 // Generate types list according to previously built tree
@@ -369,6 +375,9 @@ func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
 			case "attribute":
 				f := p.attributeNode(ch)
 				tp.addField(f)
+			case "attributeGroup":
+				ag := p.attributeGroupNode(ch)
+				tp.Fields = append(tp.Fields, ag.Fields...)
 			}
 		}
 	} else if ref != "" {

@@ -568,6 +568,19 @@ func TestRemoveDuplicatedTypes(t *testing.T) {
 	assert.Len(t, typesList, 4)
 }
 
+func TestAttributeGroup2(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	assert.Len(t, typesList, 2)
+
+	first, sec := typesList[0], typesList[1]
+	assert.Len(t, first.Fields, 2)
+	assert.Equal(t, "Telephone", first.Fields[1].Name)
+
+	assert.Len(t, sec.Fields, 3)
+	assert.Equal(t, "RPH", sec.Fields[2].Name)
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Load(name + ".xsd")

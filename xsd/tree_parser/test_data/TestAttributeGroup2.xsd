@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 rel. 3 (http://www.altova.com) by Amadeus s.a.s. (Amadeus s.a.s.) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://xml.amadeus.com/2010/06/Types_v1"
+           targetNamespace="http://xml.amadeus.com/2010/06/Types_v1"
+           xmlns:iata="http://www.iata.org/IATA/2007/00/IATA2010.1"
+           xmlns:ota="http://www.opentravel.org/OTA/2003/05/OTA2010B" elementFormDefault="qualified"
+           attributeFormDefault="unqualified" version="1.002" id="AMA2011Y">
+    <xs:element name="PaymentCardType">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Telephone" minOccurs="0" maxOccurs="5">
+                    <xs:complexType>
+                        <xs:attributeGroup ref="TelephoneInfoGroup">
+                        </xs:attributeGroup>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:attributeGroup name="TelephoneInfoGroup">
+        <xs:attributeGroup ref="TelephoneGroup">
+        </xs:attributeGroup>
+        <xs:attribute name="RPH" type="RPH_Type" use="optional">
+        </xs:attribute>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="TelephoneGroup">
+        <xs:attributeGroup ref="PrivacyGroup">
+        </xs:attributeGroup>
+    </xs:attributeGroup>
+
+    <xs:attributeGroup name="PrivacyGroup">
+        <xs:attribute name="ShareSynchInd" use="optional">
+            <xs:simpleType>
+                <xs:restriction base="xs:NMTOKEN">
+                    <xs:enumeration value="Yes"/>
+                    <xs:enumeration value="No"/>
+                    <xs:enumeration value="Inherit"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="ShareMarketInd" use="optional">
+            <xs:simpleType>
+                <xs:restriction base="xs:NMTOKEN">
+                    <xs:enumeration value="Yes"/>
+                    <xs:enumeration value="No"/>
+                    <xs:enumeration value="Inherit"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:attributeGroup>
+
+    <xs:simpleType name="RPH_Type">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{1,8}"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
