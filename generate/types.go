@@ -1,12 +1,15 @@
 package generate
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"io"
 	"github.com/dmitryvakulenko/gosoapgen/xsd/tree_parser"
 	"text/template"
 )
+
+var nameRegex, _ = regexp.Compile("^[A-Za-z0-9_]+$")
 
 var innerTypes = []string{
 	"int",
@@ -15,7 +18,9 @@ var innerTypes = []string{
 	"time.Time",
 	"string"}
 
-const typeTemplate = `type {{index .TypeNames .Type}} struct {
+const typeTemplate = `{{$tName := index .TypeNames .Type}}
+{{- if validName $tName}}
+type {{$tName}} struct {
 	{{- $typeNames := .TypeNames}}
 	{{range $idx, $f := .Type.Fields}}
 		{{- $name := title .Name}}
@@ -35,10 +40,12 @@ const typeTemplate = `type {{index .TypeNames .Type}} struct {
 		{{- else}}
 			{{- $xml = print $f.Name ",omitempty"}}
 		{{- end}}
-		{{- $name}} {{$fType}} ` + "`" + `xml:"{{$xml}}"` + "`" + `
+		{{- if validName $name}}
+			{{- $name}} {{$fType}} ` + "`" + `xml:"{{$xml}}"` + "`" + `
+		{{- end}}
 	{{end}}
 }
-
+{{- end}}
 `
 
 type tmplParams struct {
@@ -76,12 +83,12 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 		}
 
 		goNames[curType] = name
-
 	}
 
 	funcMap := template.FuncMap{
 		"title":   strings.Title,
-		"mapType": mapStandardType}
+		"mapType": mapStandardType,
+		"validName": isValidName}
 	tmpl, _ := template.New("type").Funcs(funcMap).Parse(typeTemplate)
 	for _, curType := range typesList {
 		p := tmplParams{Type: curType, TypeNames: goNames}
@@ -119,4 +126,8 @@ func mapStandardType(xmlType string) string {
 	default:
 		return ""
 	}
+}
+
+func isValidName(name string) bool {
+	return nameRegex.MatchString(name)
 }
