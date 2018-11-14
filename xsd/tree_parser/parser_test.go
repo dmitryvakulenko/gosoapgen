@@ -581,6 +581,13 @@ func TestAttributeGroup2(t *testing.T) {
 	assert.Equal(t, "RPH", sec.Fields[2].Name)
 }
 
+func TestDummy(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	assert.Len(t, typesList, 2)
+	assert.Equal(t, "authorizationResponse", typesList[0].Local)
+}
+
 func parseTypesFrom(name string) []*Type {
 	parser := NewParser(&SimpleLoader{})
 	parser.Load(name + ".xsd")

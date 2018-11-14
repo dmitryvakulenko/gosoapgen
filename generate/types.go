@@ -61,6 +61,7 @@ func Types(typesList []*tree_parser.Type, writer io.Writer) {
 		if curType.Local != "" {
 			name = curType.Local
 		} else {
+			panic("Anonymous type found")
 			// find field used this type
 			var field *tree_parser.Field
 			for _, t := range typesList {

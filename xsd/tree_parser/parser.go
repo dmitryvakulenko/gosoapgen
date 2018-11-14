@@ -87,8 +87,8 @@ func (p *parser) GetTypes() []*Type {
 	foldFieldsTypes(types)
 	embedFields(types)
 
-	oldLen := 0
-	for oldLen != len(types) {
+	oldLen := len(types) + 1
+	for oldLen > len(types) {
 		oldLen = len(types)
 		types = removeDuplicatedAndUnusedTypes(types)
 	}
@@ -167,7 +167,11 @@ func foldFieldsTypes(types []*Type) {
 
 func lastType(t *Type) *Type {
 	if len(t.Fields) == 0 && t.baseType != nil {
-		return lastType(t.baseType)
+		lt := lastType(t.baseType)
+		if lt.Local == "" {
+			lt.Name = t.Name
+		}
+		return lt
 	} else {
 		return t
 	}
@@ -377,7 +381,7 @@ func (p *parser) attributeGroupNode(n *xsd.Node) *Type {
 				tp.addField(f)
 			case "attributeGroup":
 				ag := p.attributeGroupNode(ch)
-				tp.Fields = append(tp.Fields, ag.Fields...)
+				tp.append(ag)
 			}
 		}
 	} else if ref != "" {
