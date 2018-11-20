@@ -90,7 +90,7 @@ func (p *parser) GetTypes() []*Type {
 	oldLen := len(types) + 1
 	for oldLen > len(types) {
 		oldLen = len(types)
-		types = removeDuplicatedAndUnusedTypes(types)
+		types = removeUnusedTypes(types)
 	}
 
 	return types
@@ -107,17 +107,8 @@ func (p *parser) generateTypes(schemas []*xsd.Schema) {
 }
 
 // Find types has same name but different spaces
-func removeDuplicatedAndUnusedTypes(types []*Type) []*Type {
-	typesMap := make(map[typeHash][]int)
-	for idx, t := range types {
-		h := t.hash()
-		if _, ok := typesMap[h]; !ok {
-			typesMap[h] = nil
-		}
-		typesMap[h] = append(typesMap[h], idx)
-	}
-
-	fieldsMap := make(map[typeHash][]*Field)
+func removeUnusedTypes(types []*Type) []*Type {
+	fieldsMap := make(map[typeHash]bool)
 	for _, t := range types {
 		for _, f := range t.Fields {
 			if f.Type.Space == xsdSpace {
@@ -125,33 +116,19 @@ func removeDuplicatedAndUnusedTypes(types []*Type) []*Type {
 			}
 
 			h := f.Type.hash()
-			if _, ok := fieldsMap[h]; !ok {
-				fieldsMap[h] = nil
-			}
-			fieldsMap[h] = append(fieldsMap[h], f)
+			fieldsMap[h] = true
 		}
 	}
 
 	var res []*Type
 	for _, curType := range types {
 		h := curType.hash()
-		sameTypes := typesMap[h]
-		useFields, ok := fieldsMap[h]
+		_, ok := fieldsMap[h]
 		if !ok && curType.sourceNode.Name() != "element" {
 			continue
 		}
 
 		res = append(res, curType)
-
-		if len(sameTypes) == 1 {
-			continue
-		}
-
-		for _, f := range useFields {
-			f.Type = curType
-		}
-
-		delete(fieldsMap, h)
 	}
 
 	return res

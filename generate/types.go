@@ -19,6 +19,7 @@ var innerTypes = []string{
 	"string"}
 
 const typeTemplate = `{{$tName := index .TypeNames .Type}}
+{{- $tOrigName := .Type.Name}}
 {{- if validName $tName}}
 type {{$tName}} struct {
 	{{- $typeNames := .TypeNames}}
@@ -34,7 +35,7 @@ type {{$tName}} struct {
 		{{- if $f.IsAttr}}
 			{{- $xml = print ",attr,omitempty"}}
 		{{- else if eq $f.Name "XMLName"}}
-			{{- $xml = print .Type.Space " " .Type.Local}}
+			{{- $xml = print $tOrigName.Space " " $tOrigName.Local}}
 		{{- else if eq $f.Name "XMLValue"}}
 			{{- $xml = print ",chardata"}}
 		{{- else}}
