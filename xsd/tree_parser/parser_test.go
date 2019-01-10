@@ -575,6 +575,20 @@ func TestAttributeGroup2(t *testing.T) {
 	assert.Equal(t, "RPH", sec.Fields[2].Name)
 }
 
+func TestDuplicateFieldNames(t *testing.T) {
+	typesList := parseTypesFrom(t.Name())
+
+	assert.Len(t, typesList, 5)
+
+	assert.Equal(t, "TestA", typesList[1].Local)
+	assert.Equal(t, "Flight", typesList[2].Local)
+	assert.Equal(t, typesList[1].Fields[0].Type, typesList[2])
+
+	assert.Equal(t, "TestB", typesList[3].Local)
+	assert.Equal(t, "Flight_1", typesList[4].Local)
+	assert.Equal(t, typesList[3].Fields[0].Type, typesList[4])
+}
+
 func TestDummy(t *testing.T) {
 	typesList := parseTypesFrom(t.Name())
 

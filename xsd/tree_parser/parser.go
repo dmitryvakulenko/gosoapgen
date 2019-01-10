@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	xsd "github.com/dmitryvakulenko/gosoapgen/xsd-model"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -200,17 +201,35 @@ func (p *parser) createType(n *xsd.Node) *Type {
 	sc := p.schemasStack.Back().Value.(*xsd.Schema)
 	t := newType(n, sc.TargetNamespace)
 
-	// this not global, internal type with no name
+	// this not global, embedded (not anonymous!!!) type with no name
 	if t.Local == "" {
 		return t
 	}
 
-	if p.resultTypes.Has(t.Name) {
-		return p.resultTypes.Get(t.Name)
+	if !p.resultTypes.Has(t.Name) {
+		p.resultTypes.Add(t)
+		return t
 	}
 
-	p.resultTypes.Add(t)
-	return t
+	// this is anonymous type and we need name it
+	if n.Name() == "element" && n.Parent() != nil {
+		t.Name = p.makeUniqueName(t.Name)
+		p.resultTypes.Add(t)
+		return t
+	}
+
+	panic("Duplicate type " + t.Name.Local)
+}
+
+func (p *parser) makeUniqueName(name xml.Name) xml.Name {
+	suffix := 1
+	baseName := name.Local
+	for p.resultTypes.Has(name) {
+		name.Local = baseName + "_" + strconv.Itoa(suffix)
+		suffix++
+	}
+
+	return name
 }
 
 // Find schema node by name and element

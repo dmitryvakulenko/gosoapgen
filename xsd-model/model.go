@@ -1,108 +1,113 @@
 package xsd_model
 
 import (
-    "encoding/xml"
+	"encoding/xml"
 )
 
 type parent interface {
-    addChild(*Node)
+	addChild(*Node)
 }
 
 type Node struct {
-    name      string
-    startElem *xml.StartElement
-    children  []*Node
+	name      string
+	startElem *xml.StartElement
+	parent    *Node
+	children  []*Node
 }
 
 func (n *Node) Name() string {
-    return n.name
+	return n.name
 }
 
 func (n *Node) addChild(e *Node) {
-    n.children = append(n.children, e)
+	n.children = append(n.children, e)
+}
+
+func (n *Node) Parent() *Node {
+	return n.parent
 }
 
 func (n *Node) Children() []*Node {
-    return n.children
+	return n.children
 }
 
 func (n *Node) Attribute(name string) *xml.Attr {
-    for _, a := range n.startElem.Attr {
-        if a.Name.Local == name {
-            return &a
-        }
-    }
+	for _, a := range n.startElem.Attr {
+		if a.Name.Local == name {
+			return &a
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (n *Node) AllAttributesByName(name string) []xml.Attr {
-    var ret []xml.Attr
-    for _, a := range n.startElem.Attr {
-        if a.Name.Space == name {
-            ret = append(ret, a)
-        }
-    }
+	var ret []xml.Attr
+	for _, a := range n.startElem.Attr {
+		if a.Name.Space == name {
+			ret = append(ret, a)
+		}
+	}
 
-    return ret
+	return ret
 }
 
 func (n *Node) AttributeValue(name string) string {
-    a := n.Attribute(name)
-    if a != nil {
-        return a.Value
-    } else {
-        return ""
-    }
+	a := n.Attribute(name)
+	if a != nil {
+		return a.Value
+	} else {
+		return ""
+	}
 }
 
 func (n *Node) ChildByName(name string) *Node {
-    for _, v := range n.children {
-        if v.name == name {
-            return v
-        }
-    }
+	for _, v := range n.children {
+		if v.name == name {
+			return v
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (n *Node) ChildrenByName(name string) []*Node {
-    var res []*Node
-    for _, v := range n.children {
-        if v.name == name {
-            res = append(res, v)
-        }
-    }
+	var res []*Node
+	for _, v := range n.children {
+		if v.name == name {
+			res = append(res, v)
+		}
+	}
 
-    return res
+	return res
 }
 
 type Schema struct {
-    Node
-    TargetNamespace string
-    ChildSchemas    []*Schema
-    nsAlias         map[string]string
+	Node
+	TargetNamespace string
+	ChildSchemas    []*Schema
+	nsAlias         map[string]string
 }
 
 func (s *Schema) ResolveSpace(prefix string) string {
-    return s.nsAlias[prefix]
+	return s.nsAlias[prefix]
 }
 
 func (s *Schema) FindGlobalTypeByName(typeName xml.Name) *Node {
-    if s.TargetNamespace == typeName.Space {
-        for _, n := range s.children {
-            if n.AttributeValue("name") == typeName.Local {
-                return n
-            }
-        }
-    }
+	if s.TargetNamespace == typeName.Space {
+		for _, n := range s.children {
+			if n.AttributeValue("name") == typeName.Local {
+				return n
+			}
+		}
+	}
 
-    for _, sc := range s.ChildSchemas {
-        n := sc.FindGlobalTypeByName(typeName)
-        if n != nil {
-            return n
-        }
-    }
+	for _, sc := range s.ChildSchemas {
+		n := sc.FindGlobalTypeByName(typeName)
+		if n != nil {
+			return n
+		}
+	}
 
-    return nil
+	return nil
 }

@@ -44,9 +44,8 @@ func (t *Type) hash() typeHash {
 }
 
 func newType(n *xsd.Node, ns string) *Type {
-	name := n.AttributeValue("name")
 	return &Type{
-		Name:       xml.Name{Local: name, Space: ns},
+		Name:       xml.Name{Local: n.AttributeValue("name"), Space: ns},
 		sourceNode: n}
 }
 
