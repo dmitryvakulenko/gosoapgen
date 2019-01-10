@@ -33,7 +33,7 @@ type {{$tName}} struct {
 		{{- if lt .MinOccurs .MaxOccurs}}{{$fType = print "[]" $fType}}{{end}}
 		{{- $xml := ""}}
 		{{- if $f.IsAttr}}
-			{{- $xml = print ",attr,omitempty"}}
+			{{- $xml = print $f.Name ",attr,omitempty"}}
 		{{- else if eq $f.Name "XMLName"}}
 			{{- $xml = print $tOrigName.Space " " $tOrigName.Local}}
 		{{- else if eq $f.Name "XMLValue"}}
